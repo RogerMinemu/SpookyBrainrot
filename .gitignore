@@ -1,0 +1,9 @@
+data/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.playwright-mcp/
+.atl/

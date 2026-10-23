@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%80%3C/text%3E%3C/svg%3E">
+  <title>SpookyBrainrot</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/play.css">
+</head>
+<body class="play">
+  <main>
+    <section id="join" class="hidden">
+      <h1>Unete a la partida</h1>
+      <form id="join-form">
+        <input id="code" maxlength="4" placeholder="Codigo" autocapitalize="characters" required>
+        <input id="name" maxlength="24" placeholder="Tu nombre" required>
+        <button type="submit">Entrar</button>
+      </form>
+      <p id="error" class="muted"></p>
+    </section>
+    <section id="game" class="hidden"></section>
+    <div id="conn" class="conn hidden">Reconectando...</div>
+  </main>
+  <script type="module" src="/static/js/play/main.js"></script>
+</body>
+</html>
