@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es" data-room="prologue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Exportar arte (solo desarrollo)</title>
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/theme.css">
+<style>
+  body{padding:1.2rem;color:var(--ink);background:var(--paper)}
+  #log{white-space:pre-wrap;font:14px/1.4 monospace;margin:1rem 0}
+  #files{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem}
+  #files figure{margin:0;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:.4rem;font-size:12px;word-break:break-all}
+  #files img{max-width:100%;display:block;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/16px 16px}
+</style>
+<script src="/static/vendor/p5/2.3.3/p5.min.js"></script>
+<script src="/static/vendor/p5.brush/2.2.3/p5.brush.js"></script>
+</head>
+<body>
+<h1>Exportar arte</h1>
+<p>Pinta cada capa (tele y flexible) x sala x placa y ofrece los WebP para guardarlos en
+  <code>static/art/fallback/</code>, junto con el <code>manifest.json</code>. Página de desarrollo: no la enlaza nadie.
+  Con <code>?auto=1</code> empieza sola.</p>
+<p><button id="go" type="button">Pintar todo</button> <button id="manifest" type="button" class="ghost" disabled>Descargar manifest.json</button></p>
+<div id="log" role="status"></div>
+<div id="files"></div>
+<script type="module" src="/static/dev/art-export.js"></script>
+</body>
+</html>

@@ -228,7 +228,7 @@ class Engine:
     def _puzzle_action(self, game: Game, cmd: PuzzleAction) -> Outcome:
         puzzle = self._active_puzzle(game)
         if puzzle is None:
-            return _reject("no_puzzle", "no hay ningun puzzle activo")
+            return _reject("no_puzzle", "no hay ningún puzzle activo")
         if game.player(cmd.pid) is None:
             return _reject("unknown_player")
         try:

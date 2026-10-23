@@ -1,0 +1,18 @@
+/* Home: painted hero + panels. Links and buttons stay real DOM. */
+body.home main { max-width: 760px; padding: 2.2rem 1rem 3rem; display: grid; gap: 1.5rem; }
+.hero { text-align: center; padding: 1rem 0 .4rem; }
+.hero .title { font-size: clamp(2.3rem, 9vw, 4.6rem); }
+.create-panel .row { flex-wrap: nowrap; }
+.create-panel input { flex: 1 1 auto; min-width: 0; }
+.create-panel .muted:empty { display: none; }
+.create-panel #error { margin: .8rem 0 0; color: var(--danger); font-weight: 600; }
+#games { display: grid; gap: 1rem; }
+.game-card { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; padding: 1.2rem 1.6rem; }
+.game-card .info { flex: 1 1 14rem; min-width: 0; }
+.game-card .info strong { font-family: var(--font-title); font-size: 1.7rem; font-weight: 400; overflow-wrap: anywhere; }
+.game-card .muted { margin-top: .15rem; }
+.game-card a { text-decoration: none; }
+.empty-games { text-align: center; }
+.links { text-align: center; padding: .9rem 1.4rem; font-size: 1.1rem; }
+.links a { display: inline-block; padding: .7rem .6rem; min-height: 3rem; }
+@media (max-width: 520px) { .create-panel .row { flex-wrap: wrap; } .create-panel button { width: 100%; } }

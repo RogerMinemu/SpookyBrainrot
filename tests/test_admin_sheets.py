@@ -38,7 +38,7 @@ def test_sheet_and_key_work_without_any_game(client):
 def test_key_lists_15_rows_with_spoiler_banner(client):
     key = client.get("/admin/qr-key").text
     assert key.count("<tr>") == 16  # header + 15
-    assert key.count("Ancla ") == 7 and key.count("Senuelo ") == 8
+    assert key.count("Ancla ") == 7 and key.count("Señuelo ") == 8
     assert "SPOILER" in key
 
 

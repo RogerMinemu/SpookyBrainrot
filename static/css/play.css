@@ -1,21 +1,78 @@
-body.play { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
-body.play input { width: 100%; margin: .4rem 0; font-size: 1.1rem; }
-body.play button { width: 100%; margin-top: .4rem; font-size: 1.1rem; }
+/* Phone controller: painted storybook kit, DOM widgets. Static plate (no boil on phones).
+   Rules of thumb: tap targets >= 48px, body text only on --surface (high contrast, usable in the dark),
+   every widget works with no art at all (loading / fallback / ?art=off). */
+body.play { touch-action: manipulation; -webkit-user-select: none; user-select: none; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
+body.play main { max-width: 640px; margin: 0 auto; padding: 1.1rem 16px 2rem; display: grid; gap: 1.1rem; justify-items: center; }
+body.play main > section { width: 100%; display: grid; gap: 1.1rem; justify-items: center; }
+body.play .title { font-size: clamp(1.55rem, 7.2vw, 2.4rem); max-width: 100%; padding: .26em .8em .32em; overflow-wrap: anywhere; }
+body.play .title-text { display: block; }
+body.play .panel { width: 100%; font-size: 1.15rem; padding: 1.5rem 1.4rem; display: grid; gap: .8rem; justify-items: stretch; text-align: center; }
+body.play .panel > * { margin: 0; }
+/* tall phone cards: keep the painted 9-slice frame but NOT its stretched centre (it would streak vertically) */
+body.play .panel { border-image: var(--tex-panel) 56 / 16px stretch;
+  background-image: radial-gradient(90% 60% at 20% 0%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(80% 50% at 90% 100%, color-mix(in srgb, var(--room-c) 22%, transparent), transparent 75%); }
+body.play .panel .players { justify-content: center; }
+body.play .me { font-family: var(--font-title); font-size: 1.5rem; margin: 0; }
+body.play .riddle { font-style: italic; font-size: 1.3rem; }
+body.play .muted { color: var(--ink-soft); }
+
+/* inputs and buttons: big, thumb-friendly */
+body.play input { width: 100%; margin: 0; font-size: 1.25rem; min-height: 3.5rem; }
+body.play button, body.play .btn { width: 100%; margin: 0; min-height: 3.5rem; font-size: 1.45rem; }
 #code { text-transform: uppercase; letter-spacing: .3em; text-align: center; }
-.conn { position: fixed; top: .5rem; right: .5rem; background: var(--danger); padding: .25rem .6rem; border-radius: 8px; font-size: .85rem; }
-body.play .hold-btn { height: 40vh; font-size: 1.6rem; border-radius: 24px; margin: 1rem 0; touch-action: none;
-  -webkit-touch-callout: none; background: #2a2540; color: #fff; border: 2px solid #4a4268; }
-body.play .hold-btn.down { background: #7a4cff; border-color: #b79bff; }
-body.play .wordle-input { text-transform: uppercase; letter-spacing: .2em; text-align: center;
-  -webkit-user-select: text; user-select: text; }
-body.play .wordle-input:disabled, body.play .wordle-form button:disabled { opacity: .4; }
-body.play .wgrid { display: grid; gap: .3rem; justify-content: center; margin: .6rem 0; }
-body.play .wrow { display: flex; gap: .3rem; justify-content: center; }
-body.play .wcell { width: 2.4rem; height: 2.4rem; display: grid; place-content: center; font-weight: 700;
-  border: 2px solid #2c2938; border-radius: 6px; background: #14121c; }
-body.play .wcell.correct { background: #2f8f55; }
-body.play .wcell.present { background: #a58a21; }
-body.play .wcell.absent { background: #2a2733; color: #8d8899; }
-body.play .wcell.covered { background: #3a1018; color: #7a1a2a; }
-body.play .error { color: #ff6b6b; min-height: 1.2em; }
-.me { font-size: 1.4rem; margin: .5rem 0; }
+.join-panel { gap: .9rem; }
+body.play .error { color: var(--danger); font-weight: 600; text-align: center; }
+body.play .error:empty { display: none; }
+
+/* connection badge + toast */
+.conn { position: fixed; top: .6rem; right: .6rem; z-index: 60; background: var(--danger); color: #FFF5E2; font-weight: 600;
+  padding: .4rem .9rem; border: 2.5px solid var(--ink); border-radius: 12px; box-shadow: 3px 3px 0 var(--ink); }
+.toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%) rotate(-.6deg); z-index: 50; width: max-content; max-width: min(92vw, 520px);
+  padding: .85rem 1.3rem; font-size: 1.15rem; font-weight: 600; line-height: 1.3; text-align: center;
+  border: 3px solid var(--ink); border-radius: 16px 22px 14px 24px / 20px 14px 22px 16px; background-color: var(--surface); color: var(--ink);
+  border-image: var(--tex-panel) 56 fill / 18px stretch; box-shadow: 4px 5px 0 rgba(12, 6, 22, .55); animation: toast-in .22s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 14px) rotate(-2deg); } to { opacity: 1; transform: translateX(-50%) rotate(-.6deg); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+/* ------------------------------------------------------------------ hold_together */
+body.play .hold-btn { display: grid; place-content: center; width: 100%; height: 40vh; min-height: 11rem; margin: .2rem 0; padding: 1rem;
+  font-size: 2rem; line-height: 1.1; border-radius: 34px 40px 30px 42px / 40px 30px 42px 32px; touch-action: none; -webkit-touch-callout: none;
+  color: var(--ink); border: 4px solid var(--ink); border-image: none;
+  /* a big painted thumb-print: concentric hand-inked rings over a wash (own paint, the 9-slice would streak at this size) */
+  background:
+    repeating-radial-gradient(circle at 50% 48%, transparent 0 22px, rgba(43, 34, 51, .16) 23px 26px),
+    radial-gradient(80% 70% at 28% 18%, rgba(255, 255, 255, .5), transparent 70%),
+    radial-gradient(70% 70% at 85% 95%, rgba(43, 34, 51, .22), transparent 75%), var(--btn);
+  box-shadow: 6px 8px 0 var(--ink), inset 0 0 0 6px color-mix(in srgb, var(--surface) 60%, transparent);
+  transition: transform .06s ease, box-shadow .06s ease, background-color .06s ease; }
+body.play .hold-btn .hold-label { text-shadow: 2px 2px 0 color-mix(in srgb, var(--surface) 75%, transparent); letter-spacing: .06em; }
+body.play .hold-btn:hover { transform: none; }
+/* pressed: sinks into the page, floods with ink; rings glow in the room colour, label flips to light-on-ink */
+body.play .hold-btn.down { transform: translate(5px, 7px); color: #FFF5E2;
+  background:
+    repeating-radial-gradient(circle at 50% 48%, transparent 0 22px, color-mix(in srgb, var(--room-c) 55%, transparent) 23px 27px),
+    radial-gradient(70% 60% at 50% 45%, rgba(255, 245, 226, .16), transparent 75%), var(--ink);
+  box-shadow: 1px 1px 0 var(--ink), inset 0 0 0 6px var(--room-c), inset 0 0 40px rgba(0, 0, 0, .6); outline: 4px solid var(--room-c); outline-offset: 4px; }
+body.play .hold-btn.down .hold-label { text-shadow: 2px 2px 0 rgba(0, 0, 0, .8); }
+body.play .hold-status { font-weight: 600; }
+@media (orientation: landscape) and (max-height: 520px) {
+  body.play .hold-btn { height: 34vh; min-height: 6rem; font-size: 1.5rem; }
+  body.play main { padding-top: .6rem; gap: .6rem; }
+}
+
+/* ------------------------------------------------------------------ cursed_wordle */
+body.play .wordle-form { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: stretch; }
+body.play .wordle-form button { width: auto; min-width: 6rem; padding-inline: 1rem; }
+body.play .wordle-input { min-width: 0; text-transform: uppercase; letter-spacing: .1em; font-size: 1.2rem; padding-inline: .5rem; text-align: center; -webkit-user-select: text; user-select: text; }
+body.play .wordle-input:disabled, body.play .wordle-form button:disabled { opacity: .55; }
+body.play .turn-line { font-weight: 600; }
+body.play .curse { font-weight: 600; color: var(--danger); }
+body.play .curse:empty { display: none; }
+body.play .wgrid { display: grid; gap: .4rem; justify-content: center; margin: .2rem 0; }
+body.play .wrow { display: flex; gap: .4rem; justify-content: center; }
+
+.wgrid.small .wcell, body.play .wcell { width: 2.9rem; height: 2.9rem; font-size: 1.5rem; }
+body.play .wcell.correct::after { font-size: .65rem; right: 3px; }
+@media (max-width: 380px) { .wgrid.small .wcell, body.play .wcell { width: 2.6rem; height: 2.6rem; } }
+body.play .wordle-input::placeholder { letter-spacing: 0; font-size: 1rem; text-transform: none; color: #6A5D76; opacity: 1; }
+body.play .wordle-input:disabled { background: color-mix(in srgb, var(--surface) 70%, #BDB2C6); }

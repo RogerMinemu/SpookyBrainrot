@@ -1,0 +1,6 @@
+p5.js 2.3.3 - LGPL-2.1 (see LICENSE.txt).
+Shipped UNMODIFIED: p5.min.js is byte-identical to lib/p5.min.js of the npm package p5@2.3.3
+(npm pack p5@2.3.3). Its sha256 is pinned in static/vendor/vendor.json.
+Source: https://github.com/processing/p5.js (tag v2.3.3), https://www.npmjs.com/package/p5/v/2.3.3
+Note: the file carries no version banner and its internal VERSION constant reads "2.3.1" (upstream quirk);
+the authoritative version is the package version 2.3.3 recorded in vendor.json.

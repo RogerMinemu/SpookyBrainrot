@@ -1,20 +1,22 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-room="prologue">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%80%3C/text%3E%3C/svg%3E">
   <title>SpookyBrainrot - TV</title>
   <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/theme.css">
   <link rel="stylesheet" href="/static/css/tv.css">
 </head>
 <body class="tv">
+  <div id="art" aria-hidden="true"></div>
   <div id="splash" class="splash">
-    <h1>SpookyBrainrot</h1>
-    <p>Toca la pantalla para empezar</p>
+    <h1 class="title"><span class="title-text">SpookyBrainrot</span></h1>
+    <p class="splash-hint">Toca la pantalla para empezar</p>
   </div>
   <div id="screen" class="screen hidden"></div>
-  <div id="meter" class="meter hidden"><span id="meter-text"></span><div class="meter-bar"><div id="meter-fill" class="meter-fill"></div></div></div>
+  <div id="meter" class="meter hidden" data-band="0"><div class="meter-row"><span id="meter-text"></span><span class="meter-skull" aria-hidden="true">&#9760;</span></div><div class="meter-bar"><div id="meter-fill" class="meter-fill"></div></div></div>
   <div id="conn" class="conn hidden">Reconectando...</div>
   <script type="module" src="/static/js/tv/main.js"></script>
 </body>

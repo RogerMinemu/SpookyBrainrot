@@ -26,10 +26,23 @@ from app.web.ws import router as ws_router
 log = logging.getLogger("spooky")
 
 
+VENDOR_CACHE = "public, max-age=31536000, immutable"
+
+
+def is_vendor_path(path: str) -> bool:
+    """True for paths under vendor/. `path` is relative to the static root; Windows may hand it over with backslashes."""
+    parts = path.replace("\\", "/").lstrip("/").split("/")
+    return len(parts) >= 3 and parts[0] == "vendor"  # vendor/<lib>/<file>; vendor.json/VENDOR.md stay no-cache
+
+
 class NoCacheStatic(StaticFiles):
     async def get_response(self, path, scope):  # type: ignore[override]
         response = await super().get_response(path, scope)
-        response.headers["Cache-Control"] = "no-cache"
+        # vendor dirs are versioned (vendor/p5/2.3.3/...), so only successful responses are immutable
+        if response.status_code == 200 and is_vendor_path(path):
+            response.headers["Cache-Control"] = VENDOR_CACHE
+        else:
+            response.headers["Cache-Control"] = "no-cache"
         return response
 
 

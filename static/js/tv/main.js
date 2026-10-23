@@ -2,6 +2,12 @@ import { GameSocket } from "/static/js/shared/ws.js";
 import { h, clear, fill } from "/static/js/shared/dom.js";
 import { screens } from "/static/js/tv/screens.js";
 import { handleEvent } from "/static/js/tv/effects.js";
+import { applyState } from "/static/js/ui/theme.js";
+import { panel, button, title } from "/static/js/ui/kit.js";
+import { startArt } from "/static/js/art/boot.js";
+
+// composition root: the art starts once, immediately (the splash is already painted by it)
+startArt({ layout: "tv" });
 
 const gameId = location.pathname.split("/").filter(Boolean).pop();
 const splash = document.getElementById("splash");
@@ -32,13 +38,20 @@ function updateMeter(state) {
     const r = Math.max(0, Math.min(100, Math.round(pct)));
     meterFill.style.width = `${r}%`;
     meterText.textContent = `Brainrot ${r}%`;
+    meter.dataset.band = String(r >= 75 ? 3 : r >= 50 ? 2 : r >= 25 ? 1 : 0);
   }
+}
+
+// 4001 takeover look (html[data-takeover] + .takeover on the screen); cleared by any new state.
+function clearTakeover() {
+  document.documentElement.removeAttribute("data-takeover");
+  screen.classList.remove("takeover");
 }
 
 async function render(state) {
   latest = state;
-  document.documentElement.style.setProperty("--rot", state.game.degradation);
-  document.documentElement.dataset.rot = String(state.game.degradation);
+  clearTakeover();
+  applyState(state);
   updateMeter(state);
   const kind = state.view.kind;
   if (screens[kind]) {
@@ -86,11 +99,13 @@ function start() {
       leavePuzzle();
       loadToken += 1;
       if (code === 4001) {
+        document.documentElement.dataset.takeover = "1";
+        screen.classList.add("takeover");
         fill(screen,
-          h("h1", {}, "Otra pantalla ha tomado el control"),
-          h("button", { class: "btn", onclick: () => socket.start() }, "Recuperar control"));
+          title("Otra pantalla ha tomado el control"),
+          button("Recuperar control", { onclick: () => socket.start() }));
       } else {
-        screen.textContent = code === 4010 ? "Esta partida ha sido borrada." : "Partida no encontrada.";
+        fill(screen, panel(h("p", {}, code === 4010 ? "Esta partida ha sido borrada." : "Partida no encontrada.")));
       }
     },
   });

@@ -43,7 +43,7 @@ def test_anchor_sleeping_when_puzzle_active(client):
     rt, _ = running_game(client, PHASE_PUZZLE)
     anchors, _ = tokens(client)
     r = client.get(f"/k/{anchors[2]}")
-    assert "aun duerme" in r.text
+    assert "aún duerme" in r.text
     assert rt.game.brainrot == 0 and rt.game.status == STATUS_RUNNING
 
 
@@ -53,7 +53,7 @@ def test_anchor_unlocks_and_ends_game_then_idempotent(client):
     client.cookies.set("sb_pt", tok)
     r = client.get(f"/k/{anchors[2]}")
     assert "Ancla encontrada" in r.text and rt.game.status == "finished"
-    assert "ya esta estable" in client.get(f"/k/{anchors[2]}").text
+    assert "ya está estable" in client.get(f"/k/{anchors[2]}").text
     assert client.get(f"/k/{anchors[2]}").status_code == 200  # still harmless
 
 

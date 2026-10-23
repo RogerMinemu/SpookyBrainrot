@@ -13,7 +13,7 @@ function card(a) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ riddle: riddle.value, place: place.value }),
       });
-      status.textContent = res.ok ? "Guardada" : "La pista no puede estar vacia";
+      status.textContent = res.ok ? "Guardada" : "La pista no puede estar vacía";
     },
   }, "Guardar");
   return h("div", { class: "card" },
@@ -23,7 +23,7 @@ function card(a) {
 
 async function load() {
   const res = await fetch("/api/house");
-  if (!res.ok) { fill(root, h("p", {}, "Acceso denegado: abre esta pagina con ?key=TU_CLAVE")); return; }
+  if (!res.ok) { fill(root, h("p", {}, "Acceso denegado: abre esta página con ?key=TU_CLAVE")); return; }
   const data = await res.json();
   fill(root, ...data.anchors.map(card));
 }

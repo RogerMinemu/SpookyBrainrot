@@ -1,0 +1,199 @@
+/* Watercolor storybook horror theme.
+   Single palette source: the tokens below, per html[data-room]. The painter (art/painter.js) reads
+   them with getComputedStyle, so nothing is duplicated in JS. Everything here works with NO art
+   at all (loading / fallback / ?art=off): plain CSS washes + the same layout. */
+
+@font-face {
+  font-family: "SB Marker"; font-display: swap; font-weight: 400; font-style: normal;
+  src: url("/static/vendor/fonts/permanent-marker/permanent-marker-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "SB Fredoka"; font-display: swap; font-weight: 300 700; font-style: normal;
+  src: url("/static/vendor/fonts/fredoka/fredoka-latin.woff2") format("woff2");
+}
+
+:root {
+  --paper: #F3EBDC;
+  --ink: #2B2233;
+  --ink-soft: #5A4D66;
+  --surface: #FFF5E2;
+  --danger: #B8323A;
+  --font-title: "SB Marker", "Marker Felt", "Comic Sans MS", cursive;
+  --font-body: "SB Fredoka", "Segoe UI", system-ui, sans-serif;
+  --boil-ms: 83;
+  /* default theme == prologue (also used by future rooms with no palette yet) */
+  --room-a: #1F2550; --room-b: #2F3C7A; --room-c: #E8AA38;
+  --btn: #E8AA38; --on-bg: #FFF5E2; --on-bg-soft: #D9D3EC;
+}
+html[data-room="prologue"] {
+  --room-a: #1F2550; --room-b: #2F3C7A; --room-c: #E8AA38;
+  --btn: #E8AA38; --on-bg: #FFF5E2; --on-bg-soft: #D9D3EC;
+}
+html[data-room="backrooms"] {
+  --room-a: #D9C25A; --room-b: #8A7424; --room-c: #F4EBB0;
+  --btn: #F2A283; --on-bg: #2B2233; --on-bg-soft: #3A2F22;
+}
+html[data-room="poolrooms"] {
+  --room-a: #3A9C98; --room-b: #1F5E66; --room-c: #CFE9E4;
+  --btn: #F7D86B; --on-bg: #17121D; --on-bg-soft: #1D2A2E;
+}
+
+html { background: var(--room-a); }
+body { background: transparent; color: var(--on-bg); font-family: var(--font-body); font-size: 18px; position: relative; }
+.muted { color: var(--on-bg-soft); }
+.p5Canvas, #art-p5 { display: none !important; }
+
+/* ---------------------------------------------------------------- #art (behind the DOM) */
+#art { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  background:
+    radial-gradient(60% 55% at 78% 18%, color-mix(in srgb, var(--room-c) 38%, transparent), transparent 72%),
+    radial-gradient(75% 60% at 18% 92%, color-mix(in srgb, var(--room-b) 85%, transparent), transparent 72%),
+    var(--room-a); }
+#art::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 22vmin rgba(12, 6, 22, .55); }
+#art .art-bg { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat;
+  opacity: 0; transition: opacity .7s ease; }
+#art .art-bg[data-v="0"] { background-image: var(--plate-bg-0); }
+#art .art-bg[data-v="1"] { background-image: var(--plate-bg-1); }
+#art .art-bg[data-v="2"] { background-image: var(--plate-bg-2); }
+#art.on .art-bg[data-v="0"] { opacity: 1; }
+
+/* boil: three pre-painted variants alternate with a steps() opacity animation (compositor only) */
+@keyframes boil { 0% { opacity: 1; } 33.33% { opacity: 0; } 100% { opacity: 0; } }
+html[data-boil="on"] #art .art-bg { transition: none; opacity: 0; animation: boil calc(var(--boil-ms) * 3ms) steps(1, end) infinite; }
+html[data-boil="on"] #art .art-bg[data-v="0"] { animation-delay: 0ms; }
+html[data-boil="on"] #art .art-bg[data-v="1"] { animation-delay: calc(var(--boil-ms) * -1ms); }
+html[data-boil="on"] #art .art-bg[data-v="2"] { animation-delay: calc(var(--boil-ms) * -2ms); }
+@media (prefers-reduced-motion: reduce) { html[data-boil="on"] #art .art-bg { animation: none; } html[data-boil="on"] #art.on .art-bg[data-v="0"] { opacity: 1; } }
+
+/* loading: an ink blot that breathes while the first plate is painted */
+@keyframes blot { 0%, 100% { transform: scale(.82) rotate(-4deg); opacity: .2; } 50% { transform: scale(1.1) rotate(5deg); opacity: .42; } }
+html[data-art="loading"] #art::before { content: ""; position: absolute; left: 50%; top: 50%; width: 30vmin; height: 30vmin; margin: -15vmin 0 0 -15vmin;
+  border-radius: 46% 54% 52% 48% / 55% 45% 55% 45%; background: var(--ink); animation: blot 1.6s ease-in-out infinite; }
+/* fallback: paper tile multiplied over the CSS washes (no GL) */
+html[data-art="fallback"] #art::before { content: ""; position: absolute; inset: 0; background-image: var(--paper-tile); background-size: 512px; mix-blend-mode: multiply; opacity: .75; }
+html[data-art="fallback"] #art { background:
+    radial-gradient(45% 40% at 78% 20%, color-mix(in srgb, var(--room-c) 55%, transparent), transparent 70%),
+    radial-gradient(60% 45% at 14% 88%, color-mix(in srgb, var(--room-b) 95%, transparent), transparent 72%),
+    radial-gradient(40% 30% at 55% 60%, color-mix(in srgb, var(--room-b) 45%, transparent), transparent 70%),
+    var(--room-a); }
+
+/* ---------------------------------------------------------------- hero title (DOM text + painted swash) */
+.title { position: relative; display: inline-block; margin: 0 auto; padding: .28em 1.1em .34em; isolation: isolate;
+  font-family: var(--font-title); font-weight: 400; letter-spacing: .035em; line-height: 1.08; text-align: center;
+  color: #FFF5E2; text-shadow: 4px 4px 0 var(--ink), -2px 2px 0 var(--ink), 2px -2px 0 var(--ink), -2px -2px 0 var(--ink); }
+.title::before { content: ""; position: absolute; inset: 0; z-index: -1; transform: rotate(-.8deg);
+  background-color: color-mix(in srgb, var(--ink) 88%, var(--room-a)); border: 3px solid var(--ink); border-radius: 14px 26px 12px 30px / 22px 12px 26px 14px;
+  background-image: var(--tex-swash); background-size: 100% 100%; background-repeat: no-repeat; box-shadow: 0 0 0 3px var(--room-c); }
+
+/* ---------------------------------------------------------------- panel (9-slice texture, DOM content) */
+.panel { position: relative; color: var(--ink); background: var(--surface); font-size: 1.3rem; line-height: 1.35;
+  border: 3px solid var(--ink); border-radius: 20px; padding: 1.7rem 2.1rem; box-shadow: 6px 7px 0 rgba(12, 6, 22, .5);
+  border-image: var(--tex-panel) 56 fill / 28px stretch; }
+.panel .muted { color: var(--ink-soft); }
+.panel h1, .panel h2 { font-family: var(--font-title); font-weight: 400; margin: 0 0 .4em; }
+
+/* ---------------------------------------------------------------- buttons, inputs */
+button, .btn { font-family: var(--font-title); font-size: 1.35rem; letter-spacing: .03em; min-height: 3rem; min-width: 3rem; padding: .55rem 1.7rem;
+  color: var(--ink); background: var(--btn); border: 3px solid var(--ink); border-radius: 18px; cursor: pointer;
+  box-shadow: 4px 5px 0 var(--ink); border-image: var(--tex-btn) 44 fill / 22px stretch; transition: transform .08s ease, box-shadow .08s ease; }
+button:hover, .btn:hover { transform: translate(-1px, -1px) rotate(-.4deg); }
+button:active, .btn:active { transform: translate(3px, 4px); box-shadow: 1px 1px 0 var(--ink); }
+button:focus-visible, .btn:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid var(--room-c); outline-offset: 3px; }
+button.ghost { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); border-image: none; }
+button.danger { background: var(--danger); color: #FFF5E2; border: 3px solid var(--ink); border-image: none; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+input { font-family: var(--font-body); font-size: 1.15rem; min-height: 3rem; background: var(--surface); color: var(--ink);
+  border: 3px solid var(--ink); border-radius: 14px; padding: .55rem .95rem; box-shadow: inset 2px 3px 0 rgba(43, 34, 51, .12); }
+input::placeholder { color: #6A5D76; }
+a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+/* ---------------------------------------------------------------- pills, frame, portrait */
+.pill { display: inline-flex; align-items: center; min-height: 2.4rem; padding: .3rem 1.1rem; border-radius: 999px; font-weight: 600; font-size: 1.15rem;
+  color: var(--ink); background: var(--surface); border: 2.5px solid var(--ink); box-shadow: 2px 3px 0 var(--ink); }
+.pill::before { background: #2F9E5C; border: 2px solid var(--ink); width: .8rem; height: .8rem; }
+.pill.off { background: #D8CDBD; color: #4A3F55; border-style: dashed; box-shadow: none; }
+.pill.off::before { background: #8D8199; }
+.portrait { margin: 0; padding: 18px; background: var(--surface); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 5px 6px 0 rgba(12, 6, 22, .5);
+  border-image: var(--tex-frame) 64 / 32px stretch; }
+.portrait img { display: block; max-width: 100%; }
+.portrait-empty { min-height: 160px; min-width: 160px; background: repeating-linear-gradient(45deg, transparent 0 10px, rgba(43, 34, 51, .08) 10px 20px); }
+.splat { background: var(--tex-splat) center/contain no-repeat; }
+
+/* ---------------------------------------------------------------- misc shared bits */
+.card { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 4px 5px 0 rgba(12, 6, 22, .45); }
+.card .muted { color: var(--ink-soft); }
+.toast { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); box-shadow: 4px 5px 0 rgba(12, 6, 22, .5); }
+
+/* ---------------------------------------------------------------- wordle tiles (TV grid + phone board) */
+/* painted tiles, shared by the TV grid and the phone board. State is carried by colour AND by shape
+   (check / ring / strike / ink blot) so it reads in the dark and for colour-blind players. */
+.wcell { position: relative; overflow: hidden; isolation: isolate; width: 4.2rem; height: 4.2rem; display: grid; place-content: center;
+  font-family: var(--font-title); font-size: 2.2rem; line-height: 1; color: var(--ink); background-color: var(--surface);
+  border: 3px solid var(--ink); border-radius: 12px 9px 13px 8px / 9px 13px 8px 12px; box-shadow: 2px 3px 0 var(--ink); }
+.wcell::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .9; pointer-events: none;
+  background: radial-gradient(75% 65% at 30% 25%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(70% 70% at 80% 90%, rgba(43, 34, 51, .16), transparent 75%); }
+.wcell:nth-child(even) { transform: rotate(.7deg); }
+.wcell:nth-child(odd) { transform: rotate(-.6deg); }
+.wcell.correct { background-color: #5BAE72; background-image: linear-gradient(160deg, #7CC78F, #3F9A5C); }
+.wcell.correct::after { content: "\2713"; position: absolute; right: 4px; top: 1px; font-family: var(--font-body); font-size: .8rem; font-weight: 700; }
+.wcell.present { background-color: #F0C75A; background-image: linear-gradient(160deg, #F7DA85, #E5B23A); }
+.wcell.present::after { content: ""; position: absolute; inset: 5px; border: 2.5px dashed var(--ink); border-radius: 50%; opacity: .55; z-index: -1; }
+.wcell.absent { background-color: #CFC4D4; color: #4A3F55; background-image: linear-gradient(160deg, #DAD1DE, #BCB0C3); box-shadow: 1px 2px 0 var(--ink); }
+.wcell.absent::after { content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 2.5px; background: var(--ink); opacity: .35; transform: rotate(-24deg); z-index: -1; }
+/* hidden by a salpicon: an ink blot swallows the letter */
+.wcell.covered { background-color: #2B1530; background-image: var(--tex-splat), radial-gradient(70% 70% at 40% 35%, #5B1F3C, #1E0E24); background-size: 92% 92%, auto;
+  background-position: center; background-repeat: no-repeat; color: #FFD7DC; border-color: var(--ink); }
+.wcell.covered::before { background: radial-gradient(60% 55% at 70% 30%, rgba(184, 50, 58, .45), transparent 70%); }
+
+/* ---------------------------------------------------------------- Brainrot% degradation (html[data-rot] 0..5)
+   Cheap by construction: filters live ONLY on #art (behind the DOM), the horror layers are fixed pseudo-elements
+   animated with opacity/transform (compositor), nothing repaints per frame and nothing changes layout.
+   DOM text sits on surface/ink paper, so legibility never depends on the level. */
+html[data-rot="2"] { --boil-ms: 70; }
+html[data-rot="3"] { --boil-ms: 58; }
+html[data-rot="4"] { --boil-ms: 48; }
+html[data-rot="5"] { --boil-ms: 42; }
+#art { filter: none; }
+html[data-rot="1"] #art { filter: saturate(.95) hue-rotate(-4deg); }
+html[data-rot="2"] #art { filter: saturate(.7) contrast(1.04); }
+html[data-rot="3"] #art { filter: saturate(.85) hue-rotate(-22deg) contrast(1.08); }
+html[data-rot="4"] #art { filter: saturate(1.6) hue-rotate(-38deg) blur(.6px) contrast(1.12); animation: art-jitter .5s steps(1) infinite; }
+html[data-rot="5"] #art { filter: saturate(1.9) hue-rotate(-62deg) blur(.8px) contrast(1.2) brightness(.92); animation: art-jitter .3s steps(1) infinite; }
+@keyframes art-jitter { 0% { transform: translate(0, 0) scale(1.012); } 25% { transform: translate(2px, -1px) scale(1.012); }
+  50% { transform: translate(-2px, 1px) scale(1.012); } 75% { transform: translate(1px, 2px) scale(1.012); } }
+
+/* bleeding edges and ink splatters (body::before) + breathing vignette (body::after): fixed, click-through */
+body::before, body::after { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 3; }
+body::before {
+  filter: sepia(1) hue-rotate(-50deg) saturate(12) brightness(.45); /* ochre splat plate -> dried blood, static (not animated) */
+  background:
+    var(--tex-splat, radial-gradient(closest-side, #5B0F1E 55%, transparent 60%)) -6vmin -8vmin / 46vmin 46vmin no-repeat,
+    var(--tex-splat, radial-gradient(closest-side, #5B0F1E 55%, transparent 60%)) calc(100% + 8vmin) calc(100% + 10vmin) / 58vmin 58vmin no-repeat,
+    radial-gradient(circle at 12% 100%, #9A1428 0 1.4vmin, transparent 1.5vmin), linear-gradient(#9A1428, #9A1428) 12% 0 / 1.2vmin 14vmin no-repeat,
+    radial-gradient(circle at 34% 100%, #7A0F20 0 1.8vmin, transparent 1.9vmin), linear-gradient(#7A0F20, #7A0F20) 34% 0 / 1.6vmin 9vmin no-repeat,
+    radial-gradient(circle at 71% 100%, #9A1428 0 1.5vmin, transparent 1.6vmin), linear-gradient(#9A1428, #9A1428) 71% 0 / 1.3vmin 17vmin no-repeat,
+    radial-gradient(circle at 90% 100%, #7A0F20 0 1.7vmin, transparent 1.8vmin), linear-gradient(#7A0F20, #7A0F20) 90% 0 / 1.5vmin 11vmin no-repeat;
+}
+body::after { background: radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(90, 6, 24, .75) 100%); }
+html[data-rot="2"] body::after { opacity: .25; }
+html[data-rot="3"] body::before { opacity: .35; }
+html[data-rot="3"] body::after { opacity: .45; }
+html[data-rot="4"] body::before { opacity: .7; }
+html[data-rot="4"] body::after { opacity: .7; animation: vignette-pulse 2.6s ease-in-out infinite; }
+html[data-rot="5"] body::before { opacity: .95; }
+html[data-rot="5"] body::after { opacity: .9; animation: vignette-pulse 1.3s ease-in-out infinite; }
+@keyframes vignette-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-rot] #art, html[data-rot] body::after { animation: none; }
+}
+
+/* titles: glitch from 3, RGB split from 4 (ink offset kept so the word stays readable) */
+html[data-rot="3"] .title, html[data-rot="4"] .title, html[data-rot="5"] .title { animation: glitch 2s infinite steps(2); }
+html[data-rot="4"] .title, html[data-rot="4"] .screen > h1 {
+  text-shadow: 4px 4px 0 var(--ink), -3px 0 rgba(255, 40, 80, .85), 3px 0 rgba(40, 220, 255, .8); }
+html[data-rot="5"] .title, html[data-rot="5"] .screen > h1 {
+  text-shadow: 4px 4px 0 var(--ink), -6px 0 rgba(255, 40, 80, .9), 6px 0 rgba(40, 220, 255, .85), 0 -2px 0 rgba(255, 220, 40, .6); }
+html[data-rot="5"] .screen { animation: glitch 1.2s infinite steps(2); }
+
+/* content sits above the horror layers (splatters live between #art and the DOM, never over text) */
+main, #screen { position: relative; z-index: 4; }

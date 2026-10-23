@@ -1,6 +1,12 @@
 import { GameSocket } from "/static/js/shared/ws.js";
 import { h, clear, getCookie, fill } from "/static/js/shared/dom.js";
 import { onEvent, onError } from "/static/js/play/toast.js";
+import { applyState } from "/static/js/ui/theme.js";
+import { panel, button, title, pill } from "/static/js/ui/kit.js";
+import { startArt } from "/static/js/art/boot.js";
+
+// composition root: one static plate per page (phones never boil)
+startArt({ layout: "flex" });
 
 const COOKIE = "sb_pt";
 const joinSection = document.getElementById("join");
@@ -33,20 +39,23 @@ function renderPlain(state) {
   const players = state.game.players;
   const kind = state.view.kind;
   const advanceLabel = { lobby: "Empezar", intro: "Entrar", unlocked: "Siguiente sala" }[kind];
-  fill(gameSection, 
-    h("h1", {}, state.game.name),
-    h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
-    h("p", { class: "muted" }, `${players.filter((p) => p.connected).length} de ${players.length} conectados`),
-    kind === "search" ? h("p", {}, state.game.riddle || "") : null,
-    kind === "ending" ? h("p", {}, "Fin de la partida.") : null,
-    advanceLabel ? h("button", { onclick: ctx.advance }, advanceLabel) : null,
-    h("div", {}, players.map((p) => h("div", { class: p.connected ? "" : "muted" }, p.name))));
+  fill(gameSection,
+    title(state.game.name, { cls: "phone-title" }),
+    panel([
+      h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
+      h("p", { class: "muted" }, `${players.filter((p) => p.connected).length} de ${players.length} conectados`),
+      kind === "search" ? h("p", { class: "riddle" }, state.game.riddle || "") : null,
+      kind === "ending" ? h("p", {}, "Fin de la partida.") : null,
+      advanceLabel ? button(advanceLabel, { onclick: ctx.advance }) : null,
+      h("div", { class: "players" }, players.map((p) => pill(p.name, { off: !p.connected }))),
+    ], { cls: "phone-panel" }));
 }
 
 const PLAIN = new Set(["lobby", "idle", "intro", "search", "unlocked", "ending"]);
 
 async function render(state) {
   latest = state;
+  applyState(state);
   const kind = state.view.kind;
   if (PLAIN.has(kind)) {
     leavePuzzle();
@@ -94,10 +103,12 @@ function connect() {
         connBadge.classList.add("hidden");
         leavePuzzle();
         fill(gameSection,
-          h("h1", {}, "Otra pantalla ha tomado el control"),
-          h("p", { class: "muted" }, "Tu sesion se ha abierto en otro sitio."),
-          h("button", { onclick: () => socket.start() }, "Recuperar control"));
-      } else if (code === 4010) { leavePuzzle(); fill(gameSection, h("p", {}, "La partida ha sido borrada.")); }
+          title("Otra pantalla ha tomado el control", { cls: "phone-title" }),
+          panel([
+            h("p", {}, "Tu sesión se ha abierto en otro sitio."),
+            button("Recuperar control", { onclick: () => socket.start() }),
+          ], { cls: "phone-panel" }));
+      } else if (code === 4010) { leavePuzzle(); fill(gameSection, panel(h("p", {}, "La partida ha sido borrada."), { cls: "phone-panel" })); }
     },
   });
   socket.start();
@@ -122,8 +133,8 @@ document.getElementById("join-form").addEventListener("submit", async (e) => {
       name: document.getElementById("name").value,
     }),
   });
-  if (res.status === 404) { errorEl.textContent = "Codigo no valido."; return; }
-  if (!res.ok) { errorEl.textContent = "Nombre no valido."; return; }
+  if (res.status === 404) { errorEl.textContent = "Código no válido."; return; }
+  if (!res.ok) { errorEl.textContent = "Nombre no válido."; return; }
   const data = await res.json();
   saveToken(data.token);
   connect();

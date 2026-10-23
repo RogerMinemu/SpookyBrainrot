@@ -1,13 +1,14 @@
 // Room 0 "Agarraos fuerte" - phone controller. Contract: mount(root, ctx), update(view, state), unmount().
 // ctx.send(action) sends a puzzle action to the server.
 import { h, clear, fill } from "/static/js/shared/dom.js";
+import { panel, title } from "/static/js/ui/kit.js";
 
 let state = null;
 
 export function mount(root, ctx) {
-  const button = h("button", { class: "hold-btn", type: "button" }, "MANTEN PULSADO");
-  const status = h("p", { class: "muted" }, "Mantened todos a la vez.");
-  fill(root, h("h1", {}, "Agarraos fuerte"), button, status);
+  const button = h("button", { class: "btn hold-btn", type: "button" }, h("span", { class: "hold-label" }, "MANTÉN PULSADO"));
+  const status = h("p", {}, "Mantened todos a la vez.");
+  fill(root, title("Agarraos fuerte", { cls: "phone-title" }), button, panel(status, { cls: "phone-panel hold-status" }));
 
   const s = { ctx, button, status, holding: false, cleanup: [] };
   state = s;

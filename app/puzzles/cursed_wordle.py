@@ -37,7 +37,7 @@ ALPHABET = string.ascii_uppercase
 def normalize(raw: object) -> str:
     """Strip accents, uppercase. Raises ActionRejected if not A-Z or empty."""
     if not isinstance(raw, str):
-        raise ActionRejected("bad_word", "la palabra no es valida")
+        raise ActionRejected("bad_word", "la palabra no es válida")
     decomposed = unicodedata.normalize("NFKD", raw.strip())
     word = "".join(ch for ch in decomposed if not unicodedata.combining(ch)).upper()
     if not word or not all(ch in ALPHABET for ch in word):

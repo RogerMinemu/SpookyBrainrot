@@ -20,7 +20,7 @@ ROOM_PLAN: List[RoomSpec] = [
 ]
 
 # Shown while the host has not written the riddle for an anchor yet (batch D).
-RIDDLE_PLACEHOLDER = "La pista aun no ha sido escrita... buscad el ancla por vuestra cuenta."
+RIDDLE_PLACEHOLDER = "La pista aún no ha sido escrita... buscad el ancla por vuestra cuenta."
 
 # 8 decoys, each with a brainrot cameo shown on jumpscare.
 CAMEOS: List[str] = [

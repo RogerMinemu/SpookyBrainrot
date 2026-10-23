@@ -1,18 +1,19 @@
 // Room 2 "La palabra maldita" - TV view. Contract: mount(root, ctx), update(view, state), unmount().
 // The TV never receives the answer nor any private letter.
 import { h, clear, fill } from "/static/js/shared/dom.js";
+import { panel, title } from "/static/js/ui/kit.js";
 import { renderGrid } from "/static/puzzles/cursed_wordle/grid.js";
 
 let els = null;
 
 export function mount(root) {
   els = {
-    title: h("h1", {}, "La palabra maldita"),
-    turn: h("p", { class: "muted" }),
+    title: title("La palabra maldita"),
+    turn: h("p", { class: "lead turn-line" }),
     grid: h("div", { class: "wgrid" }),
-    hint: h("p", { class: "muted" }, "Cada intento lo escribe un superviviente distinto. Algunas letras se emborronaran..."),
+    hint: h("p", { class: "muted" }, "Cada intento lo escribe un superviviente distinto. Algunas letras se emborronarán..."),
   };
-  fill(root, els.title, els.turn, els.grid, els.hint);
+  fill(root, els.title, panel([els.turn, els.grid, els.hint], { cls: "stack wordle-panel" }));
 }
 
 export function update(view) {

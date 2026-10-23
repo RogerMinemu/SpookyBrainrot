@@ -1,0 +1,41 @@
+/* Light touch for the host-only and server-rendered pages (house setup, QR sheet/key, QR scan results).
+   CSS paper + self-hosted fonts ONLY: no canvas, no scripts, no art engine. Ink-friendly on purpose:
+   the QR sheet keeps a pure white page and black QR codes (see body.sheet). */
+@font-face {
+  font-family: "SB Marker"; font-display: swap; font-weight: 400; font-style: normal;
+  src: url("/static/vendor/fonts/permanent-marker/permanent-marker-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "SB Fredoka"; font-display: swap; font-weight: 300 700; font-style: normal;
+  src: url("/static/vendor/fonts/fredoka/fredoka-latin.woff2") format("woff2");
+}
+:root {
+  --paper: #F3EBDC; --ink: #2B2233; --ink-soft: #5A4D66; --surface: #FFF5E2; --danger: #B8323A; --accent: #E8AA38;
+  --font-title: "SB Marker", "Marker Felt", "Comic Sans MS", cursive;
+  --font-body: "SB Fredoka", "Segoe UI", system-ui, sans-serif;
+  /* base.css tokens, so house.html (which also loads base.css) turns light too */
+  --bg: var(--paper); --fg: var(--ink); --muted: var(--ink-soft);
+}
+html, body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 18px; }
+body { background-image: radial-gradient(90% 60% at 15% 0%, rgba(255, 255, 255, .6), transparent 70%), radial-gradient(80% 50% at 95% 100%, rgba(232, 170, 56, .18), transparent 75%); }
+h1, h2 { font-family: var(--font-title); font-weight: 400; letter-spacing: .02em; line-height: 1.15; color: var(--ink); }
+.muted { color: var(--ink-soft); }
+a { color: var(--ink); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+a.btn, button { font-family: var(--font-title); font-size: 1.15rem; letter-spacing: .03em; color: var(--ink); background: var(--accent);
+  border: 3px solid var(--ink); border-radius: 16px; box-shadow: 3px 4px 0 var(--ink); text-decoration: none; min-height: 3rem; }
+a.btn { display: block; padding: .8rem; margin: .6rem 0; }
+button.ghost { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); }
+button.danger { background: var(--danger); color: #FFF5E2; }
+input, textarea { font-family: var(--font-body); font-size: 1.05rem; color: var(--ink); background: var(--surface);
+  border: 3px solid var(--ink); border-radius: 12px; padding: .55rem .8rem; min-height: 2.8rem; }
+body:not(.sheet) .card { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; padding: 1rem; margin: .8rem 0; box-shadow: 4px 5px 0 rgba(43, 34, 51, .35); }
+table { border-collapse: collapse; }
+td, th { border-bottom: 2px solid rgba(43, 34, 51, .25); }
+.missing { color: var(--danger); font-weight: 700; }
+.spoiler { background: var(--danger); color: #FFF5E2; border: 3px solid var(--ink); border-radius: 12px; }
+
+/* QR sheet: ONLY the label font changes. White paper, black ink, no tints (printer friendly). */
+body.sheet { background: #fff; background-image: none; color: #000; }
+body.sheet .label { font-family: var(--font-title); font-weight: 400; letter-spacing: .04em; color: #000; }
+html:has(body.sheet) { background: #fff; }
+@media print { html, body { background: #fff !important; background-image: none !important; } }

@@ -1,0 +1,37 @@
+{
+  "p5": {
+    "version": "2.3.3",
+    "path": "p5/2.3.3/p5.min.js",
+    "sha256": "3f8a0c739bd3c6350e239ff7187d38656ed2247e30a2b8084fd16a91e6e843ac",
+    "license": "LGPL-2.1",
+    "licenseFile": "p5/2.3.3/LICENSE.txt",
+    "source": "npm p5@2.3.3 lib/p5.min.js (unmodified)"
+  },
+  "p5.brush": {
+    "version": "2.2.3",
+    "path": "p5.brush/2.2.3/p5.brush.js",
+    "sha256": "41c25108c69a8eb1cca500d68f3603593e33b53e90a773fc024a6cff461fc31a",
+    "license": "MIT",
+    "licenseFile": "p5.brush/2.2.3/LICENSE.md",
+    "source": "npm p5.brush@2.2.3 dist/p5.brush.js (unmodified)"
+  },
+  "fonts": {
+    "permanent-marker": {
+      "path": "fonts/permanent-marker/permanent-marker-latin.woff2",
+      "sha256": "4884fec2c73aa52a2461073c1b87d1ceb80f400520391b43f97ca7d3c39eeb24",
+      "license": "Apache-2.0",
+      "licenseFile": "fonts/permanent-marker/LICENSE.txt"
+    },
+    "fredoka": {
+      "path": "fonts/fredoka/fredoka-latin.woff2",
+      "sha256": "99d6c78e043710d4f83ed90716779798b7b04eb690f73e0ad0e8f32d1f0e98c2",
+      "license": "OFL-1.1",
+      "licenseFile": "fonts/fredoka/OFL.txt"
+    }
+  },
+  "claude-animation-base": {
+    "license": "MIT",
+    "licenseFile": "claude-animation-base/LICENSE",
+    "note": "static/js/art/engine.js is an adapted port of src/core.js; nothing verbatim is vendored"
+  }
+}

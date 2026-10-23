@@ -8,12 +8,12 @@ const ERRORS = {
   bad_action: "Eso no se puede hacer ahora.",
   not_enough_players: "Faltan jugadores conectados.",
   wrong_phase: "Ahora no toca eso.",
-  no_puzzle: "No hay ningun reto activo.",
+  no_puzzle: "No hay ningún reto activo.",
 };
 
 export function toast(text, ms = 2600) {
   if (!text) return;
-  const el = h("div", { class: "toast" }, text);
+  const el = h("div", { class: "toast", role: "status" }, text);
   document.body.append(el);
   setTimeout(() => el.remove(), ms);
 }

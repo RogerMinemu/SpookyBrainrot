@@ -15,12 +15,12 @@ from app.core.engine import (
 )
 from app.core.qr import GameRef, QrEntry
 
+_PAPER = ('<link rel="icon" href="data:,"><link rel="stylesheet" href="/static/css/paper.css">')
+
+# colours, fonts and buttons come from paper.css (CSS paper, no scripts); only layout lives here
 _STYLE = """
-body{margin:0;background:#0b0a10;color:#e8e6f0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0}
 main{max-width:560px;margin:0 auto;padding:2rem 1rem;text-align:center}
-h1{letter-spacing:.04em}
-a.btn{display:block;background:#b455ff;color:#fff;border-radius:10px;padding:.8rem;margin:.5rem 0;text-decoration:none}
-.muted{color:#8a869c}
 """
 
 
@@ -28,13 +28,13 @@ def page(title: str, body: str, status_style: str = "", extra_head: str = "") ->
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        f"<title>{escape(title)}</title><style>{_STYLE}{status_style}</style>{extra_head}</head>"
+        f"<title>{escape(title)}</title>{_PAPER}<style>{_STYLE}{status_style}</style>{extra_head}</head>"
         f"<body><main>{body}</main></body></html>"
     )
 
 
 def unknown_token() -> str:
-    return page("QR desconocido", "<h1>Este codigo no lleva a ninguna parte</h1>"
+    return page("QR desconocido", "<h1>Este código no lleva a ninguna parte</h1>"
                 "<p class='muted'>Seguro que no es de esta casa.</p>")
 
 
@@ -47,26 +47,26 @@ def choose_game(games: Sequence[GameRef], token: str) -> str:
     links = "".join(
         f'<a class="btn" href="/k/{escape(token)}?g={escape(g.id)}">{escape(g.name)}</a>' for g in games
     )
-    return page("Elige partida", f"<h1>Que partida es la vuestra?</h1>{links}")
+    return page("Elige partida", f"<h1>¿Qué partida es la vuestra?</h1>{links}")
 
 
 def scan_page(result: Optional[str], cameo: Optional[str] = None) -> str:
     if result in (SCAN_UNLOCKED, SCAN_FINISHED):
         msg = ("<h1>Ancla encontrada</h1><p>La puerta cede...</p>" if result == SCAN_UNLOCKED
-               else "<h1>Ancla encontrada</h1><p>Es la ultima. Mirad la tele.</p>")
+               else "<h1>Ancla encontrada</h1><p>Es la última. Mirad la tele.</p>")
         return page("Ancla", msg)
     if result == SCAN_SLEEPING:
-        return page("Ancla dormida", "<h1>Esta ancla aun duerme...</h1>"
-                    "<p class='muted'>Todavia no es su momento. Volved cuando la tele os lo pida.</p>")
+        return page("Ancla dormida", "<h1>Esta ancla aún duerme...</h1>"
+                    "<p class='muted'>Todavía no es su momento. Volved cuando la tele os lo pida.</p>")
     if result == SCAN_ALREADY:
-        return page("Ancla estable", "<h1>Esta ancla ya esta estable</h1><p class='muted'>Nada que hacer aqui.</p>")
+        return page("Ancla estable", "<h1>Esta ancla ya está estable</h1><p class='muted'>Nada que hacer aquí.</p>")
     if result == SCAN_JUMPSCARE:
         name = escape(cameo or "???")
         return page("Trampa", f"<h1>Has despertado a {name}</h1><p>Mirad la tele... y rezad.</p>",
-                    status_style="body{background:#2a0510}")
+                    status_style="body{background:#F1CFCB}")
     if result == SCAN_LAUGH:
         return page("Ja", "<h1>Ja, ja, ja...</h1><p class='muted'>Otra vez cayendo en lo mismo.</p>")
-    return page("Hmm", "<h1>Algo raro pasa con este codigo</h1>")
+    return page("Hmm", "<h1>Algo raro pasa con este código</h1>")
 
 
 # --- admin ---------------------------------------------------------------------
@@ -93,17 +93,16 @@ def qr_sheet(cards: Sequence[Tuple[str, str]], missing_riddles: int) -> str:
                    for label, svg in cards)
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hoja de QR</title>'
-        f"<style>{_SHEET_STYLE}</style></head><body>{notice}{body}</body></html>"
+        f'{_PAPER}<style>{_SHEET_STYLE}</style></head><body class="sheet">{notice}{body}</body></html>'
     )
 
 
 _KEY_STYLE = """
 body{text-align:left}
 main{max-width:900px}
-.spoiler{background:#7a1a2a;color:#fff;padding:1rem;border-radius:10px;font-weight:700;text-align:center}
+.spoiler{padding:1rem;font-weight:700;text-align:center}
 table{width:100%;border-collapse:collapse;margin-top:1rem}
-td,th{border-bottom:1px solid #2c2938;padding:.5rem;text-align:left;vertical-align:top}
-.missing{color:#ff6b6b;font-weight:700}
+td,th{padding:.5rem;text-align:left;vertical-align:top}
 """
 
 
@@ -120,13 +119,13 @@ def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict]) -> str:
             place_html = escape(place) if place else '<span class="muted">-</span>'
         else:
             cameo = CAMEOS[e.idx - 1] if 1 <= e.idx <= len(CAMEOS) else "?"
-            role = f"Senuelo {e.idx}: {cameo}"
+            role = f"Señuelo {e.idx}: {cameo}"
             riddle_html = '<span class="muted">-</span>'
             place_html = '<span class="muted">-</span>'
         out.append(f"<tr><td><strong>{escape(label)}</strong></td><td>{escape(role)}</td>"
                    f"<td>{place_html}</td><td>{riddle_html}</td></tr>")
     body = (
-        '<div class="spoiler">SPOILER - solo para el anfitrion. No lo enseñeis a los jugadores.</div>'
+        '<div class="spoiler">SPOILER - solo para el anfitrión. No se lo enseñéis a los jugadores.</div>'
         "<h1>Clave de QR</h1><table><tr><th>Etiqueta</th><th>Rol</th><th>Escondite</th><th>Pista</th></tr>"
         + "".join(out) + "</table>"
     )
