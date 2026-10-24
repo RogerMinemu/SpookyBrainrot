@@ -1,0 +1,41 @@
+/* Host debug controls (TV drawer + /admin/debug). Paper look from paper.css; every token has a fallback
+   so the drawer also works on the TV page, which does not load paper.css. Large touch targets. */
+.dbg-panel { --d-ink: var(--ink, #2B2233); --d-soft: var(--ink-soft, #5A4D66); --d-surface: var(--surface, #FFF5E2);
+  --d-accent: var(--accent, #E8AA38); --d-danger: var(--danger, #B8323A);
+  font-family: var(--font-body, "SB Fredoka", "Segoe UI", system-ui, sans-serif); color: var(--d-ink); font-size: 18px; }
+.dbg-panel h3 { margin: 0 0 .4rem; font-family: var(--font-title, "SB Marker", cursive); font-weight: 400; font-size: 1.15rem; }
+.dbg-now { margin: 0 0 .8rem; padding: .6rem .8rem; background: var(--d-surface); border: 3px solid var(--d-ink);
+  border-radius: 12px; font-weight: 600; }
+.dbg-sec { margin: 0 0 1rem; }
+.dbg-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .5rem; align-items: center; }
+.dbg-row > select { flex: 1 1 9rem; min-width: 0; }
+.dbg-panel select, .dbg-panel input[type=range] { font: inherit; color: var(--d-ink); }
+.dbg-panel select { background: var(--d-surface); border: 3px solid var(--d-ink); border-radius: 12px; padding: .5rem .7rem; min-height: 3rem; }
+.dbg-panel input[type=range] { flex: 1 1 10rem; min-height: 3rem; accent-color: var(--d-danger); }
+.dbg-rot-out { min-width: 3.5rem; text-align: right; font-weight: 700; }
+.dbg-btn { font-family: var(--font-title, "SB Marker", cursive); font-size: 1.1rem; letter-spacing: .03em; color: var(--d-ink);
+  background: var(--d-accent); border: 3px solid var(--d-ink); border-radius: 16px; box-shadow: 3px 4px 0 var(--d-ink);
+  min-height: 3rem; padding: .4rem 1rem; cursor: pointer; flex: 1 1 auto; }
+.dbg-btn:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--d-ink); }
+.dbg-btn.danger { background: var(--d-danger); color: #FFF5E2; }
+.dbg-btn.go { background: #9CCB8A; }
+.dbg-preset { flex: 1 1 3.2rem; padding: .4rem .3rem; background: var(--d-surface); }
+.dbg-msg { min-height: 1.4rem; margin: .4rem 0 0; color: var(--d-soft); }
+.dbg-msg.bad { color: var(--d-danger); font-weight: 700; }
+
+/* TV drawer: fixed on top of everything, never in the layout flow */
+.dbg-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(26rem, 92vw); z-index: 9000; overflow-y: auto;
+  padding: 1rem; background: #F3EBDC; border-left: 4px solid #2B2233; box-shadow: -6px 0 0 rgba(43, 34, 51, .35); }
+.dbg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; color: #2B2233;
+  font-family: "SB Marker", cursive; font-size: 1.3rem; }
+.dbg-close { flex: 0 0 auto; min-width: 3rem; padding: 0 .6rem; }
+.dbg-badge { position: fixed; top: .6rem; left: .6rem; z-index: 9001; padding: .15rem .7rem; border-radius: 999px;
+  background: #B8323A; color: #FFF5E2; border: 2px solid #2B2233; font: 700 .9rem "SB Fredoka", system-ui, sans-serif;
+  letter-spacing: .08em; text-transform: uppercase; pointer-events: none; }
+
+/* /admin/debug page */
+.dbg-games { display: grid; gap: .6rem; margin: 1rem 0; }
+.dbg-game { text-align: left; display: block; width: 100%; }
+.dbg-game[aria-pressed=true] { background: #9CCB8A; }
+.dbg-game small { display: block; font-family: var(--font-body, system-ui, sans-serif); font-size: .85rem; color: var(--d-soft, #5A4D66); letter-spacing: 0; }
+body.dbg-page main { max-width: 640px; margin: 0 auto; padding: 1.2rem 1rem 3rem; }

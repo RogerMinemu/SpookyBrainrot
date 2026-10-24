@@ -71,6 +71,24 @@ Con `ADMIN_KEY` definida, abre una vez `/admin/house?key=TU_CLAVE`: se guarda la
 `sb_admin` y el resto de páginas de administración funcionan sin repetir la clave. Sin clave,
 la respuesta es 401; con clave incorrecta, 403.
 
+## Modo debug (anfitrión)
+
+Para probar el juego (y la interfaz acuarela) sin jugar todas las salas:
+
+- **En la tele**: pulsa `Shift+D` para abrir o cerrar el cajón de debug. Está oculto por defecto y los jugadores
+  no lo ven; mientras está abierto aparece una etiqueta roja "debug".
+- **Desde tu móvil**: abre `/admin/debug` (enlazado desde la portada y desde las páginas de administración), elige
+  la partida (en memoria o guardada) y usa los mismos controles sin enseñar nada en la tele.
+- **Controles**: saltar a cualquier sala (lobby, Sala 0, Sala 2, final) y fase (introducción, puzzle, búsqueda del
+  ancla, sala desbloqueada) con "Saltar" (el puzzle se reinicia con su `start`); "Completar puzzle"; deslizador de
+  Brainrot con atajos 0/20/40/60/80/100 (se aplica al momento); eventos de prueba (jumpscare con el brainrot que
+  elijas, salpicón, ronda fallida, ancla encontrada); "Reiniciar al lobby" (borra el progreso y conserva a los
+  jugadores).
+- **API**: `GET /admin/api/games`, `GET|POST /admin/api/games/<id>/debug[/jump|complete|brainrot|event|reset]`.
+- **Seguridad**: todo cuelga de `/admin/*`, así que lo protege `ADMIN_KEY` (401 sin clave, 403 con clave incorrecta;
+  abre `/admin/debug?key=TU_CLAVE` una vez y queda la cookie). Con `ADMIN_KEY` vacía todo está abierto: está bien en
+  casa, pero defínela si lo publicas en internet. En la tele, el cajón usa esa misma cookie.
+
 ## Desplegar en Pterodactyl
 
 1. Crea el servidor con un egg/yolk de **Python >= 3.10** (comprueba la versión exacta en tu panel).

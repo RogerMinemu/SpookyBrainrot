@@ -18,7 +18,7 @@ from app.db.repos import QrRepo
 from app.puzzles import build_registry
 from app.runtime.manager import GameManager
 from app.runtime.runtime import run_ticker
-from app.web import routes_admin, routes_api, routes_pages
+from app.web import routes_admin, routes_api, routes_debug, routes_pages
 from app.web.routes_admin import install_admin_guard
 from app.web.hub import Hub
 from app.web.ws import router as ws_router
@@ -100,6 +100,7 @@ def create_app(
     install_admin_guard(app)
 
     app.include_router(routes_admin.router)
+    app.include_router(routes_debug.router)
     app.include_router(routes_api.router)
     app.include_router(routes_pages.router)
     app.include_router(ws_router)

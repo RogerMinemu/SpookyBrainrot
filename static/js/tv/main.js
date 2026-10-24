@@ -48,8 +48,37 @@ function clearTakeover() {
   screen.classList.remove("takeover");
 }
 
+// Host debug drawer: hidden by default, Shift+D toggles it. The module is only fetched on first use,
+// so a normal game never loads it.
+let debugDrawer = null;
+let debugLoading = false;
+async function toggleDebug() {
+  if (!debugDrawer) {
+    if (debugLoading) return;
+    debugLoading = true;
+    try {
+      const mod = await import("/static/js/admin/debug-panel.js");
+      debugDrawer = mod.installDrawer({ gameId, getState: () => latest });
+    } catch (e) {
+      console.error("debug drawer failed", e);
+      return;
+    } finally {
+      debugLoading = false;
+    }
+  }
+  debugDrawer.toggle();
+}
+document.addEventListener("keydown", (e) => {
+  if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.key.toLowerCase() !== "d") return;
+  const t = e.target;
+  if (t && (t.tagName === "TEXTAREA" || (t.tagName === "INPUT" && t.type !== "range"))) return;
+  e.preventDefault();
+  toggleDebug();
+});
+
 async function render(state) {
   latest = state;
+  if (debugDrawer) debugDrawer.onState(state);
   clearTakeover();
   applyState(state);
   updateMeter(state);

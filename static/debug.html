@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%80%3C/text%3E%3C/svg%3E">
+  <title>SpookyBrainrot - Modo debug</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/paper.css">
+  <link rel="stylesheet" href="/static/css/debug.css">
+</head>
+<body class="dbg-page">
+  <main>
+    <h1>Modo debug</h1>
+    <p class="muted">Salta de sala o de fase, cambia el Brainrot y lanza eventos de prueba desde aquí, sin tocar la tele.
+      Esta página es solo para el anfitrión.</p>
+    <p><a href="/admin/house">Casa</a> &middot;
+      <a href="/admin/qr-sheet">Hoja de QR</a> &middot;
+      <a href="/admin/qr-key">Clave de QR (spoiler)</a> &middot;
+      <a href="/">Inicio</a></p>
+    <h2>Partida</h2>
+    <section id="games" class="dbg-games"></section>
+    <section id="control"></section>
+  </main>
+  <script type="module" src="/static/js/admin/debug.js"></script>
+</body>
+</html>

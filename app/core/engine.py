@@ -75,7 +75,43 @@ class Tick:
     pass
 
 
+@dataclass
+class DebugJump:
+    """Host debug: move to "lobby", "ending" or a room_no, optionally at a given phase."""
+
+    room: Any
+    phase: Optional[str] = None
+
+
+@dataclass
+class DebugComplete:
+    """Host debug: solve the running puzzle (as if the players had won it)."""
+
+
+@dataclass
+class DebugSetBrainrot:
+    value: Any
+
+
+@dataclass
+class DebugEvent:
+    """Host debug: fire a test event through the normal event channel (no state change)."""
+
+    name: str
+    cameo: Optional[str] = None
+
+
+@dataclass
+class DebugReset:
+    """Host debug: back to a pristine lobby, keeping the players."""
+
+
 Command = Any
+
+DEBUG_ROOM_LOBBY = "lobby"
+DEBUG_ROOM_ENDING = "ending"
+DEBUG_EVENTS = ("jumpscare", "splash", "round_failed", "anchor_unlocked")
+_ALL_PHASES = (PHASE_INTRO, PHASE_PUZZLE, PHASE_SEARCH, PHASE_UNLOCKED)
 
 
 @dataclass
@@ -127,6 +163,16 @@ class Engine:
             return self._scan(game, cmd)
         if isinstance(cmd, Tick):
             return self._tick(game)
+        if isinstance(cmd, DebugJump):
+            return self._debug_jump(game, cmd)
+        if isinstance(cmd, DebugComplete):
+            return self._debug_complete(game)
+        if isinstance(cmd, DebugSetBrainrot):
+            return self._debug_set_brainrot(game, cmd)
+        if isinstance(cmd, DebugEvent):
+            return self._debug_event(game, cmd)
+        if isinstance(cmd, DebugReset):
+            return self._debug_reset(game)
         return _reject("unknown_command", type(cmd).__name__)
 
     # --- play clock (R3.4) -------------------------------------------------------------
@@ -246,6 +292,105 @@ class Engine:
         if puzzle is not None:
             self._apply_effects(game, puzzle.tick(self._ctx(game), game.puzzle_state), out)
         return out
+
+    # --- host debug commands (the engine stays the single source of truth) -------------------
+    def debug_rooms(self) -> List[dict]:
+        """Jump targets: [{key, room_no, title, phases}]. `key` is what DebugJump.room accepts."""
+        last = len(self.plan) - 1
+        rooms: List[dict] = [{"key": DEBUG_ROOM_LOBBY, "room_no": None, "title": "Lobby", "phases": []}]
+        for i, spec in enumerate(self.plan):
+            phases = [PHASE_INTRO, PHASE_PUZZLE]
+            if spec.anchor is not None:
+                phases.append(PHASE_SEARCH)
+            if i < last:
+                phases.append(PHASE_UNLOCKED)  # the last room ends via the ending, not "unlocked"
+            rooms.append({"key": spec.room_no, "room_no": spec.room_no, "title": spec.title, "phases": phases})
+        rooms.append({"key": DEBUG_ROOM_ENDING, "room_no": None, "title": "Final", "phases": []})
+        return rooms
+
+    def _clear_puzzle(self, game: Game) -> None:
+        game.puzzle_id = None
+        game.puzzle_state = None
+
+    def _debug_jump(self, game: Game, cmd: DebugJump) -> Outcome:
+        room, phase = cmd.room, cmd.phase
+        if room == DEBUG_ROOM_LOBBY and not isinstance(room, bool):
+            if phase not in (None, PHASE_INTRO):
+                return _reject("unknown_phase", "el lobby no tiene fases")
+            self._clear_puzzle(game)
+            game.status, game.room_idx, game.phase, game.ending = STATUS_LOBBY, 0, PHASE_INTRO, None
+            return Outcome(changed=True)
+        if room == DEBUG_ROOM_ENDING and not isinstance(room, bool):
+            if phase is not None:
+                return _reject("unknown_phase", "el final no tiene fases")
+            self._clear_puzzle(game)
+            game.status, game.room_idx, game.phase = STATUS_FINISHED, len(self.plan) - 1, PHASE_UNLOCKED
+            game.ending = {"band": brainrot.band(game.brainrot), "brainrot": game.brainrot, "clock_ms": game.clock_ms}
+            return Outcome(changed=True)
+
+        idx = next(
+            (i for i, s in enumerate(self.plan) if not isinstance(room, bool) and s.room_no == room), None
+        )
+        if idx is None:
+            return _reject("unknown_room", f"sala desconocida: {room!r}")
+        target = phase if phase is not None else PHASE_INTRO
+        if target not in _ALL_PHASES:
+            return _reject("unknown_phase", f"fase desconocida: {target!r}")
+        spec = self.plan[idx]
+        allowed = next(r["phases"] for r in self.debug_rooms() if r["key"] == spec.room_no)
+        if target not in allowed:
+            return _reject("unknown_phase", f"la sala {spec.room_no} no tiene la fase {target}")
+        puzzle = self.puzzles.get(spec.puzzle_id) if target == PHASE_PUZZLE else None
+        if target == PHASE_PUZZLE and puzzle is None:
+            return _reject("puzzle_unavailable", spec.puzzle_id)
+
+        self._clear_puzzle(game)
+        game.status, game.room_idx, game.phase, game.ending = STATUS_RUNNING, idx, target, None
+        if puzzle is not None:
+            pids = [p.id for p in game.connected_players()] or [p.id for p in game.players]
+            game.puzzle_id = spec.puzzle_id
+            game.puzzle_state = puzzle.start(self._ctx(game), pids)
+        return Outcome(changed=True)
+
+    def _debug_complete(self, game: Game) -> Outcome:
+        if self._active_puzzle(game) is None:
+            return _reject("no_puzzle", "no hay ningún puzzle activo")
+        out = Outcome(changed=True)
+        self._complete(game, out)
+        return out
+
+    def _debug_set_brainrot(self, game: Game, cmd: DebugSetBrainrot) -> Outcome:
+        v = cmd.value
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float("inf"), float("-inf")):
+            return _reject("bad_value", "el brainrot debe ser un número entre 0 y 100")
+        game.brainrot = brainrot.clamp(float(v))
+        game.brainrot_log.append({"amount": 0, "reason": "debug", "total": game.brainrot})
+        del game.brainrot_log[:-BRAINROT_LOG_MAX]
+        return Outcome(changed=True)
+
+    def _debug_event(self, game: Game, cmd: DebugEvent) -> Outcome:
+        if cmd.name not in DEBUG_EVENTS:
+            return _reject("unknown_event", f"evento desconocido: {cmd.name!r}")
+        out = Outcome()
+        if cmd.name == "jumpscare":
+            cameo = cmd.cameo
+            if cameo is not None and cameo not in CAMEOS:
+                return _reject("unknown_cameo", f"brainrot desconocido: {cameo!r}")
+            idx = CAMEOS.index(cameo) + 1 if cameo else 0
+            out.events.append(("jumpscare", {"decoy": idx, "cameo": cameo or "???"}, "tv"))
+        elif cmd.name == "splash":
+            out.events.append(("splash", {"row": 0, "col": 0}, "all"))
+        elif cmd.name == "round_failed":
+            out.events.append(("round_failed", {"penalty": brainrot.ROUND_FAIL_PENALTY}, "all"))
+        else:
+            out.events.append(("anchor_unlocked", {"level": game.room.anchor or 1}, "all"))
+        return out
+
+    def _debug_reset(self, game: Game) -> Outcome:
+        self._clear_puzzle(game)
+        game.status, game.room_idx, game.phase, game.ending = STATUS_LOBBY, 0, PHASE_INTRO, None
+        game.brainrot, game.brainrot_log, game.decoys_hit, game.clock_ms = 0.0, [], [], 0
+        return Outcome(changed=True)
 
     # --- QR scans (anchors; decoys arrive in batch D) ---------------------------------------------------------
     def _passed_anchors(self, game: Game) -> List[int]:

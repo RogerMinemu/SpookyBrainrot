@@ -126,6 +126,7 @@ def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict]) -> str:
                    f"<td>{place_html}</td><td>{riddle_html}</td></tr>")
     body = (
         '<div class="spoiler">SPOILER - solo para el anfitrión. No se lo enseñéis a los jugadores.</div>'
+        '<p><a href="/admin/house">Casa</a> &middot; <a href="/admin/debug">Modo debug</a></p>'
         "<h1>Clave de QR</h1><table><tr><th>Etiqueta</th><th>Rol</th><th>Escondite</th><th>Pista</th></tr>"
         + "".join(out) + "</table>"
     )
