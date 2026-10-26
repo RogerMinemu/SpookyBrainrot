@@ -34,33 +34,42 @@ export function closedCurve(E, P, n = 5) {
   return C.slice(n, n * (k + 1));
 }
 
+/** Minemi-style outlines are chunky: the default ink weight of every pen shape. */
+export const INK_SW = 1.5;
+
 /**
  * A pen for one atlas cell. Local coordinates are cell pixels; `mirror` flips x about the cell centre (so a
  * right arm is the left arm reversed). `key` seeds the boil jitter: same key + same variant = same wobble.
+ * `xf` = { ox, oy, k, tx?, ty? } re-proportions a whole group of shapes by coordinates: the anchor (ox, oy) lands on
+ * (tx, ty) and everything scales by k around it (a big chibi head, a small body). Pure maths on the points: the
+ * brush is never zoomed (p5.brush drops strokes under a scale transform). Ink weights are not scaled.
  */
-export function makePen(E, key, cell, mirror = false) {
+export function makePen(E, key, cell, mirror = false, xf = null) {
   const [x0, y0, cw] = cell;
-  const X = (x) => x0 + (mirror ? cw - x : x), Y = (y) => y0 + y;
+  const k = xf ? xf.k : 1;
+  const mx = (x) => (xf ? (xf.tx ?? xf.ox) + (x - xf.ox) * k : x);
+  const my = (y) => (xf ? (xf.ty ?? xf.oy) + (y - xf.oy) * k : y);
+  const X = (x) => x0 + (mirror ? cw - mx(x) : mx(x)), Y = (y) => y0 + my(y);
   const pt = (p) => [X(p[0]), Y(p[1])];
   let n = 0;
   const seed = () => E.boilSeed(`${key}|${n++}`);
   const wob = (pts, j) => { seed(); return j ? pts.map(([x, y]) => [x + E.jit(j), y + E.jit(j)]) : pts; };
   const pen = {
-    X, Y, cell,
+    X, Y, cell, k,
     /** Closed smooth shape through control points. */
     sh(ctrl, o = {}, j = 2.4) {
-      drawShape(E, closedCurve(E, wob(ctrl.map(pt), j)), { ink: INK, sw: 1.1, ...o });
+      drawShape(E, closedCurve(E, wob(ctrl.map(pt), j)), { ink: INK, sw: INK_SW, ...o });
     },
     /** Ellipse (axis aligned; rot is mirrored with the pen). */
     ell(cx, cy, rx, ry, o = {}, j = 2.2, rot = 0) {
       seed();
-      drawShape(E, E.ell(X(cx), Y(cy), rx, ry, 24, j, mirror ? -rot : rot), { ink: INK, sw: 1.1, ...o });
+      drawShape(E, E.ell(X(cx), Y(cy), rx * k, ry * k, 24, j, mirror ? -rot : rot), { ink: INK, sw: INK_SW, ...o });
     },
     /** Tapered ribbon along a path (width w0 -> w1). */
     rib(path, w0, w1, o = {}, j = 1.6) {
       // ribbons are long and thin: a watercolour fill leaves fringes there, so they are a flat wash + ink
-      const P = wob(path.map(pt), j), a = { ink: INK, sw: 1, ...o };
-      E.paint(E.ribbon(P, w0, w1), { wash: a.wash, washOp: a.washOp, ink: a.ink, sw: a.sw });
+      const P = wob(path.map(pt), j), a = { ink: INK, sw: 1.3, ...o };
+      E.paint(E.ribbon(P, w0 * k, w1 * k), { wash: a.wash, washOp: a.washOp, ink: a.ink, sw: a.sw });
     },
     /** Ink line through points (smoothed). */
     ln(pts, sw = .8, col = INK, br = "ink", j = 1.4) {
@@ -78,14 +87,45 @@ export function makePen(E, key, cell, mirror = false) {
      */
     shine(cx, cy, rx, ry, base, rot = 0) {
       seed();
-      E.paint(E.ell(X(cx), Y(cy), rx, ry, 14, 1, mirror ? -rot : rot), { wash: light(base, .3), washOp: 255, ink: null });
+      E.paint(E.ell(X(cx), Y(cy), rx * k, ry * k, 14, 1, mirror ? -rot : rot), { wash: light(base, .3), washOp: 255, ink: null });
     },
     shade(cx, cy, rx, ry, base, rot = 0) {
       seed();
-      E.paint(E.ell(X(cx), Y(cy), rx, ry, 14, 1.5, mirror ? -rot : rot), { wash: dark(base, .22), washOp: 255, ink: null });
+      E.paint(E.ell(X(cx), Y(cy), rx * k, ry * k, 14, 1.5, mirror ? -rot : rot), { wash: dark(base, .22), washOp: 255, ink: null });
     },
   };
   return pen;
+}
+
+export const BLUSH = "#F29AAE";
+
+/** Soft rosy cheek (the Minemi blush): a translucent blot over painted skin, never on bare plate. */
+export function blush(pen, cx, cy, rx = 24, ry = 13) {
+  pen.ell(cx, cy, rx, ry, { wash: BLUSH, washOp: 165, ink: null }, 1.2);
+  pen.ell(cx - rx * .25, cy - ry * .15, rx * .45, ry * .4, { wash: light(BLUSH, .35), washOp: 150, ink: null }, .6);
+}
+
+/**
+ * A big shiny Minemi eye centred at (cx, cy): white, a large dark iris that fills it, a lighter glow in the lower
+ * half, a big highlight up-left and a small one down-right, and a thick lash line. glance = pupil shift in x.
+ * angry draws a heavy slanted lid over it.
+ */
+export function minemiEye(pen, cx, cy, rx, ry, iris, { glance = 0, angry = false, lid = "#7A5233", side = 1, lash = true } = {}) {
+  pen.ell(cx, cy, rx, ry, { wash: "#FFFDF4", washOp: 255, ink: INK, sw: 1.6 }, 1.2);
+  const ix = cx + glance, irx = rx * .8, iry = ry * .86;
+  pen.ell(ix, cy + ry * .06, irx, iry, { wash: iris, washOp: 255, ink: null }, .8);
+  pen.ell(ix, cy + ry * .42, irx * .7, iry * .38, { wash: light(iris, .38), washOp: 255, ink: null }, .6);
+  pen.ell(ix, cy + ry * .04, irx * .44, iry * .5, { wash: dark(iris, .55), washOp: 255, ink: null }, .4);
+  pen.ell(ix - irx * .38, cy - iry * .34, irx * .3, iry * .26, { wash: "#FFFFFF", washOp: 255, ink: null }, .3);
+  pen.ell(ix + irx * .36, cy + iry * .36, irx * .13, iry * .12, { wash: "#FFFFFF", washOp: 255, ink: null }, .2);
+  if (angry) {
+    const inner = cx - side * rx, outer = cx + side * rx, top = cy - ry - 6;
+    pen.poly([[inner - side * 4, cy - ry * .1], [outer + side * 5, cy - ry * .75], [outer + side * 5, top], [inner - side * 4, top]], { wash: lid, washOp: 255, ink: null }, .5);
+    pen.ln([[inner - side * 3, cy - ry * .1], [cx, cy - ry * .55], [outer + side * 3, cy - ry * .8]], 2.2, INK, "ink", .5);
+  } else if (lash) {
+    pen.ln([[cx - rx * 1.04, cy - ry * .05], [cx - rx * .55, cy - ry * .86], [cx + rx * .55, cy - ry * .9], [cx + rx * 1.06, cy - ry * .2]], 2.3, INK, "ink", .5);
+    pen.ln([[cx + side * rx * 1.02, cy - ry * .2], [cx + side * (rx * 1.02 + 9), cy - ry * .5]], 1.4, INK, "ink", .4);
+  }
 }
 
 /**
@@ -98,9 +138,16 @@ export function eyePair(E, key, cell, kind, look) {
   for (const side of [-1, 1]) {
     const cx = 144 + side * sep;
     if (kind === "closed") {
-      // sleepy upturned arc with two lashes
-      pen.ln([[cx - rx, cy + 2], [cx - rx * .4, cy + ry * .5], [cx + rx * .4, cy + ry * .5], [cx + rx, cy + 2]], 1.5, INK, "ink", .8);
-      pen.ln([[cx + side * rx, cy + 2], [cx + side * (rx + 10), cy - 6]], .8, INK, "inkfine", .5);
+      // happy closed eye (Minemi "^^"): a thick smiling arc with a lash flick
+      pen.ln([[cx - rx, cy + 2], [cx - rx * .4, cy + ry * .5], [cx + rx * .4, cy + ry * .5], [cx + rx, cy + 2]], 2.3, INK, "ink", .6);
+      pen.ln([[cx + side * rx, cy + 2], [cx + side * (rx + 11), cy - 7]], 1.3, INK, "ink", .4);
+      continue;
+    }
+    if ((kind === "open" || kind === "angry") && iris) {
+      // the big shiny Minemi eye (kept inside the 288x96 cell: lashes need ~6 px above the white)
+      const er = Math.min(rx, 144 - sep - 16), eh = Math.min(ry, 33);
+      if (brow && kind === "open") { const by = Math.max(14, cy - eh - 9); pen.ln([[cx - er, by + 2], [cx, by - 3], [cx + er, by + 3]], 1.6, brow, "ink", .5); }
+      minemiEye(pen, cx, cy + 2, er, eh, iris, { glance: side * -2, angry: kind === "angry", lid, side });
       continue;
     }
     const wide = kind === "wide";

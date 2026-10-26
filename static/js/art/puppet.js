@@ -216,7 +216,7 @@ export function poseOps(rig, state = {}, t = 0) {
       r += reduced ? PROP_REST_DEG : emote === "scary" ? 38 : emote === "angry" ? 16 : emote === "happy" ? 22 : PROP_REST_DEG;
     }
     angle.set(p.part, parentAngle + r);
-    w = mul(parent, trs(p.at[0], p.at[1], r));
+    w = mul(parent, trs(p.at[0], p.at[1], r, p.scale || 1)); // scale: chibi proportions (roster CHIBI_*)
     world.set(p.part, w);
     return w;
   };

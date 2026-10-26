@@ -60,41 +60,46 @@ export function allCells(layout) {
   return out;
 }
 
-const P = (part, parent, at, pivot, swing = 0, keep = 0) => ({ part, parent, at, pivot, swing, keep });
+const P = (part, parent, at, pivot, swing = 0, keep = 0, scale = 1) => ({ part, parent, at, pivot, swing, keep, scale });
+
+// Chibi proportions (the Minemi look): the body and everything hanging from it at CHIBI_BODY, the head (and its
+// eyes, mouth and hat) at CHIBI_HEAD in world size. Scales multiply down the tree, hence the head's local value.
+export const CHIBI_BODY = 0.8, CHIBI_HEAD = 1.36;
+const HEAD_LOCAL = CHIBI_HEAD / CHIBI_BODY;
 
 // `at` = where the part's pivot sits relative to its parent's pivot; `pivot` = pivot inside the part's own
 // cell (px from the cell corner). Array order is the draw order (back to front).
 // Shoulders swing in opposite phases (swing +1 / -1); bigger |swing| = bigger arc. keep = share of the parent's
-// rotation the part cancels (a held bat stays upright while the arm moves).
+// rotation the part cancels (a held bat stays upright while the arm moves). scale = size relative to the parent.
 const PATAPIM_PARTS = [
   P("extra", "body", [0, 100], [128, 96]),
-  P("body", null, [0, 0], [224, 628]),
+  P("body", null, [0, 0], [224, 628], 0, 0, CHIBI_BODY),
   P("legL", "body", [-86, -6], [112, 24]),
   P("legR", "body", [86, -6], [112, 24]),
   P("armL", "body", [-118, -440], [84, 34], 1),
-  P("head", "body", [0, -520], [160, 288]),
+  P("head", "body", [0, -500], [160, 288], 0, 0, HEAD_LOCAL),
   P("eyes", "head", [0, -150], [144, 48]),
   P("mouth", "head", [0, -36], [96, 96]),
   P("prop", "head", [0, -224], [128, 560]), // felt hat
   P("armR", "body", [118, -440], [84, 34], -1),
 ];
 const TRALALERO_PARTS = [
-  P("body", null, [0, 0], [224, 628]),
+  P("body", null, [0, 0], [224, 628], 0, 0, CHIBI_BODY),
   P("legL", "body", [-112, -6], [112, 24]),
   P("prop", "body", [0, -8], [128, 40]), // the third leg, in the middle
   P("legR", "body", [112, -6], [112, 24]),
   P("armL", "body", [-112, -380], [80, 36], 1.2),
-  P("head", "body", [0, -500], [160, 288]),
+  P("head", "body", [0, -470], [160, 288], 0, 0, HEAD_LOCAL),
   P("eyes", "head", [0, -142], [144, 48]),
   P("mouth", "head", [0, -48], [96, 96]),
   P("armR", "body", [112, -380], [80, 36], -1.2),
 ];
 const SAHUR_PARTS = [
-  P("body", null, [0, 0], [224, 628]),
+  P("body", null, [0, 0], [224, 628], 0, 0, CHIBI_BODY),
   P("legL", "body", [-70, -6], [112, 24]),
   P("legR", "body", [70, -6], [112, 24]),
   P("armL", "body", [-128, -420], [80, 36], 1),
-  P("head", "body", [0, -540], [160, 288]),
+  P("head", "body", [0, -520], [160, 288], 0, 0, HEAD_LOCAL),
   P("eyes", "head", [0, -122], [144, 48]),
   P("mouth", "head", [0, -44], [96, 96]),
   P("armR", "body", [128, -420], [80, 36], -1.4),
@@ -111,14 +116,14 @@ const CAMEO_EMOTES = ["idle", "scary"];
 export const ROSTER = [
   {
     id: "sahur", name: "Tung Tung Tung Sahur", kind: "rig", room: 7, voice: "sahur", seed: 0.83,
-    box: { w: 420, h: 920 }, foot: 150,
+    box: { w: 420, h: 920 }, foot: Math.round(150 * CHIBI_BODY), // the legs shrink with the body
     palette: { wood: "#C08A55", woodDark: "#9A6A3E", grain: "#5A3A22", rings: "#E0B27A", bat: "#D9B07A", tape: "#2B2233", ring: "#B8323A" },
     parts: SAHUR_PARTS, emotes: TALK_EMOTES,
     sil: sil([["rect", 0, -253, 250, 506], ["rect", 0, -640, 236, 214], ["ell", 0, -742, 236, 62], ["rect", 152, -440, 70, 480], ["rect", -128, -290, 26, 280], ["rect", -70, 78, 30, 150], ["rect", 70, 78, 30, 150], ["ell", -70, 140, 120, 46], ["ell", 70, 140, 120, 46]], [[-72, -660], [72, -660]], 20),
   },
   {
     id: "tralalero", name: "Tralalero Tralala", kind: "rig", room: 2, voice: "tralalero", seed: 0.58,
-    box: { w: 440, h: 930 }, foot: 146,
+    box: { w: 440, h: 930 }, foot: Math.round(146 * CHIBI_BODY),
     palette: { skin: "#5B7AA3", skinLight: "#6E8FB8", belly: "#E7EDF5", sneaker: "#2F6FD6", stripe: "#FFFFFF", sole: "#F3EBDC", drip: "#3A9C98" },
     parts: TRALALERO_PARTS, emotes: TALK_EMOTES,
     sil: sil([["ell", 0, -250, 300, 500], ["ell", 0, -610, 262, 230], ["tri", 34, -770, 100, 120], ["ell", -122, -250, 62, 270], ["ell", 122, -250, 62, 270], ["rect", -112, 30, 66, 70], ["rect", 112, 30, 66, 70], ["rect", 0, 34, 66, 70], ["rect", -112, 104, 170, 84], ["rect", 112, 104, 170, 84], ["rect", 0, 108, 150, 80]], [[-74, -642], [74, -642]], 15),
@@ -146,7 +151,7 @@ export const ROSTER = [
   },
   {
     id: "patapim", name: "Brr Brr Patapim", kind: "rig", room: 1, voice: "patapim", seed: 0.21,
-    box: { w: 440, h: 1010 }, foot: 140,
+    box: { w: 440, h: 1010 }, foot: Math.round(140 * CHIBI_BODY),
     palette: { bark: "#7A5233", barkDark: "#5A3A22", moss: "#6E9F58", mossDark: "#3F6B3A", feet: "#E8C2A0", feetShade: "#C99476", nose: "#C98A6A", hat: "#8A5A3B", hatBand: "#B8323A", mould: "#D9C25A" },
     parts: PATAPIM_PARTS, emotes: TALK_EMOTES,
     sil: sil([["rect", 0, -263, 250, 530], ["ell", 0, -633, 244, 232], ["ell", 0, -792, 204, 64], ["ell", 0, -834, 126, 84], ["rect", -150, -300, 56, 280], ["rect", 150, -300, 56, 280], ["rect", -86, 28, 60, 80], ["rect", 86, 28, 60, 80], ["ell", -86, 96, 176, 92], ["ell", 86, 96, 176, 92]], [[-54, -672], [54, -672]], 14),

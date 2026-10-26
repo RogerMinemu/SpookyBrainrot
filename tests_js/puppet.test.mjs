@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   ROSTER, ROSTER_IDS, RIG_CELLS, CAMEO_CELLS, RIG_ATLAS, CAMEO_ATLAS, RIG_GUTTER, EMOTES,
-  allCells, inner, byId, byName,
+  allCells, inner, byId, byName, CHIBI_BODY, CHIBI_HEAD,
 } from "../static/js/art/roster.js";
 import {
   poseOps, silhouetteOps, boilVariant, isBlinking, hash,
@@ -175,14 +175,25 @@ test("poseOps: scary leans, grows and shakes from a hash of floor(24 t)", () => 
 });
 
 test("poseOps: squash pairs sx = 1/sqrt(sy); take emote squashes then recovers", () => {
-  const m = poseOps(sahur, {}, 0.3).ops[0].m;
-  const sx = Math.hypot(m[0], m[1]), sy = Math.hypot(m[2], m[3]);
+  const m = poseOps(sahur, {}, 0.3).ops[0].m; // the body: root squash x its chibi scale
+  const sx = Math.hypot(m[0], m[1]) / CHIBI_BODY, sy = Math.hypot(m[2], m[3]) / CHIBI_BODY;
   assert.ok(Math.abs(sx - 1 / Math.sqrt(sy)) < 1e-9);
   assert.ok(Math.abs(sy - 1) <= SQUASH_AMP + 1e-9);
-  const squashAt = (e) => Math.hypot(...poseOps(sahur, { takeT: 5 }, 5 + e).ops[0].m.slice(2, 4));
+  const squashAt = (e) => Math.hypot(...poseOps(sahur, { takeT: 5 }, 5 + e).ops[0].m.slice(2, 4)) / CHIBI_BODY;
   assert.ok(squashAt(0.08) < 0.96);
   assert.ok(Math.abs(squashAt(0.3) - 1) <= SQUASH_AMP + 1e-9);
   assert.deepEqual(eyesCell(poseOps(sahur, { takeT: 5 }, 5.03)), RIG_CELLS.eyes.closed); // squint
+});
+
+test("rigs have chibi proportions: a big head on a small body (the Minemi look)", () => {
+  for (const id of ["patapim", "tralalero", "sahur"]) {
+    const ops = poseOps(byId(id), { reduced: true }, 0.6).ops;
+    const size = (part) => { const m = ops.find((o) => o.part === part).m; return Math.hypot(m[2], m[3]); };
+    assert.ok(Math.abs(size("body") - CHIBI_BODY) < 0.03, id);
+    assert.ok(Math.abs(size("head") - CHIBI_HEAD) < 0.05, id);
+    assert.ok(Math.abs(size("eyes") - CHIBI_HEAD) < 0.05, id); // the face scales with the head
+  }
+  assert.ok(CHIBI_HEAD / CHIBI_BODY > 1.6);
 });
 
 test("poseOps: enter / exit slide 450 ms in and out with alpha", () => {

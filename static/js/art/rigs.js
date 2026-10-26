@@ -6,7 +6,7 @@
 // mouth states, cute-creepy. Palettes come from the roster.
 import { PAL } from "./engine.js";
 import { RIG_CELLS, byId } from "./roster.js";
-import { makePen, eyePair, wc, fl, dark, light, INK } from "./pens.js";
+import { makePen, eyePair, blush, wc, fl, dark, light, INK } from "./pens.js";
 import { CAMEO_RECIPES } from "./cameos.js";
 
 const PINK = "#D9707F", TONGUE = "#E5788C", MOUTH_IN = "#4A1E2E", TOOTH = "#FFF8E8";
@@ -132,15 +132,17 @@ function patapim(E) {
     p.ell(150, 228, 8, 5, fl(dark(c.nose, .55), { ink: null, washOp: 200 }), .6);
     p.ell(172, 230, 8, 5, fl(dark(c.nose, .55), { ink: null, washOp: 200 }), .6);
     p.ln([[136, 214], [128, 238]], .7, dark(c.nose, .5), "inkfine", .6);
-    // cheek wrinkles
+    // cheek wrinkles and rosy cheeks
     p.ln([[108, 220], [124, 236]], .8, dark(skin, .35), "inkfine", .6);
     p.ln([[212, 220], [196, 236]], .8, dark(skin, .35), "inkfine", .6);
+    blush(p, 104, 196, 20, 11);
+    blush(p, 216, 196, 20, 11);
   }
 
-  // ---- eyes
-  const eyeLook = { sep: 54, rx: 24, ry: 28, pupil: 12, lid: skin, brow: furDk };
+  // ---- eyes (big shiny Minemi eyes; the scary "wide" pair stays glowing and small-pupilled)
+  const eyeLook = { sep: 54, rx: 28, ry: 31, pupil: 12, lid: skin, brow: furDk, iris: "#8A4E22" };
   for (const k of ["open", "closed", "angry"]) eyePair(E, `${id}|eyes.${k}`, RIG_CELLS.eyes[k], k, eyeLook);
-  eyePair(E, `${id}|eyes.wide`, RIG_CELLS.eyes.wide, "wide", { ...eyeLook, rx: 24, ry: 28, pupil: 14, pupilCol: "#F2D23C", ringCol: "#E8AA38" });
+  eyePair(E, `${id}|eyes.wide`, RIG_CELLS.eyes.wide, "wide", { ...eyeLook, iris: null, rx: 24, ry: 28, pupil: 14, pupilCol: "#F2D23C", ringCol: "#E8AA38" });
 
   // ---- mouths
   for (const k of ["closed", "mid", "open", "scary"]) mouths(E, id, k, { w: 40, cy: 98, lip: dark(c.nose, .2), grin: 12, inner: "#4A1E1E", tooth: "#E8D9A0" });
@@ -229,10 +231,12 @@ function tralalero(E) {
     }
     p.ell(146, 150, 4, 3, fl(skinDk, { ink: null, washOp: 200 }), .4);
     p.ell(174, 150, 4, 3, fl(skinDk, { ink: null, washOp: 200 }), .4);
+    blush(p, 74, 194, 22, 12);
+    blush(p, 246, 194, 22, 12);
   }
-  const look = { sep: 74, rx: 26, ry: 31, pupil: 14, lid: c.skin, brow: skinDk };
+  const look = { sep: 74, rx: 30, ry: 32, pupil: 14, lid: c.skin, brow: skinDk, iris: "#24508F" };
   for (const k of ["open", "closed", "angry"]) eyePair(E, `${id}|eyes.${k}`, RIG_CELLS.eyes[k], k, look);
-  eyePair(E, `${id}|eyes.wide`, RIG_CELLS.eyes.wide, "wide", { ...look, pupil: 15, pupilCol: "#F2D23C", ringCol: "#E8AA38" });
+  eyePair(E, `${id}|eyes.wide`, RIG_CELLS.eyes.wide, "wide", { ...look, iris: null, rx: 26, ry: 31, pupil: 15, pupilCol: "#F2D23C", ringCol: "#E8AA38" });
   for (const k of ["closed", "mid", "open", "scary"]) mouths(E, id, k, { w: 54, cy: 96, lip: dark(c.skin, .3), grin: 16, inner: "#5A1F36", fangs: true });
 }
 
@@ -293,10 +297,12 @@ function sahur(E) {
     p.shade(262, 220, 14, 34, c.wood);
     p.ell(86, 238, 12, 16, wc(dark(c.wood, .2), grain, { fillOp: 80, sw: .7 }), 1);
     p.ln([[210, 250], [216, 270]], .8, grain, "inkfine", 1);
+    blush(p, 74, 214, 24, 13);
+    blush(p, 246, 214, 24, 13);
   }
-  const look = { sep: 72, rx: 44, ry: 42, pupil: 12, lid: dark(c.wood, .2), cy: 50 };
+  const look = { sep: 72, rx: 40, ry: 36, pupil: 12, lid: dark(c.wood, .2), cy: 50, iris: "#4A2C16" };
   for (const k of ["open", "closed", "angry"]) eyePair(E, `${id}|eyes.${k}`, RIG_CELLS.eyes[k], k, look);
-  eyePair(E, `${id}|eyes.wide`, RIG_CELLS.eyes.wide, "wide", { ...look, rx: 40, ry: 38, pupil: 9, ringCol: c.ring });
+  eyePair(E, `${id}|eyes.wide`, RIG_CELLS.eyes.wide, "wide", { ...look, iris: null, rx: 40, ry: 38, pupil: 9, ringCol: c.ring });
   for (const k of ["closed", "mid", "open", "scary"]) mouths(E, id, k, { w: 54, cy: 96, lip: grain, grin: 10, inner: "#2A1018", tooth: "#F3E6C4" });
   // the bat
   {

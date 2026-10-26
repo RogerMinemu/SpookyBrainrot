@@ -5,7 +5,7 @@
 // cute first, creepy second. Scary poses use glowing eyes with an ochre halo, too many teeth, wrong proportions.
 import { PAL } from "./engine.js";
 import { CAMEO_CELLS, byId } from "./roster.js";
-import { makePen, wc, fl, dark, light, INK } from "./pens.js";
+import { makePen, minemiEye, blush, wc, fl, dark, light, INK } from "./pens.js";
 
 const MOUTH = "#5A1F36", TONGUE = "#E5788C", TOOTH = "#FFF8E8", HALO = "#E8AA38", GLOW = "#F2D23C";
 
@@ -50,12 +50,11 @@ function bombardiro(E) {
     p.ln([[404, 316], [440, 322], [484, 312]], 1.2, INK, "ink", .8);
     teeth(p, 410, 318, 482, 312, 6, 11, .8);
     p.ell(468, 280, 5, 4, fl(INK, { ink: null }), .4);
-    // goggles on the brow
-    p.ell(396, 268, 32, 30, fl(c.goggles, { sw: 1.2 }), 1.2);
-    p.ell(396, 268, 22, 21, fl("#CFE7F2", { sw: .8 }), 1);
-    p.ell(398, 270, 11, 12, fl(INK, { ink: null }), .6);
-    p.ell(402, 264, 4, 4, fl("#FFFFFF", { ink: null }), .3);
-    p.ln([[366, 262], [330, 276], [300, 270]], 2, dark(c.goggles, .45), "ink", .8);
+    // goggles on the brow, a big shiny eye behind the lens, a rosy cheek on the snout
+    p.ell(396, 268, 34, 32, fl(c.goggles, { sw: 1.6 }), 1.2);
+    minemiEye(p, 397, 269, 22, 22, "#3F7A2A", { lash: false });
+    p.ln([[364, 262], [330, 276], [300, 270]], 2.2, dark(c.goggles, .45), "ink", .8);
+    blush(p, 446, 300, 16, 9);
     // near wing, bombs, propeller
     p.ell(124, 384, 18, 34, wc(c.metalDark, INK, { fillOp: 80, sw: 1 }), 1.2);
     p.poly([[110, 360], [138, 360], [150, 344], [100, 344]], { wash: c.metal, washOp: 255, ink: INK, sw: .7 }, .6);
@@ -133,12 +132,13 @@ function ballerina(E) {
     for (let i = 0; i < 6; i++) { const x = 150 + i * 42; p.ln([[256 + (x - 256) * .2, 276], [x, 326]], .8, c.tutu, "inkfine", 1.2); }
     p.sh([[200, 270], [312, 270], [304, 284], [208, 284]], fl(c.tutu, { sw: .8 }), 1);
     cup(p, 0);
-    // serene face on the cup front: closed eyes, blush, tiny smile
+    // serene face on the cup front: happy closed eyes with a lash flick, blush, tiny smile
     for (const sx of [-1, 1]) {
-      p.ln([[256 + sx * 52 - 17, 150], [256 + sx * 52, 160], [256 + sx * 52 + 17, 150]], 1.6, INK, "ink", .5);
-      p.ell(256 + sx * 76, 168, 17, 9, fl("#F2A6B8", { ink: null, washOp: 200 }), .8);
+      p.ln([[256 + sx * 52 - 18, 150], [256 + sx * 52, 161], [256 + sx * 52 + 18, 150]], 2.3, INK, "ink", .5);
+      p.ln([[256 + sx * 70, 150], [256 + sx * 79, 143]], 1.3, INK, "ink", .3);
+      blush(p, 256 + sx * 76, 170, 18, 9);
     }
-    p.ln([[240, 172], [256, 182], [272, 172]], 1.4, INK, "ink", .5);
+    p.ln([[240, 172], [256, 182], [272, 172]], 1.8, INK, "ink", .5);
   }
   // ---- scary: the cup tilts, coffee tears, a hollow face, arms rigid
   {
@@ -213,13 +213,12 @@ function lirili(E) {
     // trunk
     p.rib([[256, 150], [256, 214], [244, 258], [276, 276]], 62, 36, wc(c.grey, dark(c.grey, .3), { fillOp: 120, bleed: 0 }), 1.6);
     for (const y of [180, 200, 222]) p.ln([[236, y], [256, y + 4], [276, y]], .8, dark(c.grey, .35), "inkfine", .5);
-    // tiny tusks, cute eyes, brows
+    // tiny tusks, big shiny eyes, brows, rosy cheeks
     for (const sx of [-1, 1]) {
       p.sh([[256 + sx * 40, 214], [256 + sx * 54, 214], [256 + sx * 60, 244]], fl(c.clockFace, { sw: .8 }), .6);
-      p.ell(256 + sx * 52, 138, 17, 20, fl("#FFFDF4", { sw: 1.1 }), .8);
-      p.ell(256 + sx * 50, 142, 9, 11, fl(INK, { ink: null }), .4);
-      p.ell(256 + sx * 47, 137, 3.4, 3.4, fl("#FFFFFF", { ink: null }), .2);
-      p.ln([[256 + sx * 34, 112], [256 + sx * 52, 106], [256 + sx * 70, 114]], 1.2, dark(c.grey, .5), "ink", .5);
+      p.ln([[256 + sx * 30, 104], [256 + sx * 54, 97], [256 + sx * 76, 106]], 1.6, dark(c.grey, .5), "ink", .5);
+      minemiEye(p, 256 + sx * 54, 140, 23, 26, "#3B4A7A", { glance: -sx * 2, side: sx });
+      blush(p, 256 + sx * 76, 182, 18, 10);
     }
     // a little cactus flower on the head
     p.ell(300, 74, 14, 11, fl(PAL.rose, { sw: .9 }), .8);
@@ -260,36 +259,38 @@ function chimpanzini(E) {
     for (const [bx, by] of [[230, 340], [290, 420], [240, 440], [300, 310]]) p.ell(bx, by, 5, 4, fl(c.tips, { ink: null, washOp: 200 }), .6);
     p.shine(214, 350, 8, 70, c.banana, .04);
   };
-  // ---- idle: a chimp popping out of a half-peeled banana, cheering
+  // ---- idle: a chimp popping out of a half-peeled banana, cheering. Chibi: the body and peel shrink toward the
+  // feet, the head grows on the new neck (two pens re-proportion the same drawing by coordinates)
   {
-    const p = makePen(E, `${id}|idle`, CAMEO_CELLS.idle);
-    // arms up, behind the peel
+    const BODY_K = .86, HEAD_K = 1.2, neck = 498 - (498 - 250) * BODY_K;
+    const p = makePen(E, `${id}|idle`, CAMEO_CELLS.idle, false, { ox: 256, oy: 498, k: BODY_K });
+    const hp = makePen(E, `${id}|idle.head`, CAMEO_CELLS.idle, false, { ox: 256, oy: 250, k: HEAD_K, ty: neck });
+    // arms up and wide (the big head must not hide the hands), behind the peel
     for (const sx of [-1, 1]) {
-      p.rib([[256 + sx * 54, 262], [256 + sx * 112, 236], [256 + sx * 128, 170], [256 + sx * 118, 124]], 34, 26, wc(c.fur, dark(c.fur, .3), { fillOp: 110, bleed: 0 }), 1.6);
-      p.ell(256 + sx * 118, 112, 24, 22, wc(c.furLight, c.fur, { fillOp: 90, sw: 1 }), 1.2);
-      for (const fx of [-12, 0, 12]) p.ln([[256 + sx * 118 + fx, 98], [256 + sx * 118 + fx * 1.2, 82]], 1.6, c.fur, "ink", .3);
+      p.rib([[256 + sx * 54, 262], [256 + sx * 136, 236], [256 + sx * 176, 170], [256 + sx * 188, 116]], 34, 26, wc(c.fur, dark(c.fur, .3), { fillOp: 110, bleed: 0 }), 1.6);
+      p.ell(256 + sx * 188, 104, 24, 22, wc(c.furLight, c.fur, { fillOp: 90, sw: 1.2 }), 1.2);
+      for (const fx of [-12, 0, 12]) p.ln([[256 + sx * 188 + fx, 90], [256 + sx * 188 + fx * 1.2, 74]], 1.6, c.fur, "ink", .3);
     }
     body(p);
     peel(p, false);
     // head
     for (const sx of [-1, 1]) {
-      p.ell(256 + sx * 90, 164, 30, 32, wc(c.fur, dark(c.fur, .3), { fillOp: 100 }), 1.4);
-      p.ell(256 + sx * 90, 164, 17, 20, fl("#E7A9B4", { sw: .6 }), 1);
+      hp.ell(256 + sx * 90, 164, 30, 32, wc(c.fur, dark(c.fur, .3), { fillOp: 100 }), 1.4);
+      hp.ell(256 + sx * 90, 164, 17, 20, fl("#E7A9B4", { sw: .8 }), 1);
     }
-    p.sh([[168, 170], [178, 118], [256, 92], [334, 118], [344, 170], [316, 232], [256, 250], [196, 232]], wc(c.fur, dark(c.fur, .3), { fillOp: 110, bleed: 0 }), 2.4);
-    p.sh([[196, 156], [226, 128], [256, 144], [286, 128], [316, 156], [310, 214], [256, 240], [202, 214]], wc(c.face, dark(c.face, .2), { fillOp: 90, bleed: 0, sw: .8 }), 1.8);
+    hp.sh([[168, 170], [178, 118], [256, 92], [334, 118], [344, 170], [316, 232], [256, 250], [196, 232]], wc(c.fur, dark(c.fur, .3), { fillOp: 110, bleed: 0 }), 2.4);
+    hp.sh([[196, 156], [226, 128], [256, 144], [286, 128], [316, 156], [310, 214], [256, 240], [202, 214]], wc(c.face, dark(c.face, .2), { fillOp: 90, bleed: 0, sw: 1 }), 1.8);
     for (const sx of [-1, 1]) {
-      p.ell(256 + sx * 34, 164, 19, 22, fl("#FFFDF4", { sw: 1.1 }), .8);
-      p.ell(256 + sx * 32, 168, 10, 12, fl(INK, { ink: null }), .4);
-      p.ell(256 + sx * 29, 163, 3.6, 3.6, fl("#FFFFFF", { ink: null }), .2);
+      minemiEye(hp, 256 + sx * 34, 166, 20, 23, "#5A3418", { glance: -sx * 2, side: sx });
+      blush(hp, 256 + sx * 50, 204, 13, 7);
     }
-    p.ln([[216, 134], [236, 130], [250, 138]], 1.5, dark(c.fur, .5), "ink", .4);
-    p.ln([[296, 134], [276, 130], [262, 138]], 1.5, dark(c.fur, .5), "ink", .4);
-    p.ell(256, 196, 30, 20, wc(light(c.face, .1), c.face, { fillOp: 60, sw: .8 }), 1);
-    p.ell(246, 192, 4, 3, fl(INK, { ink: null }), .3);
-    p.ell(266, 192, 4, 3, fl(INK, { ink: null }), .3);
-    p.sh([[226, 210], [256, 224], [286, 210], [282, 226], [256, 240], [230, 226]], fl(MOUTH, { sw: 1 }), 1);
-    teeth(p, 236, 214, 276, 214, 4, 8, .8);
+    hp.ln([[214, 132], [234, 127], [250, 134]], 1.7, dark(c.fur, .5), "ink", .4);
+    hp.ln([[298, 132], [278, 127], [262, 134]], 1.7, dark(c.fur, .5), "ink", .4);
+    hp.ell(256, 200, 26, 17, wc(light(c.face, .1), c.face, { fillOp: 60, sw: 1 }), 1);
+    hp.ell(247, 196, 4, 3, fl(INK, { ink: null }), .3);
+    hp.ell(265, 196, 4, 3, fl(INK, { ink: null }), .3);
+    hp.sh([[228, 212], [256, 224], [284, 212], [280, 228], [256, 240], [232, 228]], fl(MOUTH, { sw: 1.2 }), 1);
+    teeth(hp, 238, 215, 274, 215, 4, 7, .8);
   }
   // ---- scary: the peel opens like jaws, too many teeth, the chimp stares
   {
@@ -359,9 +360,11 @@ function trippi(E) {
     antennae(p, 330, 180, 0);
     catHead(p, 330, 180, false);
     for (const sx of [-1, 1]) {
-      p.ell(330 + sx * 34, 176, 20, 24, fl(c.eyes, { sw: 1.2 }), .8);
+      p.ell(330 + sx * 34, 176, 21, 25, fl(c.eyes, { sw: 1.6 }), .8);
+      p.ell(330 + sx * 34, 186, 13, 10, fl(light(c.eyes, .35), { ink: null }), .4);
       p.ell(330 + sx * 34, 176, 5, 18, fl(INK, { ink: null }), .4);
-      p.ell(330 + sx * 34 - 6, 168, 4.5, 4.5, fl("#FFFFFF", { ink: null }), .2);
+      p.ell(330 + sx * 34 - 7, 167, 6, 5.5, fl("#FFFFFF", { ink: null }), .2);
+      p.ell(330 + sx * 34 + 7, 186, 2.6, 2.6, fl("#FFFFFF", { ink: null }), .2);
       p.ln([[330 + sx * 58, 214], [330 + sx * 118, 206]], .9, INK, "inkfine", .6);
       p.ln([[330 + sx * 56, 224], [330 + sx * 114, 232]], .9, INK, "inkfine", .6);
     }
