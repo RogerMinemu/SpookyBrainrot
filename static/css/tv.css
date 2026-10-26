@@ -219,3 +219,50 @@ html[data-takeover] #art { filter: grayscale(.85) contrast(1.25) brightness(.55)
 .bomb-led { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 3px solid var(--ink); background: #5A1A1A; }
 .bomb-module.solved .bomb-led { background: #2F9E5C; box-shadow: 0 0 12px #2F9E5C; }
 @media (prefers-reduced-motion: reduce) { .bomb-clock.hurry { animation: none; } .shape-field.drift .drifter { animation-duration: calc(var(--dur, 5s) * 3); } }
+
+/* ------------------------------------------------------------------ story cutscenes (js/tv/story.js) */
+/* Over the screen (which hides), under the event overlays (z 40): the room's painted backdrop stays visible through a
+   vignette, the cast canvas is letterboxed like the sim stage, the caption is a storybook card at the bottom. */
+html.story-on #screen, html.story-on .guardian-stage { visibility: hidden; }
+.story { position: fixed; inset: 0; z-index: 30; cursor: pointer; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 38%, transparent 35%, rgba(12, 6, 22, .62) 100%); animation: overlay-in .3s ease-out; }
+.story-stage, .story-alarm { position: absolute; inset: 0; pointer-events: none; }
+.story-canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+.story-alarm { opacity: 0; transition: opacity .3s;
+  background: conic-gradient(from var(--sweep, 0deg) at 50% -10%, transparent 0 40deg, rgba(216, 56, 74, .38) 60deg, transparent 80deg 360deg); }
+.story.alarm-on .story-alarm { opacity: 1; animation: alarm-sweep 1.4s linear infinite; }
+@property --sweep { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes alarm-sweep { to { --sweep: 360deg; } }
+.story.shake { animation: scare-shake .12s steps(2) 5; }
+
+.story-card { position: absolute; inset: 0; display: grid; place-content: center; pointer-events: none; }
+.story-card .torn { font-size: clamp(3rem, 6vw, 6rem); transform: rotate(-1.5deg); animation: slam .4s cubic-bezier(.2, 1.6, .4, 1) both; }
+
+.story-caption { position: absolute; left: 50%; bottom: 3.5vh; transform: translateX(-50%); width: min(1500px, 86vw); min-height: 9.5rem;
+  padding: 2.3rem 2.4rem 1.5rem; color: var(--ink); background: var(--surface); text-align: left;
+  border: 3px solid var(--ink); border-radius: 22px 30px 20px 34px / 30px 20px 32px 22px; border-image: var(--tex-panel) 56 fill / 18px stretch;
+  box-shadow: 6px 8px 0 rgba(12, 6, 22, .55); animation: caption-in .25s ease-out; }
+@keyframes caption-in { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+.story-name { position: absolute; top: -1.4rem; left: 1.8rem; padding: .2rem 1.1rem .3rem; font-family: var(--font-title); font-size: 1.7rem;
+  color: #FFF5E2; background: var(--ink); border: 3px solid var(--ink); border-radius: 14px 18px 12px 20px; box-shadow: 4px 4px 0 var(--room-c, var(--accent));
+  transform: rotate(-1.5deg); } /* light on ink reads on every room colour (the pale Level 0 yellow included) */
+.story-text { margin: 0; font-size: clamp(1.6rem, 2.3vw, 2.5rem); line-height: 1.32; font-weight: 600; }
+.story-rest { visibility: hidden; }
+.story.is-riddle .story-text { font-style: italic; font-size: clamp(1.8rem, 2.6vw, 2.8rem); }
+/* the Foundation speaks from a terminal */
+.story-caption.terminal { background: #0E1A14; border-image: none; color: #8CF2B0; border-color: #0A120E; box-shadow: 6px 8px 0 rgba(0, 0, 0, .6), inset 0 0 40px rgba(140, 242, 176, .12); }
+.story-caption.terminal .story-text { font-family: "Consolas", "Courier New", monospace; font-weight: 400; text-shadow: 0 0 8px rgba(140, 242, 176, .55); }
+.story-caption.terminal .story-name { background: #0A120E; color: #8CF2B0; text-shadow: none; font-family: "Consolas", "Courier New", monospace; }
+.story-caption.terminal .story-shown::after { content: "▮"; margin-left: .1em; animation: cursor-blink 1s steps(1) infinite; }
+@keyframes cursor-blink { 50% { opacity: 0; } }
+.story-caption.via-phone .story-name { background: #3B2F4A; }
+
+.story-skip { position: absolute; top: 1.4rem; right: 1.6rem; width: auto; padding: .5rem 1.4rem; font-size: 1.4rem; z-index: 2; }
+.story-hint { position: absolute; right: 1.8rem; bottom: .6rem; font-size: 1rem; color: #FFF5E2; opacity: .75; text-shadow: 1px 1px 0 var(--ink); pointer-events: none; }
+/* "show: meter": the real Brainrot bar comes forward and throbs while the Foundation warns about it */
+html.story-show-meter #meter { z-index: 35; transform-origin: top left; animation: meter-warn .9s ease-in-out infinite; }
+@keyframes meter-warn { 0%, 100% { transform: scale(1.25) rotate(-1deg); } 50% { transform: scale(1.35) rotate(-1deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .story, .story.shake, .story-card .torn, .story-caption, html.story-show-meter #meter { animation: none; }
+  .story.alarm-on .story-alarm { animation: none; }
+}

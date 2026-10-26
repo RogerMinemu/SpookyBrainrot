@@ -16,7 +16,8 @@ def make_running_game(client, names=("Ana", "Bea")):
     async def go():
         for p in rt.game.players:
             await rt.set_presence(p.id, True)
-        await rt.apply(Advance())
+        await rt.apply(Advance())  # lobby -> room 0 intro
+        await rt.apply(Advance())  # -> room 0 puzzle
 
     client.portal.call(go)
     return rt, toks

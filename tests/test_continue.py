@@ -21,7 +21,9 @@ def test_continue_after_restart_identical_state_players_disconnected(tmp_path):
             hello(tv, {"role": "tv", "game_id": gid})
             hello(wa, {"role": "player", "player_token": ta})
             hello(wb, {"role": "player", "player_token": tb})
-            tv.send_text(env("advance"))
+            tv.send_text(env("advance"))  # lobby -> room 0 intro
+            state_until(tv, lambda p: p["game"]["status"] == "running")
+            tv.send_text(env("advance"))  # -> room 0 puzzle
             before = state_until(tv, lambda p: p["game"]["phase"] == "puzzle")
         rt = c1.app.state.manager.get(gid)
         rt.game.brainrot = 20

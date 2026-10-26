@@ -6,6 +6,7 @@ import { applyState } from "/static/js/ui/theme.js";
 import { panel, button, title } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
 import { unlockAudio, isUnlocked } from "/static/js/shared/audio.js";
+import { createStory } from "/static/js/tv/story.js";
 
 // composition root: the art starts once, immediately (the splash is already painted by it)
 const art = startArt({ layout: "tv" });
@@ -31,6 +32,8 @@ const ctx = {
   // painted cast: puzzles and screens get characters ONLY through this handle (silhouette until the art is ready)
   sprite: (id) => art.sprite(id),
 };
+// Cutscenes between the rooms: the brainrots tell the story (over the screen, keyed by the state)
+const story = createStory({ gameId, sprite: ctx.sprite, sendFx: ctx.sendFx });
 // Last mask per phone. Relayed inputs can arrive before the puzzle module is mounted (replay on connect).
 const masks = new Map();
 
@@ -93,6 +96,7 @@ async function render(state) {
   clearTakeover();
   applyState(state);
   updateMeter(state);
+  story.sync(state);
   const kind = state.view.kind;
   if (screens[kind]) {
     leavePuzzle();
@@ -126,7 +130,10 @@ async function render(state) {
 if (new URLSearchParams(location.search).has("demo")) {
   // unlock()/sound(): the demo page calls them from ITS click handlers. A click on the parent document gives the frame
   // tree sticky user activation (same-origin iframe), so ctx.resume() succeeds without a click inside the TV itself.
-  window.__sbtv = { state: () => latest, host: null, unlock: () => unlockAudio(), sound: () => isUnlocked() };
+  window.__sbtv = {
+    state: () => latest, host: null, unlock: () => unlockAudio(), sound: () => isUnlocked(),
+    story: { active: () => story.active(), key: () => story.key(), skip: () => story.skip() },
+  };
   document.addEventListener("pointerdown", () => unlockAudio(), { capture: true });
 }
 

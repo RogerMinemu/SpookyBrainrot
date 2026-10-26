@@ -269,13 +269,15 @@ class Engine:
             return Outcome(changed=True)
 
         # phase == INTRO
-        if game.status == STATUS_LOBBY and len(game.connected_players()) < self.min_players:
-            return _reject("not_enough_players", f"hacen falta al menos {self.min_players} jugadores conectados")
+        if game.status == STATUS_LOBBY:
+            if len(game.connected_players()) < self.min_players:
+                return _reject("not_enough_players", f"hacen falta al menos {self.min_players} jugadores conectados")
+            # the game starts in room 0's intro (the TV plays the prologue there); the next advance starts the puzzle
+            game.status = STATUS_RUNNING
+            return Outcome(changed=True)
         puzzle = self.puzzles.get(game.room.puzzle_id)
         if puzzle is None:
             return _reject("puzzle_unavailable", game.room.puzzle_id)
-        if game.status == STATUS_LOBBY:
-            game.status = STATUS_RUNNING
         game.puzzle_id = game.room.puzzle_id
         game.puzzle_state = puzzle.start(self._ctx(game), [p.id for p in game.connected_players()])
         game.phase = PHASE_PUZZLE

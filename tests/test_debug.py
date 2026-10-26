@@ -224,7 +224,8 @@ def test_reset_keeps_players_and_clears_progress():
     assert (g.status, g.room_idx, g.phase) == (STATUS_LOBBY, 0, PHASE_INTRO)
     assert g.puzzle_id is None and g.puzzle_state is None and g.ending is None
     assert g.brainrot == 0 and g.brainrot_log == [] and g.decoys_hit == [] and g.clock_ms == 0
-    assert e.apply(g, Advance()).ok and g.phase == PHASE_PUZZLE  # the game is playable again
+    assert e.apply(g, Advance()).ok and g.phase == PHASE_INTRO  # the game is playable again: prologue,
+    assert e.apply(g, Advance()).ok and g.phase == PHASE_PUZZLE  # then room 0
 
 
 def test_debug_rooms_listing():

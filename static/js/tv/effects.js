@@ -3,7 +3,21 @@
 // never shift the layout underneath. Pure presentation: cast data only; characters are drawn via ctx.sprite.
 import { h } from "/static/js/shared/dom.js";
 import { portrait } from "/static/js/ui/kit.js";
+import { tone } from "/static/js/shared/audio.js";
 import { byName } from "/static/js/art/roster.js"; // pure cast data; characters are drawn through ctx.sprite only
+import { SCARES, VOICES } from "/static/js/story/script.js";
+
+const SCARE_BLIPS = 26, SCARE_BLIP_S = 0.045;
+
+/** The brainrot says its scare line: a burst of its voice blips, one per letter. */
+function speak(id, line) {
+  const v = VOICES[id];
+  if (!v) return;
+  [...line].filter((ch) => /\p{L}/u.test(ch)).slice(0, SCARE_BLIPS).forEach((ch, k) => {
+    const lift = /[aeiouáéíóú]/i.test(ch) ? 1.08 : 1;
+    tone(v.freq * lift, v.dur, { type: v.type, vol: v.vol, slide: v.slide, at: 0.25 + k * SCARE_BLIP_S });
+  });
+}
 
 function overlay(cls, children, ms, onEnd) {
   const el = h("div", { class: `overlay ${cls}`, role: "status" }, children);
@@ -40,12 +54,15 @@ const handlers = {
   // The portrait slot is empty until the art exists: it then shows the brainrot's name in big painted letters.
   jumpscare: (d, ctx) => {
     const sc = scarePortrait(d.cameo, ctx);
+    const rig = byName(d.cameo);
+    const line = (rig && SCARES[rig.id]) || "os ha encontrado...";
+    if (rig && SCARES[rig.id]) speak(rig.id, line);
     overlay("jumpscare", [
       splat("s1"), splat("s2"),
       h("div", { class: "scare-stage" },
         sc ? sc.frame : portrait({ cameo: d.cameo || "???" }),
-        torn("os ha encontrado...", "scare-line")),
-    ], 2400, sc ? sc.destroy : null);
+        torn(line, "scare-line")),
+    ], 3000, sc ? sc.destroy : null);
   },
   splash: () => overlay("splash-flash", [
     splat("s1"), splat("s2"), splat("s3"),

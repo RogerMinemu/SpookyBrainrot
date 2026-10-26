@@ -25,7 +25,8 @@ def test_mid_puzzle_state_restores_in_new_instance(tmp_path):
     async def play():
         p, _ = await m1.join(rt, "Ana")
         await rt.set_presence(p.id, True)
-        await rt.apply(Advance())
+        await rt.apply(Advance())  # lobby -> room 0 intro (prologue)
+        await rt.apply(Advance())  # -> room 0 puzzle
         await rt.apply(PuzzleAction(p.id, {"type": "hold", "down": True}))
         return p
 
@@ -51,6 +52,9 @@ def test_every_accepted_command_persists_and_rejected_does_not(tmp_path):
         p, _ = await m.join(rt, "Ana")
         await rt.set_presence(p.id, True)
         assert saved_state(m, rt.game.id)["seq"] == rt.game.seq
+        await rt.apply(Advance())
+        s0 = saved_state(m, rt.game.id)
+        assert rt.game.status == STATUS_RUNNING and s0["phase"] == "intro" and s0["seq"] == rt.game.seq
         await rt.apply(Advance())
         s1 = saved_state(m, rt.game.id)
         assert s1["phase"] == "puzzle" and s1["puzzle"]["id"] == "hold_together"

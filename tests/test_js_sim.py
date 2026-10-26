@@ -16,6 +16,7 @@ NODE_TESTS = [
     "tests_js/qr.test.mjs",
     "tests_js/red_light.test.mjs",
     "tests_js/sprites.test.mjs",
+    "tests_js/story_runner.test.mjs",
 ]
 
 

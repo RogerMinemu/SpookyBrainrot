@@ -44,7 +44,9 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
         for name, ws, tok in (("Ana", wa, ta), ("Bea", wb, tb)):
             pids[name] = hello(ws, {"role": "player", "player_token": tok})["player_id"]
         hello(tv, {"role": "tv", "game_id": gid})
-        tv.send_text(env("advance"))  # lobby -> room 0
+        tv.send_text(env("advance"))  # lobby -> room 0 intro (prologue)
+        state_until(tv, lambda p: p["game"]["status"] == "running")
+        tv.send_text(env("advance"))  # -> room 0 puzzle
         state_until(tv, lambda p: p["game"]["phase"] == "puzzle")
 
         # --- room 1: four sub-levels, one clear each; a stale report is ignored -----------------
@@ -149,7 +151,7 @@ def test_sahur_wrong_owner_fails_the_round_and_phones_see_round_failed(client, c
             hello(ws, {"role": "player", "player_token": tok})
         hello(tv, {"role": "tv", "game_id": gid})
         tv.send_text(env("advance"))
-        state_until(tv, lambda p: p["game"]["phase"] == "puzzle")
+        state_until(tv, lambda p: p["game"]["status"] == "running")
         jump(client, gid, 7, "puzzle")
         s = state_until(tv, lambda p: p["view"].get("kind") == "sahur_dice")
         length = len(s["view"]["seq"])

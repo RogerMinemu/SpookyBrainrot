@@ -25,6 +25,11 @@ Abre `http://localhost:8000` en el ordenador conectado a la tele y crea una part
 directamente a la pantalla de la tele (`/tv/<id>`). Toca la pantalla para empezar. Los jugadores escanean el QR del
 lobby con el móvil (`/play`).
 
+Entre sala y sala, la tele pone una cinemática en la que los brainrots cuentan la historia (guion en
+`static/js/story/script.js`). Mientras tanto, los móviles muestran «Mirad la tele». En la tele, Espacio, Intro, → o un
+clic pasan de frase, y Esc o «Saltar» terminan la escena. Para tener a los brainrots como recurso gráfico, abre
+`/static/dev/brainrots.html`: pinta a los ocho y descarga cada pose en PNG transparente.
+
 > La plantilla se llama `env.example` (no `.env.example`). Cópiala a `.env`; el fichero `.env`
 > está en `.gitignore`.
 

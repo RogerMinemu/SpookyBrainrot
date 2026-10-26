@@ -125,3 +125,49 @@ def test_red_light_keeps_its_procedural_guardian_as_fallback():
 def test_new_room_guardians_are_drawn_through_ctx_sprite():
     for kind, cid in (("shape_count", "lirili"), ("backrooms_trivia", "ballerina"), ("bomb_defusal", "bombardiro")):
         assert f'ctx.sprite("{cid}")' in _src(PUZZLES / kind / "tv.js"), kind
+
+
+# ---- story: the brainrots tell the story between the rooms -----------------------------------------------------
+STORY = STATIC / "js" / "story"
+
+
+def test_story_script_and_runner_are_pure():
+    for name in ("script.js", "runner.js"):
+        src = _src(STORY / name)
+        for tok in _IMPURE_TOKENS + ("import(", "sessionStorage", "localStorage"):
+            assert tok not in src, (name, tok)
+        assert "Nike" not in src, name
+
+
+def test_story_placeholder_matches_the_server():
+    from app.content import RIDDLE_PLACEHOLDER
+
+    assert f'export const RIDDLE_PLACEHOLDER = "{RIDDLE_PLACEHOLDER}";' in _src(STORY / "script.js")
+
+
+def test_tv_story_draws_through_ctx_sprite_and_is_wired_into_the_tv():
+    story = _src(STATIC / "js" / "tv" / "story.js")
+    assert "painter" not in story and "createCanvas" not in story and "window.p5" not in story
+    assert "sessionStorage" in story and 'sendFx("all", "story"' in story and "drawAny(" in story
+    main = _src(STATIC / "js" / "tv" / "main.js")
+    assert "createStory({ gameId, sprite: ctx.sprite, sendFx: ctx.sendFx })" in main and "story.sync(state)" in main
+    assert "story: { active:" in main  # the demo bots wait for the cutscene
+    assert ".story-caption" in _src(STATIC / "css" / "tv.css")
+
+
+def test_phones_mirror_the_tv_story_and_hold_the_advance_buttons():
+    play = _src(STATIC / "js" / "play" / "main.js")
+    assert 'fx.kind === "story"' in play and "STORY_STALE_MS" in play and "lineFor(" in play
+    assert ".story-line" in _src(STATIC / "css" / "play.css")
+
+
+def test_puzzles_never_import_the_story():
+    for p in PUZZLES.rglob("*.js"):
+        assert "/js/story/" not in _src(p), p
+
+
+def test_brainrot_sheet_dev_page_exists():
+    html = _src(STATIC / "dev" / "brainrots.html")
+    js = _src(STATIC / "dev" / "brainrots.js")
+    assert "/static/dev/brainrots.js" in html and "<canvas" not in html
+    assert "CHAR_PLATE" in js and "image/png" in js and "toBlob" in js

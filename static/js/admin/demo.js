@@ -484,11 +484,23 @@ function pressAdvance(now, label) {
   if (sb) { sb.advance(); say(`${seat.name} pulsa «${label}» en su móvil.`); }
 }
 
+// The TV's cutscene (window.__sbtv.story): the bots watch it before they press anything. ?story=skip skips them.
+const skipStories = new URLSearchParams(location.search).get("story") === "skip";
+const storyPlaying = () => { const s = tvApi() && tvApi().story; return !!(s && s.active()); };
+
 function autopilot(st, now) {
   const g = st.game;
   const view = st.view;
   const sub = view.level ?? view.round ?? "";
   const key = `${g.status}|${g.room_no}|${g.phase}|${view.kind}|${sub}`;
+  if (storyPlaying()) {
+    if (skipStories) tvApi().story.skip();
+    else {
+      if (state.storyKey !== key) { state.storyKey = key; say("La tele cuenta la historia: los bots miran. En la tele, Espacio sigue y Esc salta."); }
+      state.enteredAt = now; // the dwell starts when the story ends
+      return;
+    }
+  }
   if (key !== state.key) {
     state.key = key;
     state.enteredAt = now;

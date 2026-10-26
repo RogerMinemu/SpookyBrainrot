@@ -91,16 +91,19 @@ def make(min_players=1, players=("a", "b"), connect=True):
 
 
 def to_puzzle(eng, g):
+    if g.status == STATUS_LOBBY:  # the lobby opens room 0's intro (the prologue) first
+        assert eng.apply(g, Advance()).changed and g.status == STATUS_RUNNING and g.phase == PHASE_INTRO
     out = eng.apply(g, Advance())
     assert out.changed and g.phase == PHASE_PUZZLE
     return out
 
 
-def test_advance_from_lobby_starts_puzzle_and_game():
+def test_advance_from_lobby_starts_the_game_in_room0_intro_then_the_puzzle():
     eng, g, _ = make()
     assert g.status == STATUS_LOBBY and g.phase == PHASE_INTRO
+    assert eng.apply(g, Advance()).changed
+    assert g.status == STATUS_RUNNING and g.phase == PHASE_INTRO and g.room_no == 0 and g.puzzle_state is None
     to_puzzle(eng, g)
-    assert g.status == STATUS_RUNNING
     assert g.puzzle_id == "hold_together"
     assert g.puzzle_state["started_with"] == ["a", "b"]
 
@@ -112,6 +115,8 @@ def test_lobby_gated_by_min_players():
     assert not out.changed and out.error[0] == "not_enough_players"
     assert g.status == STATUS_LOBBY and g.phase == PHASE_INTRO and g.puzzle_state is None
     g.player("b").connected = True
+    assert eng.apply(g, Advance()).changed
+    assert g.status == STATUS_RUNNING and g.phase == PHASE_INTRO
     assert eng.apply(g, Advance()).changed
     assert g.phase == PHASE_PUZZLE
 
@@ -255,8 +260,9 @@ def test_tick_changes_only_when_puzzle_says_so():
 def test_unregistered_puzzle_rejected():
     eng, g, _ = make()
     del eng.puzzles["hold_together"]
+    assert eng.apply(g, Advance()).changed  # lobby -> room 0 intro needs no puzzle yet
     out = eng.apply(g, Advance())
-    assert out.error[0] == "puzzle_unavailable" and g.status == STATUS_LOBBY
+    assert out.error[0] == "puzzle_unavailable" and g.phase == PHASE_INTRO and g.puzzle_state is None
 
 
 # --- play clock (R3.4) ----------------------------------------------------------------

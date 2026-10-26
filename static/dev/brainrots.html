@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es" data-room="prologue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Reparto de brainrots</title>
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/theme.css">
+<style>
+  body{padding:1.2rem 1rem 3rem;color:var(--ink);background:var(--paper);max-width:1500px;margin:0 auto}
+  h1{font-family:var(--font-title);font-weight:400;margin:.2rem 0 .4rem}
+  #log{font:14px/1.4 monospace;margin:.6rem 0 1rem;color:var(--ink-soft)}
+  #cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:1.1rem}
+  .who{margin:0;background:var(--surface);border:3px solid var(--ink);border-radius:18px;padding:.8rem;box-shadow:4px 5px 0 rgba(12,6,22,.35);display:grid;gap:.5rem}
+  .who h2{margin:0;font-family:var(--font-title);font-weight:400;font-size:1.5rem}
+  .who p{margin:0;font-size:.95rem;color:var(--ink-soft)}
+  .who canvas{width:100%;aspect-ratio:3/4;display:block;border-radius:12px;background:repeating-conic-gradient(#efe6d6 0 25%,#f8f2e7 0 50%) 0 0/22px 22px}
+  .row{display:flex;flex-wrap:wrap;gap:.35rem}
+  .row button{width:auto;min-height:2.2rem;padding:.2rem .8rem;font-size:.95rem}
+  .row button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+</style>
+<script src="/static/vendor/p5/2.3.3/p5.min.js"></script>
+<script src="/static/vendor/p5.brush/2.2.3/p5.brush.js"></script>
+</head>
+<body>
+<h1>Reparto de brainrots</h1>
+<p>Los ocho brainrots del juego, pintados en acuarela con el mismo pincel que la tele. Elige una pose y descárgala como
+  PNG con fondo transparente para usarla como recurso gráfico. «Descargar todo» baja cada brainrot en todas sus poses.
+  Página de desarrollo: no la enlaza el juego.</p>
+<p class="row"><button id="all" type="button" disabled>Descargar todo</button></p>
+<div id="log" role="status">Pintando a los brainrots...</div>
+<div id="cast"></div>
+<script type="module" src="/static/dev/brainrots.js"></script>
+</body>
+</html>

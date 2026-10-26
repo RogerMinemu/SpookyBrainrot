@@ -59,8 +59,8 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 
 ### 0 · Prólogo — Noclip
 
-- Cinemática de intro (canción de Suno).
 - La tele muestra un QR para unirse a `/play`. Cada jugador pone su nombre.
+- «Empezar» lleva a la **intro de la sala 0**: la Fundación cuenta el prólogo (ver *Historia*) y después «Entrar» empieza el puzzle.
 - **Agarraos fuerte**: todos mantienen pulsado un botón a la vez durante 5 s. Si uno suelta, se reinicia. Al lograrlo: noclip y caída al Nivel 0.
 - Sin ancla: sirve para aprender el mando.
 
@@ -122,6 +122,24 @@ Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody 
 - **Rondas con trampa**: en las rondas 2 y 3 algunas órdenes llegan **sin** el «Sahur dice»: esas hay que ignorarlas, no tocarlas.
 - 3 rondas (secuencias de 4, 5 y 6 pasos). Un fallo (tambor equivocado, de otro jugador o fuera de orden) cuesta Brainrot% y repite la ronda con una secuencia nueva.
 - Al superarlo: pista de la última ancla, **la salida**. Escanearla lanza la cinemática del final que os toque.
+
+## Historia: los brainrots cuentan el juego
+
+No es una ristra de minijuegos: entre sala y sala, la tele pone una **cinemática** y los brainrots narran la historia y llevan al grupo de un nivel al siguiente.
+
+- **La Fundación** habla desde una terminal verde: avisa del fallo de contención, explica los móviles, las anclas (QR), los QR trampa y el Brainrot%.
+- **Cada guardián** (Patapim, Tralalero, Lirilì, Ballerina, Bombardiro y Sahur) tiene tres escenas:
+  - **intro**: presenta su nivel y explica su prueba, con su personaje y su voz;
+  - **pista**: al superar la prueba, lee la pista de la casa y recuerda escanear el QR con la cámara del móvil. Si el anfitrión no la escribió, sale una variante sin pista;
+  - **relevo**: con la puerta abierta, manda al grupo al siguiente nivel y presenta a quien los espera.
+- **Sahur** llama por teléfono antes de su sala (y en el prólogo y en un final) para meter prisa: a las 4:30 pasa a recoger.
+- **Finales**: uno por banda de Brainrot% (escapáis, algo vino con vosotros, os convertís en brainrots).
+- **Sustos**: cada QR trampa despierta a su brainrot con su frase.
+- Las voces son pitidos sintetizados por letra, como en los juegos de rol clásicos, distintos para cada personaje. La boca de los rigs (Patapim, Tralalero, Sahur) se mueve con las vocales; los cameos dan saltitos al hablar.
+- Los **móviles** muestran «Mirad la tele» con quién habla y su frase, y ocultan «Entrar» / «Siguiente sala» hasta que acaba (si la tele deja de avisar 6 s, vuelven).
+- El **anfitrión** controla la tele: Espacio, Intro, → o un clic pasan de frase; Esc o «Saltar» terminan la escena. Cada escena se ve una vez por partida (una tele recargada no la repite).
+- Unos 8 minutos de narración en total. Guion: `static/js/story/script.js`.
+- **Reparto como recurso gráfico**: `/static/dev/brainrots.html` pinta a los ocho y descarga cada pose en PNG transparente.
 
 ## Tiempo real y guardado
 

@@ -60,6 +60,13 @@ body.play .hold-status { font-weight: 600; }
   body.play main { padding-top: .6rem; gap: .6rem; }
 }
 
+/* ------------------------------------------------------------------ story: the TV is telling it (js/play/main.js) */
+body.play .story-who { justify-self: center; padding: .15rem 1rem .25rem; font-family: var(--font-title); font-size: 1.3rem; color: #FFF5E2;
+  background: var(--ink); border: 3px solid var(--ink); border-radius: 12px 16px 10px 18px; box-shadow: 3px 3px 0 var(--room-c, var(--accent));
+  transform: rotate(-1.5deg); }
+body.play .story-line { font-size: 1.3rem; line-height: 1.4; font-weight: 600; }
+body.play .story-line.story-card { font-family: var(--font-title); font-size: 1.8rem; font-weight: 400; }
+
 /* ------------------------------------------------------------------ Pistas: QR scanner (js/play/scanner.js) */
 /* square viewfinder with an inked aim box; the status line under it says what the camera read */
 body.play .scan-view { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; background: #0C0616;

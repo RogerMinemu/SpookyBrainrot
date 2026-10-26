@@ -22,6 +22,10 @@ export const DANCE_AMP = 14, DANCE_HZ = 2;
 export const SQUASH_AMP = 0.018, SQUASH_HZ = 0.9;
 export const NOD_DEG = 2.5, NOD_HZ = 3.2;
 export const ARM_DEG = 7, ARM_HZ = 1.6;
+/** Cameos have no mouth: while they talk they hop and squash on the syllables instead. */
+export const TALK_HOP = 9, TALK_HOP_HZ = 3.4, TALK_SQUASH = 0.035;
+/** A held prop (Sahur's bat) leans out a little at rest, so it never covers the face. */
+export const PROP_REST_DEG = 12;
 export const DANCE_ARM_DEG = 18;
 export const BLINK_PERIOD = 3.9, BLINK_LEN = 0.12, BLINK_SEED_MUL = 1.7;
 export const TAKE_SEC = 0.22;
@@ -101,7 +105,12 @@ function rootOf(rig, state, t) {
   if (!reduced) {
     y -= state.dance ? DANCE_AMP * Math.pow(Math.sin(TAU * DANCE_HZ * t), 2) : BOB_AMP * Math.sin(TAU * BOB_HZ * t);
   }
-  const sy0 = 1 + SQUASH_AMP * Math.sin(TAU * SQUASH_HZ * t);
+  let sy0 = 1 + SQUASH_AMP * Math.sin(TAU * SQUASH_HZ * t);
+  if (rig.kind !== "rig" && state.talking && !reduced) {
+    const beat = Math.abs(Math.sin(TAU * TALK_HOP_HZ * t));
+    y -= TALK_HOP * beat;
+    sy0 *= 1 + TALK_SQUASH * (beat - 0.5);
+  }
   const take = takeAt(t - (state.takeT ?? Infinity));
   const sy = sy0 * take.squash;
   const sx = 1 / Math.sqrt(sy);
@@ -203,7 +212,8 @@ export function poseOps(rig, state = {}, t = 0) {
     let r = rotOf(p.part, p.swing);
     if (p.keep) {
       r -= p.keep * parentAngle;
-      if (!reduced) r += emote === "scary" ? 38 : emote === "angry" ? 16 : emote === "happy" ? 22 : 0; // held prop leans out with the mood
+      // held prop leans out with the mood (at rest too, a still lean is not motion)
+      r += reduced ? PROP_REST_DEG : emote === "scary" ? 38 : emote === "angry" ? 16 : emote === "happy" ? 22 : PROP_REST_DEG;
     }
     angle.set(p.part, parentAngle + r);
     w = mul(parent, trs(p.at[0], p.at[1], r));

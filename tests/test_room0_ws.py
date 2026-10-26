@@ -49,7 +49,10 @@ def test_two_players_hold_together_and_reach_room1_intro(client, clock):
         hello(wb, {"role": "player", "player_token": tb})
         state_until(tv, lambda p: all(x["connected"] for x in p["game"]["players"]))
 
-        # TV starts the game
+        # TV starts the game: room 0's intro (the prologue), then "Entrar" starts the puzzle
+        tv.send_text(env("advance"))
+        s = state_until(tv, lambda p: p["game"]["status"] == "running")
+        assert s["game"]["phase"] == "intro" and s["view"] == {"kind": "intro", "room_no": 0, "title": "Agarraos fuerte"}
         tv.send_text(env("advance"))
         s = state_until(tv, lambda p: p["game"]["phase"] == "puzzle")
         assert s["view"]["kind"] == "hold_together" and s["game"]["status"] == "running"
@@ -86,6 +89,8 @@ def test_advance_in_wrong_phase_returns_error_to_sender_only(client):
         hello(tv, {"role": "tv", "game_id": gid})
         hello(wa, {"role": "player", "player_token": ta})
         wa.send_text(env("advance"))
+        state_until(wa, lambda p: p["game"]["status"] == "running")
+        wa.send_text(env("advance"))
         state_until(wa, lambda p: p["game"]["phase"] == "puzzle")
         wa.send_text(env("advance"))
         err = next_of(wa, "error")
@@ -108,6 +113,8 @@ def test_release_over_ws_resets_progress_and_release_by_other_is_ignored(client,
         hello(tv, {"role": "tv", "game_id": gid})
         hello(wa, {"role": "player", "player_token": ta})
         hello(wb, {"role": "player", "player_token": tb})
+        tv.send_text(env("advance"))
+        state_until(tv, lambda p: p["game"]["status"] == "running")
         tv.send_text(env("advance"))
         state_until(tv, lambda p: p["game"]["phase"] == "puzzle")
         wa.send_text(env("puzzle", {"type": "hold", "down": True}))

@@ -6,6 +6,8 @@ import { panel, button, title, pill } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
 import { unlockAudio, setMuted, play as playSound } from "/static/js/shared/audio.js";
 import { createScanner } from "/static/js/play/scanner.js";
+import { storyKeyFor, lineFor, varsFor } from "/static/js/story/runner.js";
+import { PHONE } from "/static/js/story/script.js";
 
 // composition root: one static plate per page (phones never boil)
 startArt({ layout: "flex" });
@@ -33,6 +35,12 @@ let socket = null;
 let active = null; // { kind, mod } puzzle controller currently mounted
 let scanner = null; // "Pistas" QR camera: lives across the re-renders of the search phase, dies when it ends
 let latest = null;
+// The TV's cutscene beat (fx "story", every beat + a 2 s heartbeat). While it is fresh and matches our state,
+// the phone shows the same line and holds back "Entrar" / "Siguiente sala"; a silent TV releases them.
+const STORY_STALE_MS = 6000;
+const STORY_KINDS = new Set(["intro", "unlocked", "ending"]);
+let storyFx = null;
+let storyTimer = 0;
 let loadToken = 0;
 let tvOnline = true; // optimistic until the first state says otherwise
 
@@ -78,9 +86,35 @@ if (SEAT) {
   window.__sb = sb;
 }
 
+/** The line the TV is telling right now, or null when no cutscene is running for this state. */
+function storyLine(state) {
+  if (!storyFx || storyFx.data.done || Date.now() - storyFx.at > STORY_STALE_MS) return null;
+  if (storyFx.data.key !== storyKeyFor(state)) return null;
+  return lineFor(storyFx.data.scene, storyFx.data.beat, varsFor(state)) || { name: "", text: PHONE.waiting };
+}
+
+function onStoryFx(data) {
+  storyFx = { data: data || {}, at: Date.now() };
+  clearTimeout(storyTimer);
+  storyTimer = setTimeout(() => latest && PLAIN.has(latest.view.kind) && renderPlain(latest), STORY_STALE_MS + 100);
+  if (latest && STORY_KINDS.has(latest.view.kind)) renderPlain(latest);
+}
+
+function renderStory(state, line) {
+  fill(gameSection,
+    title(PHONE.title, { cls: "phone-title" }),
+    panel([
+      h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
+      line.name ? h("p", { class: "story-who" }, line.name) : null,
+      h("p", { class: line.card ? "story-line story-card" : "story-line" }, line.text),
+    ], { cls: "phone-panel story-panel" }));
+}
+
 function renderPlain(state) {
   const players = state.game.players;
   const kind = state.view.kind;
+  const line = STORY_KINDS.has(kind) ? storyLine(state) : null;
+  if (line) { dropScanner(); renderStory(state, line); return; }
   const search = kind === "search";
   const advanceLabel = { lobby: "Empezar", intro: "Entrar", unlocked: "Siguiente sala" }[kind];
   if (search && !scanner) scanner = createScanner({ onToken: (token) => !!socket && socket.send("scan", { token }) });
@@ -149,6 +183,7 @@ function connect() {
       if (active && active.mod.onTvOnline) active.mod.onTvOnline(online);
     },
     onFx: (fx) => {
+      if (fx.kind === "story") { onStoryFx(fx.data); return; }
       if (active && active.mod.onFx) active.mod.onFx(fx);
       else playSound(fx.kind);
     },
