@@ -37,35 +37,51 @@ function glowEye(p, cx, cy, rx, ry, slit = false) {
 function bombardiro(E) {
   const c = byId("bombardiro").palette, id = "bombardiro";
   const metal = (o = {}) => wc(c.metal, c.metalDark, { fillOp: 120, bleed: 0, ...o });
-  // ---- idle: an old bomber with a crocodile for a fuselage, side view, hovering
+  // ---- idle: chibi Bombardiro (the Minemi look). A big round crocodile head in 3/4 view with two big shiny eyes,
+  // aviator goggles pushed up on the brow (the reference's "goggles" hat) and rosy cheeks, on a small bomber body.
+  // The body pen shrinks the old full-size plane behind the head; the head is drawn at its own, chibi size.
   {
-    const p = makePen(E, `${id}|idle`, CAMEO_CELLS.idle);
+    const p = makePen(E, `${id}|idle`, CAMEO_CELLS.idle, false, { ox: 200, oy: 330, k: .72, tx: 170 });
+    const hp = makePen(E, `${id}|idle.head`, CAMEO_CELLS.idle);
     p.sh([[240, 256], [334, 248], [352, 152], [304, 122], [252, 130]], wc(c.metalDark, dark(c.metalDark, .3), { fillOp: 100, bleed: 0 }), 1.8); // far wing
     p.sh([[52, 286], [84, 196], [124, 192], [138, 262]], metal(), 1.6); // tail fin
     p.sh([[70, 304], [34, 300], [22, 312], [40, 326], [110, 338]], wc(c.croc, c.crocDark, { fillOp: 110, bleed: 0 }), 1.6); // tail
     p.sh([[60, 300], [100, 264], [182, 240], [272, 238], [352, 246], [404, 264], [422, 302], [394, 340], [302, 360], [190, 360], [110, 342]], wc(c.croc, c.crocDark, { fillOp: 125, bleed: 0 }), 2.4); // fuselage
     p.sh([[110, 336], [200, 352], [302, 352], [392, 332], [380, 346], [300, 362], [190, 362], [124, 348]], fl(c.belly, { sw: .8 }), 1.4);
-    for (let i = 0; i < 8; i++) { const x = 126 + i * 36; p.ln([[x - 9, 252 + i * .8], [x, 242 + i * .8], [x + 9, 252 + i * .8]], .9, c.crocDark, "inkfine", .6); }
-    p.sh([[392, 270], [440, 262], [486, 278], [494, 302], [480, 326], [430, 332], [392, 332]], wc(c.croc, c.crocDark, { fillOp: 110, bleed: 0 }), 1.8); // snout
-    p.ln([[404, 316], [440, 322], [484, 312]], 1.2, INK, "ink", .8);
-    teeth(p, 410, 318, 482, 312, 6, 11, .8);
-    p.ell(468, 280, 5, 4, fl(INK, { ink: null }), .4);
-    // goggles on the brow, a big shiny eye behind the lens, a rosy cheek on the snout
-    p.ell(396, 268, 34, 32, fl(c.goggles, { sw: 1.6 }), 1.2);
-    minemiEye(p, 397, 269, 22, 22, "#3F7A2A", { lash: false });
-    p.ln([[364, 262], [330, 276], [300, 270]], 2.2, dark(c.goggles, .45), "ink", .8);
-    blush(p, 446, 300, 16, 9);
-    // near wing, bombs, propeller
-    p.ell(124, 384, 18, 34, wc(c.metalDark, INK, { fillOp: 80, sw: 1 }), 1.2);
-    p.poly([[110, 360], [138, 360], [150, 344], [100, 344]], { wash: c.metal, washOp: 255, ink: INK, sw: .7 }, .6);
-    p.ell(168, 394, 15, 28, wc(c.metalDark, INK, { fillOp: 80, sw: 1 }), 1.2);
+    for (let i = 0; i < 6; i++) { const x = 126 + i * 36; p.ln([[x - 9, 252 + i * .8], [x, 242 + i * .8], [x + 9, 252 + i * .8]], .9, c.crocDark, "inkfine", .6); }
+    // the head: rounded cranium + short round snout, scutes on top, lighter jaw
+    for (const [bx, by] of [[296, 150], [336, 132], [380, 130]]) hp.ell(bx, by, 16, 11, wc(c.crocDark, dark(c.crocDark, .3), { fillOp: 90 }), 1);
+    hp.sh([[252, 250], [258, 182], [300, 142], [360, 128], [414, 140], [446, 178], [470, 214], [482, 254], [470, 290], [420, 308], [350, 314], [290, 302], [260, 282]],
+      wc(c.croc, c.crocDark, { fillOp: 120, bleed: 0 }), 2.4);
+    hp.shine(316, 168, 34, 10, c.croc, -.3);
+    hp.sh([[298, 292], [360, 300], [430, 294], [468, 280], [462, 296], [424, 312], [352, 318], [296, 306]], fl(c.belly, { sw: 1 }), 1.2);
+    hp.ln([[322, 282], [376, 296], [430, 292], [468, 274]], 1.9, INK, "ink", .5); // smile
+    teeth(hp, 384, 294, 462, 280, 4, 9, .8);
+    hp.ell(470, 236, 5, 4, fl(INK, { ink: null }), .4);
+    hp.ell(458, 228, 4, 3, fl(INK, { ink: null }), .3);
+    // two big shiny eyes (3/4 view: the far one narrower), cheeks
+    minemiEye(hp, 300, 218, 24, 35, "#3F7A2A", { side: -1, glance: 2 });
+    minemiEye(hp, 384, 222, 32, 40, "#3F7A2A", { side: 1, glance: 2 });
+    blush(hp, 282, 266, 12, 7, -1);
+    blush(hp, 424, 268, 18, 10, 1);
+    // aviator goggles pushed up on the brow, like the reference's goggles hat
+    hp.poly([[258, 168], [444, 140], [448, 158], [262, 186]], { wash: "#3A2E2C", washOp: 255, ink: INK, sw: 1.1 }, .6);
+    for (const [gx, gy] of [[318, 158], [394, 146]]) {
+      hp.ell(gx, gy, 27, 22, fl("#3A2E2C", { sw: 1.4 }), .8);
+      hp.ell(gx, gy, 19, 15, wc(c.goggles, dark(c.goggles, .35), { fillOp: 80, sw: .8 }), .6);
+      hp.ell(gx - 6, gy - 5, 6, 4, fl(light(c.goggles, .6), { ink: null }), .2);
+    }
+    hp.poly([[350, 144], [362, 142], [364, 156], [352, 158]], { wash: "#3A2E2C", washOp: 255, ink: INK, sw: .8 }, .3);
+    // near wing and bombs (small, under the head), propeller at the snout
+    p.ell(124, 384, 18, 34, wc(c.metalDark, INK, { fillOp: 80, sw: 1.2 }), 1.2);
+    p.poly([[110, 360], [138, 360], [150, 344], [100, 344]], { wash: c.metal, washOp: 255, ink: INK, sw: .9 }, .6);
+    p.ell(168, 394, 15, 28, wc(c.metalDark, INK, { fillOp: 80, sw: 1.2 }), 1.2);
     p.sh([[206, 334], [326, 334], [376, 434], [286, 452], [172, 414]], metal(), 2);
     p.ln([[236, 346], [290, 438]], .8, c.metalDark, "inkfine", 1.2);
-    p.ln([[210, 372], [336, 372]], .8, c.metalDark, "inkfine", 1.2);
-    for (const [rx, ry] of [[232, 350], [300, 350], [262, 414], [330, 400]]) p.ell(rx, ry, 4, 4, fl(c.metalDark, { sw: .5 }), .3);
+    for (const [rx, ry] of [[232, 350], [300, 350], [262, 414], [330, 400]]) p.ell(rx, ry, 4, 4, fl(c.metalDark, { sw: .6 }), .3);
     p.shine(240, 360, 30, 6, c.metal, .5);
-    p.ell(490, 302, 12, 78, fl("#DDE4EA", { washOp: 120, ink: INK, sw: .6 }), 1.2); // spinning blades
-    p.sh([[484, 290], [500, 290], [500, 316], [484, 316]], fl(c.metalDark, { sw: .8 }), 1);
+    hp.ell(488, 258, 8, 62, fl("#DDE4EA", { washOp: 120, ink: INK, sw: .7 }), 1); // spinning blades
+    hp.ell(486, 258, 9, 11, fl(c.metalDark, { sw: 1 }), .6);
   }
   // ---- scary: diving at the camera, jaws wide
   {
