@@ -24,7 +24,7 @@ export function onError(err) {
 
 const EVENT_TEXT = {
   splash: () => "Algo ha salpicado la pared...",
-  round_failed: (d) => `La palabra se ha podrido (+${d.penalty || 0}% de brainrot).`,
+  round_failed: (d) => `${d.title || "¡Ronda fallida!"} ${d.text || "Probad otra vez."} (+${d.penalty || 0}% de brainrot)`,
   toast: (d) => d.text,
   anchor_unlocked: () => "Ancla encontrada",
   jumpscare: (d) => `${d.cameo || "Algo"} anda cerca...`,

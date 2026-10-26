@@ -6,12 +6,14 @@ only (see Game.serialize_state).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from app.content import ROOM_PLAN, RoomSpec
 from app.core.puzzle import PlayerInfo, Puzzle
 
-STATE_VERSION = 1
+STATE_VERSION = 2
+# v1 saves stored only room_idx over the old two-room plan: idx 0 = room 0, idx 1 = room 2 (Wordle).
+LEGACY_V1_ROOM_NOS = (0, 2)
 MAX_NAME_LEN = 24
 
 STATUS_LOBBY = "lobby"
@@ -22,6 +24,32 @@ PHASE_INTRO = "intro"
 PHASE_PUZZLE = "puzzle"
 PHASE_SEARCH = "search"
 PHASE_UNLOCKED = "unlocked"
+
+
+def resolve_room_idx(state: Mapping[str, Any], plan: Optional[Sequence[RoomSpec]] = None) -> int:
+    """Index into the room plan for a stored state blob (any version). Never raises, always in range.
+
+    v2 saves carry `room_no` and are looked up by it; v1 saves only have the old plan's index, which maps
+    through LEGACY_V1_ROOM_NOS. Anything unknown clamps into the plan.
+    """
+    plan = ROOM_PLAN if plan is None else plan
+    last = len(plan) - 1
+    raw = state.get("room_idx", 0)
+    idx = raw if isinstance(raw, int) and not isinstance(raw, bool) else 0
+    version = state.get("v", 1)
+    if isinstance(version, int) and not isinstance(version, bool) and version >= 2:
+        room_no = state.get("room_no")
+    else:
+        room_no = LEGACY_V1_ROOM_NOS[max(0, min(idx, len(LEGACY_V1_ROOM_NOS) - 1))]
+    if room_no is not None:
+        for i, spec in enumerate(plan):
+            if spec.room_no == room_no:
+                return i
+    return max(0, min(idx, last))
+
+
+def resolve_room(state: Mapping[str, Any]) -> RoomSpec:
+    return ROOM_PLAN[resolve_room_idx(state)]
 
 
 @dataclass
@@ -101,6 +129,7 @@ class Game:
         return {
             "v": STATE_VERSION,
             "room_idx": self.room_idx,
+            "room_no": self.room_no,
             "phase": self.phase,
             "brainrot": self.brainrot,
             "brainrot_log": list(self.brainrot_log),
@@ -127,7 +156,7 @@ class Game:
             code=code,
             name=name,
             status=status,
-            room_idx=state.get("room_idx", 0),
+            room_idx=resolve_room_idx(state),
             phase=state.get("phase", PHASE_INTRO),
             brainrot=state.get("brainrot", 0.0),
             brainrot_log=list(state.get("brainrot_log", [])),
@@ -139,8 +168,19 @@ class Game:
         )
         for p in g.players:
             p.connected = False  # R1.4: players always start disconnected
+        if status == STATUS_FINISHED:
+            g.room_idx = len(ROOM_PLAN) - 1  # a finished game always sits on the last room
         pz = state.get("puzzle")
         if pz:
-            g.puzzle_id = pz["id"]
-            g.puzzle_state = puzzles[pz["id"]].deserialize(pz["state"])
+            # Unknown id, a puzzle that does not belong to this room, or a blob that no longer
+            # deserializes (older/newer plugin) all fall back to the room intro instead of raising.
+            plugin = puzzles.get(pz.get("id")) if isinstance(pz, Mapping) else None
+            if plugin is not None and pz.get("id") == g.room.puzzle_id:
+                try:
+                    g.puzzle_state = plugin.deserialize(pz.get("state"))
+                    g.puzzle_id = pz["id"]
+                except Exception:
+                    g.puzzle_id, g.puzzle_state = None, None
+        if g.phase == PHASE_PUZZLE and g.puzzle_state is None:
+            g.phase = PHASE_INTRO
         return g

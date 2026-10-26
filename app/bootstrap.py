@@ -21,6 +21,7 @@ from app.runtime.runtime import run_ticker
 from app.web import routes_admin, routes_api, routes_debug, routes_pages
 from app.web.routes_admin import install_admin_guard
 from app.web.hub import Hub
+from app.web.realtime import InputRelay
 from app.web.ws import router as ws_router
 
 log = logging.getLogger("spooky")
@@ -63,7 +64,7 @@ def create_app(
     db = Database(settings.db_path)
     qr_repo = QrRepo(db)
     qr_repo.ensure(generate_entries)  # idempotent: tokens are created ONCE and never regenerated
-    hub = Hub()
+    hub = Hub(relay=InputRelay(clock.now_ms))
     manager = GameManager(db, clock, rng, build_registry(), hub, min_players=settings.min_players)
 
     @asynccontextmanager

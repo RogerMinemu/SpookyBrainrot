@@ -49,7 +49,9 @@ def make_engine():
 
 def test_jump_to_each_room_and_phase():
     e, g = make_engine(), make_game()
-    for room, phase in [(0, "intro"), (0, "puzzle"), (0, "unlocked"), (2, "intro"), (2, "puzzle"), (2, "search")]:
+    rooms = [(0, "intro"), (0, "puzzle"), (0, "unlocked"), (1, "puzzle"), (1, "unlocked"), (2, "intro"),
+             (2, "puzzle"), (2, "search"), (7, "intro"), (7, "puzzle"), (7, "search")]
+    for room, phase in rooms:
         out = e.apply(g, DebugJump(room, phase))
         assert out.ok and out.changed, (room, phase)
         assert g.room_no == room and g.phase == phase and g.status == STATUS_RUNNING
@@ -64,12 +66,11 @@ def test_jump_default_phase_is_intro():
 
 def test_jump_to_puzzle_reinitializes_state():
     e, g = make_engine(), make_game()
-    e.apply(g, DebugJump(2, "puzzle"))
+    e.apply(g, DebugJump(1, "puzzle"))
     first = g.puzzle_state
-    first.target = "XXXXXX"
-    e.apply(g, DebugJump(2, "puzzle"))
-    assert g.puzzle_state is not first and g.puzzle_state.target != "XXXXXX"
-    assert g.puzzle_state.attempts == []
+    first.level = 3
+    e.apply(g, DebugJump(1, "puzzle"))
+    assert g.puzzle_state is not first and g.puzzle_state.level == 0
     # leaving the puzzle drops its state, and Room 0 gets its own fresh state
     e.apply(g, DebugJump(0, "intro"))
     assert g.puzzle_id is None and g.puzzle_state is None
@@ -109,7 +110,7 @@ def test_jump_lobby_and_ending():
         (None, None, "unknown_room"),
         (0, "bogus", "unknown_phase"),
         (0, "search", "unknown_phase"),  # Room 0 has no anchor
-        (2, "unlocked", "unknown_phase"),  # the last room ends via the ending
+        (7, "unlocked", "unknown_phase"),  # the last room ends via the ending
         ("lobby", "puzzle", "unknown_phase"),
         ("ending", "intro", "unknown_phase"),
     ],
@@ -132,7 +133,33 @@ def test_complete_current_puzzle():
     e.apply(g, DebugJump(0, "puzzle"))
     assert e.apply(g, DebugComplete()).ok and g.phase == PHASE_UNLOCKED
     # then the normal flow continues
-    assert e.apply(g, Advance()).ok and g.room_no == 2
+    assert e.apply(g, Advance()).ok and g.room_no == 1
+
+
+def test_jump_to_sub_level():
+    e, g = make_engine(), make_game()
+    assert e.apply(g, DebugJump(1, "puzzle", level=2)).ok
+    assert g.puzzle_state.level == 2 and g.puzzle_state.epoch == 2  # jumping restarts the TV sim
+    assert e.apply(g, DebugJump(7, "puzzle", level=1)).ok
+    assert g.puzzle_state.round == 1 and g.puzzle_state.phase == "show" and len(g.puzzle_state.seq) == 5
+    assert e.apply(g, DebugJump(1, "puzzle", level=0)).ok and g.puzzle_state.level == 0
+
+
+@pytest.mark.parametrize(
+    "room,phase,level",
+    [(1, "puzzle", 4), (1, "puzzle", -1), (1, "puzzle", "2"), (1, "puzzle", True), (1, "puzzle", 1.5),
+     (7, "puzzle", 3), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
+     ("lobby", None, 0), ("ending", None, 0)],
+)
+def test_jump_bad_level_is_rejected_without_mutation(room, phase, level):
+    e, g = make_engine(), make_game()
+    e.apply(g, DebugJump(1, "puzzle", level=1))
+    snap = (g.room_idx, g.phase, g.status, g.puzzle_id, g.puzzle_state, g.seq)
+    state = e.puzzles["coop_platformer"].serialize(g.puzzle_state)
+    out = e.apply(g, DebugJump(room, phase, level))
+    assert out.error and out.error[0] == "unknown_level" and not out.changed
+    assert (g.room_idx, g.phase, g.status, g.puzzle_id, g.puzzle_state, g.seq) == snap
+    assert e.puzzles["coop_platformer"].serialize(g.puzzle_state) == state
 
 
 def test_complete_without_puzzle_rejected():
@@ -174,7 +201,8 @@ def test_events_use_the_normal_channel_without_changing_state():
     assert out.events == [("jumpscare", {"decoy": 3, "cameo": CAMEOS[2]}, "tv")]
     assert e.apply(g, DebugEvent("jumpscare")).events[0][1]["cameo"] == "???"  # the default
     assert e.apply(g, DebugEvent("splash")).events[0][0] == "splash"
-    assert e.apply(g, DebugEvent("round_failed")).events[0][1]["penalty"] == brainrot.ROUND_FAIL_PENALTY
+    failed = e.apply(g, DebugEvent("round_failed")).events[0][1]
+    assert failed["penalty"] == brainrot.ROUND_FAIL_PENALTY and failed["title"] and failed["text"]
     assert e.apply(g, DebugEvent("anchor_unlocked")).events[0][0] == "anchor_unlocked"
     assert g.serialize_state(e.puzzles) == snap
 
@@ -201,9 +229,12 @@ def test_reset_keeps_players_and_clears_progress():
 
 def test_debug_rooms_listing():
     rooms = make_engine().debug_rooms()
-    assert [r["key"] for r in rooms] == ["lobby", 0, 2, "ending"]
+    assert [r["key"] for r in rooms] == ["lobby", 0, 1, 2, 3, 4, 6, 7, "ending"]  # room 5 was dropped
     assert rooms[1]["phases"] == ["intro", "puzzle", "unlocked"]
-    assert rooms[2]["phases"] == ["intro", "puzzle", "search"]
+    assert rooms[2]["phases"] == ["intro", "puzzle", "search", "unlocked"]
+    assert rooms[7]["phases"] == ["intro", "puzzle", "search"]  # the last room ends via the ending
+    # platformer levels, shape rounds, trivia "start with N right answers", Sahur rounds; the bomb has none
+    assert [r["levels"] for r in rooms] == [[], [], [0, 1, 2, 3], [], [0, 1, 2], [0, 1, 2, 3, 4, 5], [], [0, 1, 2], []]
 
 
 # --- HTTP level -----------------------------------------------------------------------------
@@ -223,7 +254,8 @@ def test_info_lists_rooms_cameos_presets(client):
     r = client.get(url(gid))
     assert r.status_code == 200
     d = r.json()
-    assert [x["key"] for x in d["rooms"]] == ["lobby", 0, 2, "ending"]
+    assert [x["key"] for x in d["rooms"]] == ["lobby", 0, 1, 2, 3, 4, 6, 7, "ending"]
+    assert d["tv_view"] is None and d["peek"] == ""
     assert d["cameos"] == CAMEOS and d["presets"] == [0, 20, 40, 60, 80, 100]
     assert d["game"]["room"] == "lobby" and d["game"]["players"] == 2
 
@@ -241,15 +273,17 @@ def test_games_list_has_live_and_saved(client):
 def test_jump_http_persists_and_changes_seq(client):
     gid = new_game(client)
     seq0 = client.get(url(gid)).json()["game"]["seq"]
-    r = client.post(url(gid, "/jump"), json={"room": 2, "phase": "puzzle"})
+    r = client.post(url(gid, "/jump"), json={"room": 1, "phase": "puzzle", "level": 2})
     assert r.status_code == 200
     d = r.json()
-    assert d["room"] == 2 and d["phase"] == "puzzle" and d["seq"] > seq0
+    assert d["room"] == 1 and d["phase"] == "puzzle" and d["seq"] > seq0
     row = client.app.state.manager.games.get(gid)
     st = json.loads(row.state_json)
-    assert st["room_idx"] == 1 and st["phase"] == "puzzle" and st["puzzle"]["id"] == "cursed_wordle"
+    assert st["room_idx"] == 1 and st["room_no"] == 1 and st["phase"] == "puzzle"
+    assert st["puzzle"]["id"] == "coop_platformer" and st["puzzle"]["state"]["level"] == 2
     rt = client.app.state.manager.get(gid)
-    assert rt.state_payload("tv")["view"]["kind"] == "cursed_wordle"
+    assert rt.state_payload("tv")["view"]["kind"] == "coop_platformer"
+    assert client.get(url(gid)).json()["tv_view"]["level"] == 2
     for target, kind in [("ending", "ending"), ("lobby", "lobby")]:
         assert client.post(url(gid, "/jump"), json={"room": target}).status_code == 200
         assert rt.state_payload("tv")["view"]["kind"] == kind
@@ -271,6 +305,9 @@ def test_http_errors(client):
         ("/jump", {"room": 9}),
         ("/jump", {"room": 0, "phase": "search"}),
         ("/jump", {"room": 0, "phase": "bogus"}),
+        ("/jump", {"room": 1, "phase": "puzzle", "level": 9}),
+        ("/jump", {"room": 1, "phase": "puzzle", "level": "x"}),
+        ("/jump", {"room": 2, "phase": "puzzle", "level": 0}),
         ("/brainrot", {"value": "mucho"}),
         ("/event", {"name": "nuke"}),
         ("/event", {"name": "jumpscare", "cameo": "Nadie"}),
@@ -280,6 +317,16 @@ def test_http_errors(client):
         assert r.status_code == 422 and r.json()["detail"], (tail, body)
     assert client.post(url(gid, "/complete")).status_code == 422  # nothing to complete in the lobby
     assert client.post(url(gid, "/jump"), json={}).status_code == 422  # missing field (pydantic)
+
+
+def test_bad_level_http_does_not_mutate(client):
+    gid = new_game(client)
+    client.post(url(gid, "/jump"), json={"room": 1, "phase": "puzzle", "level": 1})
+    before = client.get(url(gid)).json()
+    r = client.post(url(gid, "/jump"), json={"room": 1, "phase": "puzzle", "level": 7})
+    assert r.status_code == 422
+    after = client.get(url(gid)).json()
+    assert after["game"] == before["game"] and after["tv_view"] == before["tv_view"]
 
 
 def test_complete_http(client):
@@ -338,24 +385,17 @@ def test_private_views_do_not_leak_after_a_jump(client):
             await rt.set_presence(p.id, True)
 
     client.portal.call(connect)
-    assert client.post(url(gid, "/jump"), json={"room": 2, "phase": "puzzle"}).status_code == 200
+    assert client.post(url(gid, "/jump"), json={"room": 7, "phase": "puzzle"}).status_code == 200
     s = rt.game.puzzle_state
-    assert set(s.letters) == {p.id for p in rt.game.players}
-    texts = {"tv": json.dumps(rt.state_payload("tv"))}
+    assert len(s.seq) == 4
+    assert "seq" in rt.state_payload("tv")["view"]
     for p in rt.game.players:
-        texts[p.id] = json.dumps(rt.state_payload("player", p.id))
-    assert "letter" not in json.loads(texts["tv"])["view"]
-    for p in rt.game.players:
-        own = json.loads(texts[p.id])["view"]["letter"]
-        assert own == s.letters[p.id]
-        for other in rt.game.players:
-            if other.id != p.id:
-                assert json.loads(texts[other.id])["view"]["letter"] != own
-    for text in texts.values():
-        assert s.target not in text and '"target"' not in text
-    # the debug API itself never exposes the secret answer or tokens either
+        view = rt.state_payload("player", p.id)["view"]
+        assert "seq" not in view and "hits" not in view and "trap" not in json.dumps(view)
+        assert view["drums"] == [d for d, owners in s.owners.items() if p.id in owners]
+    # the host-only debug peek shows the TV view; it never exposes tokens
     body = json.dumps(client.get(url(gid)).json()) + json.dumps(client.get("/admin/api/games").json())
-    assert s.target not in body and "token" not in body
+    assert '"seq"' in body and "token" not in body
 
 
 # --- ADMIN_KEY ---------------------------------------------------------------------------------

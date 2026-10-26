@@ -25,4 +25,22 @@ def test_degradation_level_monotonic():
 
 
 def test_penalties_are_positive_constants():
-    assert b.WRONG_ATTEMPT > 0 and b.DECOY_PENALTY > 0 and b.ROUND_FAIL_PENALTY > 0
+    assert b.DECOY_PENALTY > 0 and b.ROUND_FAIL_PENALTY > 0
+    assert b.SIM_PENALTY > 0 and b.SAHUR_FAIL_PENALTY > 0
+    assert b.SIM_PENALTY_COOLDOWN_MS > 0 and b.ROOM_PENALTY_CAP >= b.SIM_PENALTY
+    assert not hasattr(b, "WRONG_ATTEMPT")
+
+
+def test_capped_limits_to_remaining_room():
+    assert b.capped(0, 2, 12) == 2
+    assert b.capped(11, 2, 12) == 1
+    assert b.capped(12, 2, 12) == 0
+    assert b.capped(20, 2, 12) == 0  # over the cap already: never negative
+
+
+def test_capped_penalty_never_leaves_meter_bounds():
+    value = 99.0
+    value = b.add(value, b.capped(0, b.SIM_PENALTY, b.ROOM_PENALTY_CAP))
+    assert value == 100.0
+    value = b.add(value, b.capped(b.ROOM_PENALTY_CAP, b.SIM_PENALTY, b.ROOM_PENALTY_CAP))
+    assert 0.0 <= value <= 100.0

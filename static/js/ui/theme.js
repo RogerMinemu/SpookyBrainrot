@@ -1,9 +1,9 @@
 // Theme state: maps the server state to html[data-room] / html[data-rot] / --rot.
 // Pure presentation. The art layer (art/boot.js) observes data-room, so screens never import any art code.
 
-const ROOM_THEMES = { 0: "prologue", 1: "backrooms", 2: "poolrooms" };
+const ROOM_THEMES = { 0: "prologue", 1: "backrooms", 2: "poolrooms", 3: "mall", 4: "site19", 6: "hangar", 7: "sahur" };
 const NEUTRAL_KINDS = new Set(["lobby", "idle", "ending"]);
-export const KNOWN_ROOMS = ["prologue", "backrooms", "poolrooms"];
+export const KNOWN_ROOMS = ["prologue", "backrooms", "poolrooms", "mall", "site19", "hangar", "sahur"];
 
 /** Theme id for a server state. Unknown / future rooms inherit the default (prologue). */
 export function roomFor(state) {

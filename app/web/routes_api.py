@@ -7,9 +7,9 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from app.content import RIDDLE_PLACEHOLDER, ROOM_PLAN
+from app.content import ANCHORS_IN_USE, RIDDLE_PLACEHOLDER
 from app.core.qr import ANCHOR_COUNT
-from app.core.game import normalize_name
+from app.core.game import normalize_name, resolve_room
 from app.db.repos import GameRow
 from app.web.qr_svg import svg_for_url
 
@@ -27,16 +27,16 @@ class CreateGame(BaseModel):
 class JoinBody(BaseModel):
     code: str
     name: str
+    seat: bool = False  # /admin/demo phones: the token lives in the page's seat storage, never in the shared cookie
 
 
 def _summary(row: GameRow) -> Dict[str, Any]:
     state = json.loads(row.state_json)
-    room_idx = min(state.get("room_idx", 0), len(ROOM_PLAN) - 1)
     return {
         "id": row.id,
         "name": row.name,
         "status": row.status,
-        "room_no": ROOM_PLAN[room_idx].room_no,
+        "room_no": resolve_room(state).room_no,
         "updated_at": row.updated_at,
     }
 
@@ -89,9 +89,10 @@ async def join(body: JoinBody, request: Request, response: Response) -> Dict[str
     if rt is None:
         raise HTTPException(status_code=404, detail="game not found")
     player, token = await manager.join(rt, name)
-    response.set_cookie(
-        COOKIE_NAME, token, max_age=COOKIE_MAX_AGE, samesite="lax", httponly=False, secure=False, path="/"
-    )
+    if not body.seat:  # a seat must not overwrite the identity of the browser that hosts the demo
+        response.set_cookie(
+            COOKIE_NAME, token, max_age=COOKIE_MAX_AGE, samesite="lax", httponly=False, secure=False, path="/"
+        )
     return {"player_id": player.id, "name": player.name, "game_id": rt.game.id, "token": token}
 
 
@@ -116,6 +117,7 @@ def _house_view(cfg: Dict[int, dict]) -> Dict[str, Any]:
                 "riddle": riddle,
                 "place": (row.get("spot_id") or "").strip(),
                 "configured": bool(riddle),
+                "in_use": idx in ANCHORS_IN_USE,  # a dropped room leaves its printed anchor without a job
                 "placeholder": RIDDLE_PLACEHOLDER,
             }
         )

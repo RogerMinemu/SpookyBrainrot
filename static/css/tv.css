@@ -35,10 +35,11 @@ body.tv { overflow: hidden; height: 100vh; }
 .hold-bar { width: min(70vw, 900px); height: 2.8rem; border-radius: 999px; background: var(--surface);
   border: 3px solid var(--ink); box-shadow: 4px 5px 0 var(--ink); overflow: hidden; margin: 0 auto; }
 .hold-bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--room-b), var(--room-c)); border-right: 3px solid var(--ink); transition: width .25s linear; }
-.wgrid { display: grid; gap: .5rem; justify-content: center; }
-.wrow { display: flex; gap: .5rem; justify-content: center; }
 .glitch { animation: glitch calc(3s - var(--rot) * .4s) infinite steps(2); }
 @keyframes glitch { 0%, 92% { transform: none; } 94% { transform: translate(calc(var(--rot) * 2px), 0) skewX(calc(var(--rot) * 1deg)); } 100% { transform: none; } }
+/* realtime stage (static/js/sim/draw.js): 1920x1080 canvas, letterboxed, transparent over the painted #art */
+.sim-stage { position: fixed; inset: 0; z-index: 5; width: 100vw; height: 100vh; object-fit: contain; background: transparent;
+  pointer-events: none; display: block; }
 /* ---------------------------------------------------------------- overlays (painted, fixed, no layout shift) */
 .overlay { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; gap: 1rem;
   z-index: 40; font-size: 2rem; pointer-events: none; overflow: hidden; animation: overlay-in .14s ease-out; }
@@ -69,6 +70,8 @@ body.tv { overflow: hidden; height: 100vh; }
 .scare-stage { position: relative; z-index: 2; display: grid; gap: 1.6rem; justify-items: center; }
 .overlay.jumpscare .portrait { transform: rotate(-2.5deg); animation: slam .28s cubic-bezier(.2, 1.6, .4, 1) both; }
 .overlay.jumpscare .portrait-empty { display: grid; place-content: center; width: min(46vh, 44vw); height: min(46vh, 44vw);
+  background: radial-gradient(60% 60% at 50% 45%, #5B1F3C, #1E0E24); }
+.overlay.jumpscare .scare-canvas { display: block; width: min(52vh, 46vw); height: min(52vh, 46vw);
   background: radial-gradient(60% 60% at 50% 45%, #5B1F3C, #1E0E24); }
 .portrait-name { font-family: var(--font-title); font-size: clamp(3rem, 7.5vh, 6.5rem); line-height: 1; color: #FFF5E2; padding: 0 .5rem;
   text-shadow: 5px 5px 0 var(--ink), -3px 3px 0 var(--ink), 3px -3px 0 var(--ink), -3px -3px 0 var(--ink), 0 0 .6em #E33A4A;
@@ -138,7 +141,80 @@ html[data-takeover] #art { filter: grayscale(.85) contrast(1.25) brightness(.55)
 .meter[data-band="3"] { animation: meter-throb 1.1s ease-in-out infinite; }
 @keyframes meter-throb { 0%, 100% { transform: rotate(-1deg) scale(1); } 50% { transform: rotate(-1deg) scale(1.035); } }
 /* puzzles (TV) */
+.sahur-panel { gap: 1.2rem; }
+/* the painted Sahur stands in the lower-left corner, never over the drums (pointer-events off, no layout shift) */
+.sahur-stage { position: fixed; left: 1vw; bottom: 0; width: 24vw; height: 66vh; z-index: 1; pointer-events: none; }
+.sahur-stage .cast-canvas { display: block; width: 100%; height: 100%; }
+.sahur-cue { font-family: var(--font-title); font-size: 3.2rem; line-height: 1.1; min-height: 1.2em; margin: 0; }
+.sahur-drums { display: flex; flex-wrap: wrap; gap: 1.6rem; justify-content: center; }
+.sahur-drum { display: grid; place-items: center; align-content: center; gap: .2rem; width: 12rem; height: 12rem; border-radius: 50%;
+  background: var(--btn); color: var(--ink); border: 4px solid var(--ink); box-shadow: 5px 7px 0 var(--ink); transition: transform .08s ease; }
+.sahur-drum.hit { transform: scale(1.14); background: var(--room-c); box-shadow: 0 0 0 8px var(--surface), 5px 7px 0 var(--ink); }
+.sahur-drum-n { font-family: var(--font-title); font-size: 3.4rem; line-height: 1; }
+.sahur-drum-owners { font-size: 1.05rem; font-weight: 600; max-width: 10rem; text-align: center; overflow-wrap: anywhere; }
 .hold-panel .hold-bar { width: min(62vw, 820px); }
-.wordle-panel { gap: 1.2rem; }
-.wordle-panel .turn-line { font-size: 1.7rem; }
-.wordle-panel > p:last-child { font-size: 1.25rem; color: var(--ink-soft); max-width: 46ch; }
+
+/* guardians of rooms 3, 4 and 6: a painted cameo in the lower-right corner, behind the puzzle panel (z-index -1 inside #screen) */
+.guardian-stage { position: fixed; right: 1vw; bottom: 0; width: 18vw; height: 18vw; max-height: 40vh; z-index: -1; pointer-events: none; }
+.guardian-stage .cast-canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+/* room 3: shape_count */
+.shape-panel { gap: .7rem; padding: 1rem 1.6rem; }
+.shape-top { display: flex; align-items: baseline; justify-content: space-between; gap: 2rem; width: 100%; }
+.shape-cue { margin: 0; font-family: var(--font-title); font-size: 3rem; line-height: 1; }
+.shape-cue.hurry { color: var(--danger); }
+.shape-field-box { width: min(70vw, 90vh); aspect-ratio: 16 / 9; overflow: hidden; background: #FBF6EA; border: 3px solid var(--ink); border-radius: 14px;
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--room-c) 30%, transparent); }
+.shape-field { display: block; width: 100%; height: 100%; }
+.shape-field.drift .drifter { animation: shape-drift var(--dur, 5s) ease-in-out var(--delay, 0s) infinite alternate; }
+@keyframes shape-drift { from { transform: translate(0, 0); } to { transform: translate(var(--dx, 0), var(--dy, 0)); } }
+.shape-tags { gap: .5rem; }
+.shape-tag { gap: .4rem; font-size: 1.1rem; }
+.shape-tag::before { display: none; }
+.shape-tag .shape-icon { width: 1.7rem; height: 1.7rem; }
+.shape-tag.ok { background: #CFEBD5; }
+.shape-tag.bad { background: #F1CFCB; }
+
+/* room 4: backrooms_trivia */
+.trivia-panel { gap: 1rem; max-width: min(1400px, 84vw); }
+.trivia-top { display: flex; align-items: center; justify-content: space-between; gap: 2rem; width: 100%; }
+.trivia-dots { display: flex; gap: .5rem; }
+.trivia-dots span { width: 1.4rem; height: 1.4rem; border-radius: 50%; border: 3px solid var(--ink); background: var(--surface); }
+.trivia-dots span.on { background: #2F9E5C; }
+.trivia-q { margin: 0; max-width: 40ch; font-family: var(--font-title); font-size: 2.5rem; line-height: 1.2; }
+.trivia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; }
+.trivia-option { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; row-gap: .4rem; align-items: center; padding: .8rem 1.2rem; text-align: left;
+  background: #FBF6EA; border: 3px solid var(--ink); border-radius: 16px; box-shadow: 4px 5px 0 var(--ink); transition: transform .12s ease, background-color .12s ease; }
+.trivia-option .trivia-letter { grid-row: span 2; display: grid; place-items: center; width: 3.2rem; height: 3.2rem; border-radius: 50%;
+  background: var(--btn); border: 3px solid var(--ink); font-family: var(--font-title); font-size: 1.9rem; }
+.trivia-text { font-size: 1.55rem; font-weight: 600; line-height: 1.25; }
+.trivia-voters { justify-content: flex-start; gap: .4rem; min-height: 2.2rem; }
+.trivia-voters .pill { min-height: 2rem; padding: .15rem .8rem; font-size: 1rem; }
+.trivia-option.locked { background: color-mix(in srgb, var(--room-c) 45%, #FBF6EA); transform: scale(1.02); }
+.trivia-option.right { background: #CFEBD5; box-shadow: 0 0 0 6px #2F9E5C, 4px 5px 0 var(--ink); }
+.trivia-option.wrong { background: #F1CFCB; }
+.trivia-status { margin: 0; font-size: 1.7rem; font-weight: 600; }
+.trivia-lock { width: min(60vw, 800px); height: .9rem; overflow: hidden; border: 3px solid transparent; border-radius: 999px; }
+.trivia-lock.on { border-color: var(--ink); background: var(--surface); }
+.trivia-lock.on::after { content: ""; display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--room-b), var(--room-c));
+  animation: lock-fill var(--lock-ms, 2500ms) linear forwards; }
+@keyframes lock-fill { to { width: 100%; } }
+.trivia-fact { margin: 0; max-width: 60ch; min-height: 1.4em; font-size: 1.4rem; font-style: italic; }
+
+/* room 6: bomb_defusal (the TV never shows the bomb: clock, strikes and module lights only) */
+.bomb-panel { gap: 1.4rem; }
+.bomb-head { display: flex; align-items: center; justify-content: center; gap: 3rem; }
+.bomb-clock { padding: .2rem 2.4rem; font-family: "Courier New", ui-monospace, monospace; font-weight: 700; font-size: 9rem; line-height: 1; letter-spacing: .06em;
+  color: #FF4A3D; background: #1A0E10; border: 4px solid var(--ink); border-radius: 18px; text-shadow: 0 0 18px rgba(255, 74, 61, .85); box-shadow: 6px 7px 0 var(--ink); }
+.bomb-clock.hurry { animation: bomb-blink 1s steps(2) infinite; }
+.bomb-clock.boom { color: #FFD23C; text-shadow: 0 0 24px rgba(255, 160, 40, .9); }
+@keyframes bomb-blink { 50% { opacity: .5; } }
+.bomb-strikes { display: flex; gap: .8rem; }
+.bomb-strikes span { font-size: 4rem; line-height: 1; color: color-mix(in srgb, var(--ink) 22%, transparent); }
+.bomb-strikes span.on { color: var(--danger); text-shadow: 0 0 12px rgba(184, 50, 58, .7); }
+.bomb-modules { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+.bomb-module { display: inline-flex; align-items: center; gap: .7rem; padding: .5rem 1.3rem; font-size: 1.6rem; font-weight: 600;
+  background: var(--surface); border: 3px solid var(--ink); border-radius: 999px; box-shadow: 3px 4px 0 var(--ink); }
+.bomb-led { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 3px solid var(--ink); background: #5A1A1A; }
+.bomb-module.solved .bomb-led { background: #2F9E5C; box-shadow: 0 0 12px #2F9E5C; }
+@media (prefers-reduced-motion: reduce) { .bomb-clock.hurry { animation: none; } .shape-field.drift .drifter { animation-duration: calc(var(--dur, 5s) * 3); } }

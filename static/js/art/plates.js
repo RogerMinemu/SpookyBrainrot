@@ -3,6 +3,8 @@
 // WEBGL origin) and uses ONLY the engine (E) - no p5 calls of its own except through E.p.
 // Colours come from theme.css tokens (the painter reads them via getComputedStyle), never from here.
 import { mixCol, PAL } from "./engine.js";
+import { ROSTER, atlasOf } from "./roster.js";
+import { CHAR_RECIPES } from "./rigs.js";
 
 /** Plates in queue order. `size(o)` -> [w, h]; `opaque` plates are full-bleed backgrounds. */
 export const PLATE_SPECS = {
@@ -14,7 +16,7 @@ export const PLATE_SPECS = {
   splat: { size: () => [512, 512], css: () => "--tex-splat" },
 };
 export const PLATE_ORDER = ["panel", "btn", "swash", "frame", "splat"];
-export const ROOMS = ["prologue", "backrooms", "poolrooms"];
+export const ROOMS = ["prologue", "backrooms", "poolrooms", "mall", "site19", "hangar", "sahur"];
 
 const darker = (c, k) => mixCol(c, "#0a0812", k);
 const lighter = (c, k) => mixCol(c, "#FFF8E8", k);
@@ -112,7 +114,147 @@ function bgPoolrooms(E, pal, { w, h, m }) {
   E.paint(E.rect(-30, h * .62, w + 60, 24 * m, 3 * m), { wash: lighter(tile, .55), washOp: 250, ink: PAL.ink, sw: .9 });
 }
 
-const BG_BY_ROOM = { prologue: bgPrologue, backrooms: bgBackrooms, poolrooms: bgPoolrooms };
+// Room 7 "Sahur dice": a dark street before dawn, a glowing window and a row of drums.
+function bgSahur(E, pal, { w, h, m }) {
+  const dark = darker(pal.a, .35);
+  E.paint(E.rect(-20, -20, w + 40, h + 40, 6 * m), { wash: pal.a, washOp: 255, ink: null });
+  // dawn glow on the horizon
+  E.paint(E.ell(w * .5, h * .74, w * .8, h * .36, 26, 18 * m), { wash: pal.b, washOp: 200, ink: null });
+  E.paint(E.ell(w * .5, h * .78, w * .46, h * .2, 24, 14 * m), { wash: pal.c, washOp: 120, ink: null });
+  // crescent moon and a few stars
+  E.paint(E.ell(w * .8, h * .2, 90 * m, 90 * m, 24, 4 * m), { wash: lighter(pal.c, .45), washOp: 240, fill: pal.c, fillOp: 60, ink: PAL.ink, sw: 1 });
+  E.paint(E.ell(w * .83, h * .18, 80 * m, 80 * m, 22, 4 * m), { wash: pal.a, washOp: 255, ink: null });
+  for (let i = 0; i < 18; i++) {
+    const x = (.04 + E.hash(i * 3 + 5) * .92) * w, y = (.03 + E.hash(i * 7 + 1) * .38) * h;
+    E.paint(E.ell(x, y, (2 + E.hash(i) * 4) * m, (2 + E.hash(i + 4) * 4) * m, 8, m), { wash: lighter(pal.c, .5), washOp: 220, ink: null });
+  }
+  // sleeping houses with lit windows
+  for (let i = 0; i < 5; i++) {
+    const hw = w * (.14 + E.hash(i + 20) * .06), hx = w * (.02 + i * .2), hh = h * (.22 + E.hash(i + 30) * .1), hy = h * .8 - hh;
+    E.paint(E.rect(hx, hy, hw, hh, 4 * m), { wash: dark, washOp: 255, fill: pal.b, fillOp: 60, ink: PAL.ink, sw: 1.1 });
+    E.paint([[hx - 14 * m, hy + 3 * m], [hx + hw / 2, hy - 46 * m], [hx + hw + 14 * m, hy + 3 * m]], { wash: darker(pal.a, .6), washOp: 255, ink: PAL.ink, sw: 1.2 });
+    if (E.hash(i + 40) > .35) E.paint(E.rect(hx + hw * .3, hy + hh * .3, hw * .22, hh * .2, 3 * m), { wash: pal.c, washOp: 240, fill: PAL.ochre, fillOp: 120, ink: PAL.ink, sw: .8 });
+  }
+  // street and a row of drums
+  E.paint(E.rect(-30, h * .8, w + 60, h * .3, 12 * m), { wash: darker(pal.a, .5), washOp: 255, fill: pal.b, fillOp: 70, ink: PAL.ink, sw: 1 });
+  for (let i = 0; i < 6; i++) {
+    const cx = w * (.12 + i * .15), cy = h * .9, rw = 70 * m, rh = 50 * m;
+    E.paint(E.rect(cx - rw, cy, rw * 2, rh, 6 * m), { wash: pal.b, washOp: 255, fill: darker(pal.b, .3), fillOp: 120, ink: PAL.ink, sw: 1 });
+    E.paint(E.ell(cx, cy, rw, 22 * m, 18, 3 * m), { wash: lighter(pal.c, .3), washOp: 245, ink: PAL.ink, sw: 1 });
+  }
+}
+
+// Room 3 "Contad las formas": an empty mall at 3 AM. Shutters down, one shop still lit, a dead escalator, Lirilì's clock.
+function bgMall(E, pal, { w, h, m }) {
+  const dark = darker(pal.a, .35);
+  E.paint(E.rect(-20, -20, w + 40, h + 40, 6 * m), { wash: pal.a, washOp: 255, ink: null });
+  // two floors of shop fronts with their signs
+  for (let row = 0; row < 2; row++) {
+    const y = row ? h * .42 : h * .08, hh = row ? h * .3 : h * .15;
+    for (let i = 0; i < 5; i++) {
+      const sx = w * (.03 + i * .195), sw = w * .17, lit = E.hash(i * 7 + row * 13) > .6;
+      E.paint(E.rect(sx, y, sw, hh, 4 * m), { wash: lit ? lighter(pal.c, .2) : dark, washOp: lit ? 170 : 255, fill: pal.b, fillOp: 60,
+        hatch: lit ? null : { d: 14 * m, a: 0, c: darker(pal.b, .3), w: .6 }, ink: PAL.ink, sw: 1 });
+      E.paint(E.rect(sx + sw * .15, y - 24 * m, sw * .7, 18 * m, 2 * m), { wash: lit ? pal.c : darker(pal.b, .2), washOp: 235, ink: PAL.ink, sw: .8 });
+    }
+  }
+  // the upper gallery: a balcony slab with its railing
+  E.paint(E.rect(-30, h * .3, w + 60, h * .05, 4 * m), { wash: pal.b, washOp: 255, fill: dark, fillOp: 90, ink: PAL.ink, sw: 1.1 });
+  E.inkLine([[0, h * .25], [w, h * .25 + E.jit(3 * m)]], 1.2, PAL.ink);
+  for (let i = 0; i <= 24; i++) E.inkLine([[w * i / 24, h * .25], [w * i / 24 + E.jit(2 * m), h * .3]], .8, PAL.ink, "inkfine");
+  // the floor: big tiles fading into the dark
+  E.paint(E.rect(-30, h * .74, w + 60, h * .32, 10 * m), { wash: darker(pal.b, .2), washOp: 255, fill: pal.b, fillOp: 70, ink: PAL.ink, sw: 1 });
+  for (let i = 1; i < 10; i++) E.inkLine([[w * i / 10, h * .74], [w * (i / 10 - .5) * 1.6 + w * .5, h]], .7, darker(pal.b, .45), "inkfine");
+  // a dead escalator climbing to the gallery
+  E.paint([[w * .56, h * .76], [w * .66, h * .76], [w * .9, h * .33], [w * .82, h * .33]], { wash: darker(pal.a, .5), washOp: 255, fill: pal.b, fillOp: 80, ink: PAL.ink, sw: 1.2 });
+  for (let k = 1; k < 9; k++) {
+    const t = k / 9;
+    E.inkLine([[E.lerp(w * .56, w * .82, t), E.lerp(h * .76, h * .33, t)], [E.lerp(w * .66, w * .9, t), E.lerp(h * .76, h * .33, t)]], .7, lighter(pal.b, .2), "inkfine");
+  }
+  // planters
+  for (const px of [.08, .4]) {
+    E.paint(E.rect(w * px, h * .66, 110 * m, 70 * m, 4 * m), { wash: darker(pal.b, .3), washOp: 255, ink: PAL.ink, sw: 1 });
+    E.paint(E.ell(w * px + 55 * m, h * .64, 80 * m, 50 * m, 22, 8 * m), { wash: PAL.sap, washOp: 200, fill: darker(PAL.sap, .3), fillOp: 90, ink: PAL.ink, sw: .9 });
+  }
+  // Lirilì's clock above the gallery, stopped at three
+  const cx = w * .5, cy = h * .17, r = 54 * m;
+  E.paint(E.ell(cx, cy, r, r, 30, 2 * m), { wash: lighter(pal.c, .55), washOp: 245, fill: pal.c, fillOp: 70, ink: PAL.ink, sw: 1.2 });
+  E.inkLine([[cx, cy], [cx, cy - r * .7]], 1.4, PAL.ink);
+  E.inkLine([[cx, cy], [cx + r * .5, cy]], 1.6, PAL.ink);
+}
+
+// Room 4 "Trivia de las Backrooms": Site-19, a containment corridor with glowing terminals and a sealed blast door.
+function bgSite19(E, pal, { w, h, m }) {
+  const wall = pal.a, plate = pal.b, glow = pal.c;
+  E.paint(E.rect(-20, -20, w + 40, h + 40, 6 * m), { wash: wall, washOp: 255, ink: null });
+  // riveted wall plates
+  for (let i = 0; i < 6; i++) {
+    E.paint(E.rect(w * i / 6 + 8 * m, h * .08, w / 6 - 16 * m, h * .62, 3 * m), { wash: plate, washOp: 220, fill: darker(plate, .2), fillOp: 70, ink: PAL.ink, sw: .9 });
+  }
+  // the blast door: a heavy disc with hazard hatching and spokes
+  const cx = w * .5, cy = h * .42, r = Math.min(w, h) * .26;
+  E.paint(E.ell(cx, cy, r * 1.08, r * 1.08, 40, 3 * m), { wash: darker(wall, .4), washOp: 255, ink: PAL.ink, sw: 1.3 });
+  E.paint(E.ell(cx, cy, r, r, 40, 3 * m), { wash: lighter(plate, .15), washOp: 255, fill: plate, fillOp: 90, hatch: { d: 26 * m, a: 45, c: PAL.ochre, w: 1.2 }, ink: PAL.ink, sw: 1.3 });
+  E.paint(E.ell(cx, cy, r * .35, r * .35, 28, 2 * m), { wash: darker(plate, .3), washOp: 255, ink: PAL.ink, sw: 1.1 });
+  for (let k = 0; k < 8; k++) {
+    const a = k / 8 * Math.PI * 2;
+    E.inkLine([[cx + Math.cos(a) * r * .38, cy + Math.sin(a) * r * .38], [cx + Math.cos(a) * r * .95, cy + Math.sin(a) * r * .95]], 1, PAL.ink, "inkfine");
+  }
+  // terminals glowing on both sides
+  for (const tx of [.08, .8]) {
+    E.paint(E.rect(w * tx, h * .3, w * .12, h * .18, 3 * m), { wash: darker(wall, .5), washOp: 255, ink: PAL.ink, sw: 1.1 });
+    E.paint(E.rect(w * tx + 10 * m, h * .3 + 10 * m, w * .12 - 20 * m, h * .18 - 20 * m, 2 * m), { wash: glow, washOp: 180, fill: lighter(glow, .3), fillOp: 80, ink: null });
+    for (let l = 0; l < 4; l++) {
+      E.inkLine([[w * tx + 22 * m, h * .33 + l * 20 * m], [w * tx + w * .12 * (.4 + E.hash(l + tx * 10) * .4), h * .33 + l * 20 * m]], .9, darker(glow, .5), "inkfine");
+    }
+  }
+  // the floor, with a yellow and black hazard band
+  E.paint(E.rect(-30, h * .72, w + 60, h * .35, 10 * m), { wash: darker(wall, .45), washOp: 255, fill: plate, fillOp: 60, ink: PAL.ink, sw: 1 });
+  for (let i = 0; i < 22; i++) {
+    const x = w * i / 22;
+    E.paint([[x, h * .72], [x + w / 44, h * .72], [x + w / 44 - 24 * m, h * .77], [x - 24 * m, h * .77]], { wash: i % 2 ? PAL.ochre : PAL.ink, washOp: 235, ink: null });
+  }
+  // ceiling lights
+  for (let i = 0; i < 4; i++) E.paint(E.rect(w * (.08 + i * .24), h * .02, w * .12, 14 * m, 2 * m), { wash: lighter(glow, .5), washOp: 230, ink: PAL.ink, sw: .7 });
+}
+
+// Room 6 "Desactivad la bomba": an abandoned hangar. Ribbed roof, crates, hanging lamps and the big door open to the night.
+function bgHangar(E, pal, { w, h, m }) {
+  const dark = darker(pal.a, .4);
+  E.paint(E.rect(-20, -20, w + 40, h + 40, 6 * m), { wash: pal.a, washOp: 255, ink: null });
+  // corrugated back wall
+  for (let i = 0; i < 40; i++) E.inkLine([[w * i / 40, h * .2], [w * i / 40 + E.jit(2 * m), h * .74]], .6, darker(pal.a, .3), "inkfine");
+  // the open door: night sky and the moon
+  const dx = w * .3, dy = h * .22, dw = w * .4, dh = h * .52;
+  E.paint(E.rect(dx, dy, dw, dh, 3 * m), { wash: PAL.night, washOp: 255, fill: PAL.indigo, fillOp: 90, ink: PAL.ink, sw: 1.3 });
+  E.paint(E.ell(dx + dw * .75, dy + dh * .28, 40 * m, 40 * m, 22, 2 * m), { wash: lighter(pal.c, .5), washOp: 240, ink: PAL.ink, sw: .8 });
+  for (let i = 0; i < 10; i++) {
+    E.paint(E.ell(dx + dw * (.05 + E.hash(i * 3 + 1) * .9), dy + dh * (.05 + E.hash(i * 5 + 2) * .5), 3 * m, 3 * m, 8, m), { wash: lighter(pal.c, .6), washOp: 220, ink: null });
+  }
+  // the ribbed roof arch
+  for (const k of [0, 1]) {
+    E.inkLine(E.through([[-20, h * (.24 + k * .05)], [w * .25, h * (.08 + k * .05)], [w * .5, h * (.03 + k * .05)], [w * .75, h * (.08 + k * .05)], [w + 20, h * (.24 + k * .05)]]), 2 - k * .6, PAL.ink);
+  }
+  // concrete floor and the yellow guide line
+  E.paint(E.rect(-30, h * .74, w + 60, h * .32, 10 * m), { wash: dark, washOp: 255, fill: pal.b, fillOp: 70, ink: PAL.ink, sw: 1 });
+  E.inkLine([[w * .5, h * .76], [w * .5 + E.jit(4 * m), h]], 2, pal.c, "dry");
+  // crates (level 1 sits on the crate below it)
+  const base = h * .74, unit = 130 * m;
+  for (const [cx, level, s] of [[.08, 0, 1], [.16, 0, .8], [.115, 1, .7], [.86, 0, 1.1], [.94, 0, .7]]) {
+    const size = unit * s, bottom = base - level * unit;
+    E.paint(E.rect(w * cx - size / 2, bottom - size, size, size, 3 * m), { wash: pal.b, washOp: 255, fill: lighter(pal.b, .2), fillOp: 90,
+      hatch: { d: 16 * m, a: 0, c: darker(pal.b, .3), w: .6 }, ink: PAL.ink, sw: 1.1 });
+    E.inkLine([[w * cx - size / 2, bottom - size], [w * cx + size / 2, bottom]], .9, PAL.ink, "inkfine");
+  }
+  // hanging lamps with their pools of light
+  for (const lx of [.2, .5, .8]) {
+    E.inkLine([[w * lx, 0], [w * lx, h * .12]], .9, PAL.ink, "inkfine");
+    E.paint([[w * lx - 30 * m, h * .15], [w * lx + 30 * m, h * .15], [w * lx + 12 * m, h * .12], [w * lx - 12 * m, h * .12]], { wash: darker(pal.a, .5), washOp: 255, ink: PAL.ink, sw: .8 });
+    E.paint(E.ell(w * lx, h * .17, 60 * m, 22 * m, 18, 3 * m), { wash: pal.c, washOp: 120, ink: null });
+  }
+}
+
+const BG_BY_ROOM = { prologue: bgPrologue, backrooms: bgBackrooms, poolrooms: bgPoolrooms, mall: bgMall, site19: bgSite19, hangar: bgHangar, sahur: bgSahur };
 
 function bg(E, pal, o) {
   (BG_BY_ROOM[o.room] || bgPrologue)(E, pal, o);
@@ -158,3 +300,13 @@ function splat(E, pal, { w, h }) {
 }
 
 export const RECIPES = { bg, panel, btn, swash, frame, splat };
+
+// ------------------------------------------------------------------ characters
+// One part-atlas plate per character: `char:<id>`, painted once per boil variant. They are GLOBAL (the cache key
+// uses `*` instead of the room) and never touch a CSS variable; boot.js decodes them for the sprite layer.
+export const CHAR_PLATE = (id) => `char:${id}`;
+for (const r of ROSTER) {
+  const a = atlasOf(r);
+  PLATE_SPECS[CHAR_PLATE(r.id)] = { global: true, size: () => [a.w, a.h], css: null };
+  RECIPES[CHAR_PLATE(r.id)] = (E, pal, o) => CHAR_RECIPES[r.id](E, o);
+}

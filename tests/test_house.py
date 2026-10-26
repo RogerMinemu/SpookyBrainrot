@@ -6,6 +6,8 @@ def test_get_house_defaults_unconfigured(client):
     data = client.get("/api/house").json()
     assert [a["idx"] for a in data["anchors"]] == list(range(1, 8))
     assert not any(a["configured"] for a in data["anchors"])
+    # room 5 was dropped: its printed anchor has no job (the house page says it needs no hiding)
+    assert [a["idx"] for a in data["anchors"] if not a["in_use"]] == [5]
 
 
 def test_put_then_get(client):
@@ -35,7 +37,7 @@ def test_idx_outside_range_422(client):
 def test_placeholder_then_configured_riddle_in_state(client):
     g = client.post("/api/games", json={"name": "G"}).json()
     rt = client.app.state.manager.get(g["id"])
-    rt.game.status, rt.game.room_idx, rt.game.phase = STATUS_RUNNING, 1, PHASE_SEARCH
+    rt.game.status, rt.game.room_idx, rt.game.phase = STATUS_RUNNING, 2, PHASE_SEARCH  # room 2, anchor 2
     assert rt.state_payload("tv")["game"]["riddle"] == RIDDLE_PLACEHOLDER
     client.put("/api/house/2", json={"riddle": "Mirad tras el espejo"})
     assert rt.state_payload("tv")["game"]["riddle"] == "Mirad tras el espejo"

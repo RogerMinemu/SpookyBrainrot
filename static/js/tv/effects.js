@@ -1,13 +1,35 @@
 // TV reactions to server `event` messages. Painted overlays: DOM text over ink splashes and torn paper
 // (all looks live in tv.css / theme.css). Overlays are position:fixed and pointer-events:none, so they
-// never shift the layout underneath. Pure presentation: no art code is imported here.
+// never shift the layout underneath. Pure presentation: cast data only; characters are drawn via ctx.sprite.
 import { h } from "/static/js/shared/dom.js";
 import { portrait } from "/static/js/ui/kit.js";
+import { byName } from "/static/js/art/roster.js"; // pure cast data; characters are drawn through ctx.sprite only
 
-function overlay(cls, children, ms) {
+function overlay(cls, children, ms, onEnd) {
   const el = h("div", { class: `overlay ${cls}`, role: "status" }, children);
   document.body.append(el);
-  setTimeout(() => el.remove(), ms);
+  setTimeout(() => { el.remove(); if (onEnd) onEnd(); }, ms);
+}
+
+/**
+ * The scary pose of a cameo: lunges at the camera inside a portrait frame (the flat silhouette under ?art=off or
+ * before the plate is ready). Returns { frame, destroy } or null for a name that is not in the cast.
+ */
+function scarePortrait(name, ctx) {
+  const rig = byName(name);
+  if (!rig || !ctx || !ctx.sprite) return null;
+  const sp = ctx.sprite(rig.id);
+  const frame = h("figure", { class: "portrait scare-portrait", "data-cameo": name });
+  let t0 = null;
+  const W = 700, H = 700;
+  const mount = sp.mount(frame, {
+    w: W, h: H, className: "scare-canvas",
+    driver: (g, t) => {
+      if (t0 === null) t0 = t;
+      sp.drawAny(g, { x: W / 2, y: H - 30, h: H * 0.74, t, emote: "scary", lungeT: t0 });
+    },
+  });
+  return { frame, destroy: mount.destroy };
 }
 
 /** A hand-torn paper strip (clip-path edges) holding DOM text. */
@@ -16,12 +38,15 @@ const splat = (cls = "") => h("div", { class: `overlay-splat splat ${cls}`.trim(
 
 const handlers = {
   // The portrait slot is empty until the art exists: it then shows the brainrot's name in big painted letters.
-  jumpscare: (d) => overlay("jumpscare", [
-    splat("s1"), splat("s2"),
-    h("div", { class: "scare-stage" },
-      portrait({ cameo: d.cameo || "???" }),
-      torn("os ha encontrado...", "scare-line")),
-  ], 2400),
+  jumpscare: (d, ctx) => {
+    const sc = scarePortrait(d.cameo, ctx);
+    overlay("jumpscare", [
+      splat("s1"), splat("s2"),
+      h("div", { class: "scare-stage" },
+        sc ? sc.frame : portrait({ cameo: d.cameo || "???" }),
+        torn("os ha encontrado...", "scare-line")),
+    ], 2400, sc ? sc.destroy : null);
+  },
   splash: () => overlay("splash-flash", [
     splat("s1"), splat("s2"), splat("s3"),
     h("div", { class: "overlay-big ink-word" }, "¡Salpicón!")], 1100),
@@ -29,16 +54,16 @@ const handlers = {
     splat("s1"), splat("s2"),
     h("div", { class: "rot-drips", "aria-hidden": "true" }),
     h("div", { class: "scare-stage" },
-      torn("La palabra se ha podrido", "big"),
-      torn(`+${d.penalty || 0}% de brainrot. Nueva palabra.`, "small"))], 3200),
+      torn(d.title || "¡Ronda fallida!", "big"),
+      torn(`${d.text || "Probad otra vez."} +${d.penalty || 0}% de brainrot.`, "small"))], 3200),
   toast: (d) => overlay("note", [torn(d.text || "")], 3000),
   anchor_unlocked: () => overlay("note unlocked-note", [torn("Ancla encontrada", "gold")], 2600),
 };
 
 /** Global hook; returns true if handled. Puzzle modules may also export onEvent(ev). */
-export function handleEvent(ev) {
+export function handleEvent(ev, ctx) {
   const fn = handlers[ev.name];
   if (!fn) return false;
-  fn(ev.data || {});
+  fn(ev.data || {}, ctx);
   return true;
 }

@@ -65,6 +65,13 @@ class PuzzleAction:
 
 
 @dataclass
+class TvAction:
+    """An outcome reported by the TV (sim clear / penalty, replay request...). Never player-bound."""
+
+    data: dict = field(default_factory=dict)
+
+
+@dataclass
 class Scan:
     kind: str  # "anchor" | "decoy"
     idx: int
@@ -77,10 +84,11 @@ class Tick:
 
 @dataclass
 class DebugJump:
-    """Host debug: move to "lobby", "ending" or a room_no, optionally at a given phase."""
+    """Host debug: move to "lobby", "ending" or a room_no, optionally at a phase and (0-based) sub-level."""
 
     room: Any
     phase: Optional[str] = None
+    level: Any = None
 
 
 @dataclass
@@ -121,6 +129,7 @@ class Outcome:
     scan_result: Optional[str] = None
     error: Optional[Tuple[str, str]] = None  # (code, message): goes to the sender only
     persist: bool = False  # persist without bumping seq (clock bookkeeping)
+    broadcast: bool = False  # push the state to everyone without bumping seq (e.g. TV presence)
 
     @property
     def ok(self) -> bool:
@@ -159,6 +168,8 @@ class Engine:
             return self._advance(game, cmd)
         if isinstance(cmd, PuzzleAction):
             return self._puzzle_action(game, cmd)
+        if isinstance(cmd, TvAction):
+            return self._tv_action(game, cmd)
         if isinstance(cmd, Scan):
             return self._scan(game, cmd)
         if isinstance(cmd, Tick):
@@ -241,7 +252,7 @@ class Engine:
         if count == game.tv_connected:
             return Outcome()
         game.tv_connected = count  # clock was already settled with the old count
-        return Outcome(changed=False, persist=True)
+        return Outcome(changed=False, persist=True, broadcast=True)  # phones show tv_online
 
     # --- advance (resolution 3) ---------------------------------------------------------------------
     def _advance(self, game: Game, cmd: Advance) -> Outcome:
@@ -285,6 +296,21 @@ class Engine:
         self._apply_effects(game, effects, out)
         return out
 
+    def _tv_action(self, game: Game, cmd: TvAction) -> Outcome:
+        puzzle = self._active_puzzle(game)
+        if puzzle is None:
+            return _reject("no_puzzle", "no hay ningún puzzle activo")
+        handler = getattr(puzzle, "handle_tv", None)
+        if handler is None:
+            return _reject("no_tv_actions", "este puzzle no admite acciones de la tele")
+        try:
+            effects = handler(self._ctx(game), game.puzzle_state, cmd.data)
+        except ActionRejected as e:
+            return _reject(e.code, e.message)
+        out = Outcome()
+        self._apply_effects(game, effects, out)
+        return out
+
     # --- tick ----------------------------------------------------------------------------------------------
     def _tick(self, game: Game) -> Outcome:
         out = Outcome()
@@ -295,25 +321,43 @@ class Engine:
 
     # --- host debug commands (the engine stays the single source of truth) -------------------
     def debug_rooms(self) -> List[dict]:
-        """Jump targets: [{key, room_no, title, phases}]. `key` is what DebugJump.room accepts."""
+        """Jump targets: [{key, room_no, title, phases, levels}]. `key` is what DebugJump.room accepts.
+
+        `levels` lists the 0-based sub-levels DebugJump.level accepts for the puzzle phase (empty = none).
+        """
         last = len(self.plan) - 1
-        rooms: List[dict] = [{"key": DEBUG_ROOM_LOBBY, "room_no": None, "title": "Lobby", "phases": []}]
+        rooms: List[dict] = [{"key": DEBUG_ROOM_LOBBY, "room_no": None, "title": "Lobby", "phases": [], "levels": []}]
         for i, spec in enumerate(self.plan):
             phases = [PHASE_INTRO, PHASE_PUZZLE]
             if spec.anchor is not None:
                 phases.append(PHASE_SEARCH)
             if i < last:
                 phases.append(PHASE_UNLOCKED)  # the last room ends via the ending, not "unlocked"
-            rooms.append({"key": spec.room_no, "room_no": spec.room_no, "title": spec.title, "phases": phases})
-        rooms.append({"key": DEBUG_ROOM_ENDING, "room_no": None, "title": "Final", "phases": []})
+            rooms.append(
+                {
+                    "key": spec.room_no,
+                    "room_no": spec.room_no,
+                    "title": spec.title,
+                    "phases": phases,
+                    "levels": self._levels_of(spec),
+                }
+            )
+        rooms.append({"key": DEBUG_ROOM_ENDING, "room_no": None, "title": "Final", "phases": [], "levels": []})
         return rooms
+
+    def _levels_of(self, spec: RoomSpec) -> List[int]:
+        puzzle = self.puzzles.get(spec.puzzle_id)
+        n = getattr(puzzle, "levels", 0) if puzzle is not None else 0
+        return list(range(n)) if isinstance(n, int) and not isinstance(n, bool) and n > 0 else []
 
     def _clear_puzzle(self, game: Game) -> None:
         game.puzzle_id = None
         game.puzzle_state = None
 
     def _debug_jump(self, game: Game, cmd: DebugJump) -> Outcome:
-        room, phase = cmd.room, cmd.phase
+        room, phase, level = cmd.room, cmd.phase, cmd.level
+        if room in (DEBUG_ROOM_LOBBY, DEBUG_ROOM_ENDING) and not isinstance(room, bool) and level is not None:
+            return _reject("unknown_level", "esta sala no tiene niveles")
         if room == DEBUG_ROOM_LOBBY and not isinstance(room, bool):
             if phase not in (None, PHASE_INTRO):
                 return _reject("unknown_phase", "el lobby no tiene fases")
@@ -337,19 +381,25 @@ class Engine:
         if target not in _ALL_PHASES:
             return _reject("unknown_phase", f"fase desconocida: {target!r}")
         spec = self.plan[idx]
-        allowed = next(r["phases"] for r in self.debug_rooms() if r["key"] == spec.room_no)
-        if target not in allowed:
+        info = next(r for r in self.debug_rooms() if r["key"] == spec.room_no)
+        if target not in info["phases"]:
             return _reject("unknown_phase", f"la sala {spec.room_no} no tiene la fase {target}")
         puzzle = self.puzzles.get(spec.puzzle_id) if target == PHASE_PUZZLE else None
         if target == PHASE_PUZZLE and puzzle is None:
             return _reject("puzzle_unavailable", spec.puzzle_id)
+        if level is not None:  # validated before anything is touched: a bad level mutates nothing
+            if target != PHASE_PUZZLE or not isinstance(level, int) or isinstance(level, bool) or level not in info["levels"]:
+                return _reject("unknown_level", f"nivel desconocido: {level!r}")
 
         self._clear_puzzle(game)
         game.status, game.room_idx, game.phase, game.ending = STATUS_RUNNING, idx, target, None
         if puzzle is not None:
             pids = [p.id for p in game.connected_players()] or [p.id for p in game.players]
             game.puzzle_id = spec.puzzle_id
-            game.puzzle_state = puzzle.start(self._ctx(game), pids)
+            ctx = self._ctx(game)
+            game.puzzle_state = puzzle.start(ctx, pids)
+            if level is not None:
+                puzzle.jump_level(ctx, game.puzzle_state, level)
         return Outcome(changed=True)
 
     def _debug_complete(self, game: Game) -> Outcome:
@@ -381,7 +431,17 @@ class Engine:
         elif cmd.name == "splash":
             out.events.append(("splash", {"row": 0, "col": 0}, "all"))
         elif cmd.name == "round_failed":
-            out.events.append(("round_failed", {"penalty": brainrot.ROUND_FAIL_PENALTY}, "all"))
+            out.events.append(
+                (
+                    "round_failed",
+                    {
+                        "penalty": brainrot.ROUND_FAIL_PENALTY,
+                        "title": "¡Ronda fallida!",
+                        "text": "Algo ha salido mal... probad otra vez.",
+                    },
+                    "all",
+                )
+            )
         else:
             out.events.append(("anchor_unlocked", {"level": game.room.anchor or 1}, "all"))
         return out

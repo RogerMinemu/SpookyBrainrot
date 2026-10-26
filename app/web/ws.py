@@ -10,6 +10,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.core.engine import Advance, PuzzleAction
 from app.web import protocol
 from app.web.hub import Conn
+from app.web.realtime import MAX_FRAME_BYTES, frame_ok
 from app.web.routes_api import COOKIE_NAME
 
 router = APIRouter()
@@ -64,7 +65,9 @@ async def ws_endpoint(ws: WebSocket) -> None:
         game_id = hello.get("game_id")
         rt = manager.get(game_id) if isinstance(game_id, str) else None
     elif role == "player":
-        token = hello.get("player_token") or ws.cookies.get(COOKIE_NAME)
+        token = hello.get("player_token")
+        if not token and hello.get("seat") is not True:  # demo seats never fall back to the shared cookie
+            token = ws.cookies.get(COOKIE_NAME)
         found = manager.find_by_token(token) if isinstance(token, str) and token else None
         if found:
             rt, player = found
@@ -91,7 +94,9 @@ async def ws_endpoint(ws: WebSocket) -> None:
             changed = bool(await rt.set_tv_presence(hub.tv_count(rt.game.id)))
         if not changed:
             await hub.send_state(rt, conn)
-        await _receive_loop(ws, rt, conn)
+        if role == "tv":
+            await hub.replay_inputs(conn)
+        await _receive_loop(ws, rt, conn, hub)
     except WebSocketDisconnect:
         pass
     except Exception:
@@ -101,6 +106,7 @@ async def ws_endpoint(ws: WebSocket) -> None:
         if manager.get(rt.game.id) is rt:
             try:
                 if player and not hub.player_connected(rt.game.id, player.id):
+                    await hub.zero_input(rt.game.id, player.id)
                     await rt.set_presence(player.id, False)
                 elif role == "tv":
                     await rt.set_tv_presence(hub.tv_count(rt.game.id))
@@ -108,9 +114,11 @@ async def ws_endpoint(ws: WebSocket) -> None:
                 log.exception("presence update failed")
 
 
-async def _receive_loop(ws: WebSocket, rt, conn: Conn) -> None:
+async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
     while True:
         raw = await ws.receive_text()
+        if len(raw) > MAX_FRAME_BYTES:  # oversize: dropped before parsing, socket kept
+            continue
         try:
             t, payload = protocol.parse(raw)
         except protocol.BadVersion:
@@ -130,6 +138,16 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn) -> None:
                 continue
             out = await rt.apply(PuzzleAction(pid=conn.pid, data=payload))
             await _reply_error(ws, rt, out)
+        elif t == "input":  # realtime lane: no lock, no persist
+            if frame_ok(t, raw):
+                await hub.relay_input(conn, payload)
+        elif t == "fx":
+            if frame_ok(t, raw):
+                await hub.relay_fx(conn, payload)
+        elif t == "sim":  # TV outcome report: epoch-guarded TvAction under the lock
+            if frame_ok(t, raw) and hub.sim_allowed(conn):
+                out = await rt.tv_action(payload)
+                await _reply_error(ws, rt, out)
         else:
             await ws.send_text(protocol.error_envelope("unknown_type", f"unsupported message {t}", rt.game.seq))
 

@@ -7,7 +7,8 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from app.config import ROOT_DIR
-from app.core.qr import ANCHOR_COUNT, ordered_with_labels, qr_url
+from app.content import ANCHORS_IN_USE
+from app.core.qr import ordered_with_labels, qr_url
 from app.web import pages
 from app.web.qr_svg import svg_scalable
 
@@ -58,7 +59,7 @@ async def admin_qr_sheet(request: Request) -> HTMLResponse:
     labelled = ordered_with_labels(state.qr_repo.entries())
     cards = [(label, svg_scalable(qr_url(state.settings.public_url, e.token))) for label, e in labelled]
     house = state.house_repo.all()
-    missing = sum(1 for i in range(1, ANCHOR_COUNT + 1) if not (house.get(i, {}).get("riddle") or "").strip())
+    missing = sum(1 for i in ANCHORS_IN_USE if not (house.get(i, {}).get("riddle") or "").strip())
     return HTMLResponse(pages.qr_sheet(cards, missing), headers=NO_CACHE)
 
 

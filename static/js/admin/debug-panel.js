@@ -15,6 +15,13 @@ const EVENT_LABELS = {
 };
 const PRESETS = [0, 20, 40, 60, 80, 100];
 const SLIDER_QUIET_MS = 900; // ignore incoming state while the host is dragging
+// Sub-level names per room key (the platformer default is "Nivel N").
+const LEVEL_LABELS = {
+  3: (n) => `Ronda ${n + 1}`,
+  4: (n) => `Con ${n} aciertos`,
+  7: (n) => `Ronda ${n + 1}`,
+};
+const viewKey = (v) => (v && typeof v === "object" ? `${v.kind}:${v.epoch}` : "");
 
 export function ensureStyles() {
   if (document.getElementById("debug-css")) return;
@@ -44,7 +51,20 @@ async function call(gameId, path, method = "GET", body) {
 export function infoFromState(state) {
   const g = (state && state.game) || {};
   const room = g.status === "lobby" ? "lobby" : g.status === "finished" ? "ending" : g.room_no;
-  return { status: g.status, room, phase: g.phase, brainrot: g.brainrot, degradation: g.degradation };
+  // The TV state message carries the puzzle's TV view as `state.view` (kind = puzzle kind).
+  return { status: g.status, room, phase: g.phase, brainrot: g.brainrot, degradation: g.degradation,
+    tv_view: (state && state.view) || null };
+}
+
+/** One-line host peek at the TV view of the running puzzle (Sahur sequence with traps, platformer level). */
+export function peekText(view) {
+  if (!view || typeof view !== "object") return "";
+  if (Array.isArray(view.seq)) {
+    const steps = view.seq.map((s) => `${s.drum + 1}${s.trap ? "!" : ""}`).join(" ");
+    return `Secuencia (ronda ${view.round}/${view.rounds}): ${steps} · ! = trampa`;
+  }
+  if (view.kind === "coop_platformer") return `Nivel ${view.level + 1}/${view.levels}`;
+  return "";
 }
 
 const roomName = (rooms, key) => {
@@ -68,6 +88,8 @@ export function createDebugPanel({ gameId }) {
   const now = h("p", { class: "dbg-now", id: "dbg-now" }, "Cargando...");
   const roomSel = h("select", { id: "dbg-room", "aria-label": "Sala" });
   const phaseSel = h("select", { id: "dbg-phase", "aria-label": "Fase" });
+  const levelSel = h("select", { id: "dbg-level", "aria-label": "Subnivel" });
+  const peek = h("p", { class: "dbg-peek", id: "dbg-peek" }, "");
   const slider = h("input", { id: "dbg-rot", type: "range", min: "0", max: "100", step: "1", value: "0", "aria-label": "Brainrot" });
   const rotOut = h("output", { id: "dbg-rot-out", class: "dbg-rot-out" }, "0%");
   const cameoSel = h("select", { id: "dbg-cameo", "aria-label": "Brainrot del jumpscare" });
@@ -83,6 +105,7 @@ export function createDebugPanel({ gameId }) {
       const next = await call(gameId, path, "POST", body);
       say(okMsg);
       if (next) update(next);
+      refreshPeek();
     } catch (e) {
       say(e.message, true);
     }
@@ -101,6 +124,39 @@ export function createDebugPanel({ gameId }) {
       : h("option", { value: "" }, "(sin fases)"));
     phaseSel.disabled = !phases.length;
     if (info && String(info.room) === roomSel.value && phases.includes(info.phase)) phaseSel.value = info.phase;
+    fillLevels();
+  }
+  // Sub-level jumps (platformer levels, Sahur rounds) only make sense in the puzzle phase of rooms that have them.
+  function fillLevels() {
+    const room = (meta.rooms || []).find((r) => String(r.key) === roomSel.value);
+    const levels = room && room.levels ? room.levels : [];
+    const label = LEVEL_LABELS[room && room.key] || ((n) => `Nivel ${n + 1}`);
+    fill(levelSel, levels.length
+      ? levels.map((n) => h("option", { value: String(n) }, label(n)))
+      : h("option", { value: "" }, "(sin subniveles)"));
+    levelSel.disabled = !levels.length || phaseSel.value !== "puzzle";
+  }
+  function showPeek() {
+    peek.textContent = [info && info.peek, peekText(info && info.tv_view)].filter(Boolean).join(" · ");
+    peek.hidden = !peek.textContent;
+  }
+  // The server spoiler line (trivia answer, bomb solution) is fetched again whenever the puzzle moves on.
+  let peekKey = null;
+  let peekBusy = false;
+  async function refreshPeek() {
+    if (peekBusy) return;
+    peekBusy = true;
+    try {
+      const data = await call(gameId, "");
+      info = { ...(info || {}), tv_view: data.tv_view, peek: data.peek || "" };
+      peekKey = viewKey(data.tv_view);
+      showPeek();
+    } catch (_) { /* the peek is a nicety */ } finally { peekBusy = false; }
+  }
+  function jumpBody() {
+    const body = { room: roomKey(), phase: phaseSel.value || null };
+    if (!levelSel.disabled && levelSel.value !== "") body.level = Number(levelSel.value);
+    return body;
   }
   function sendBrainrot(v) {
     return act("/brainrot", { value: v }, `Brainrot al ${v}%`);
@@ -113,10 +169,29 @@ export function createDebugPanel({ gameId }) {
     sliderTimer = setTimeout(() => sendBrainrot(Number(slider.value)), 120);
   });
   roomSel.addEventListener("change", fillPhases);
+  phaseSel.addEventListener("change", fillLevels);
+
+  // Current 0-based sub-level out of the TV view (platformer level, Sahur round), or null.
+  function levelOf(view) {
+    if (!view || typeof view !== "object") return null;
+    if (view.kind === "coop_platformer" && Number.isInteger(view.level)) return view.level;
+    if ((view.kind === "sahur_dice" || view.kind === "shape_count") && Number.isInteger(view.round)) return view.round - 1;
+    if (view.kind === "backrooms_trivia" && Number.isInteger(view.right)) return Math.min(view.right, view.goal - 1);
+    return null;
+  }
+  function syncSelects() {
+    const key = String(info.room);
+    if (roomSel.value !== key) roomSel.value = key;
+    fillPhases();
+    const lvl = levelOf(info.tv_view);
+    if (lvl !== null && [...levelSel.options].some((o) => o.value === String(lvl))) levelSel.value = String(lvl);
+  }
 
   function update(next) {
     const first = info === null;
     info = { ...(info || {}), ...next };
+    if ("peek" in next) peekKey = viewKey(next.tv_view);
+    else if (meta && viewKey(info.tv_view) !== peekKey) refreshPeek();
     if (!meta) return;
     now.textContent = `${roomName(meta.rooms, info.room)} · ${info.phase ? (PHASE_LABELS[info.phase] || info.phase) : "-"}`
       + ` · Brainrot ${Math.round(info.brainrot || 0)}%`;
@@ -124,10 +199,10 @@ export function createDebugPanel({ gameId }) {
       slider.value = String(Math.round(info.brainrot));
       rotOut.textContent = `${Math.round(info.brainrot)}%`;
     }
-    if (first) {
-      roomSel.value = String(info.room);
-      fillPhases();
-    }
+    // Follow the game on every update (jumps made elsewhere, rooms advancing); never fight the host while a select is in use.
+    const active = document.activeElement;
+    if (first || (active !== roomSel && active !== phaseSel && active !== levelSel)) syncSelects();
+    showPeek();
     el.dataset.room = String(info.room);
     el.dataset.phase = String(info.phase);
   }
@@ -145,7 +220,7 @@ export function createDebugPanel({ gameId }) {
         ...data.events.filter((n) => n !== "jumpscare").map((n) =>
           btn(EVENT_LABELS[n] || n, () => act("/event", { name: n }, `${EVENT_LABELS[n] || n} lanzado`))));
       info = null;
-      update(data.game);
+      update({ ...data.game, tv_view: data.tv_view, peek: data.peek || "" });
       say("");
     } catch (e) {
       now.textContent = "No se pudo cargar";
@@ -157,10 +232,11 @@ export function createDebugPanel({ gameId }) {
     now,
     h("section", { class: "dbg-sec" },
       h("h3", {}, "Saltar a"),
-      h("div", { class: "dbg-row" }, roomSel, phaseSel),
+      h("div", { class: "dbg-row" }, roomSel, phaseSel, levelSel),
       h("div", { class: "dbg-row" },
-        btn("Saltar", () => act("/jump", { room: roomKey(), phase: phaseSel.value || null }, "Salto hecho"), "go"),
-        btn("Completar puzzle", () => act("/complete", undefined, "Puzzle completado")))),
+        btn("Saltar", () => act("/jump", jumpBody(), "Salto hecho"), "go"),
+        btn("Completar puzzle", () => act("/complete", undefined, "Puzzle completado"))),
+      peek),
     h("section", { class: "dbg-sec" },
       h("h3", {}, "Brainrot"),
       h("div", { class: "dbg-row dbg-slider" }, slider, rotOut),

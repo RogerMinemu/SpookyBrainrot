@@ -1,6 +1,7 @@
-"""Private-view isolation skeleton (R2.6). Extended with Wordle letters in batch C (C5)."""
+"""Private-view isolation (R2.6): tokens, per-player holds and the Sahur sequence stay out of player views."""
 import json
 
+from app.content import ROOM_PLAN
 from app.core.engine import Advance, PuzzleAction
 
 
@@ -67,35 +68,28 @@ def test_tv_view_has_no_player_only_keys_and_code_is_tv_only(client):
     assert "holding" not in tv["view"]
 
 
-def test_wordle_letters_and_answer_never_leak(client):
+def test_sahur_sequence_never_reaches_player_views(client):
     from app.core.game import PHASE_PUZZLE
 
     rt, toks = make_running_game(client, ("Ana", "Bea", "Cai"))
 
-    async def to_wordle():
+    async def to_sahur():
         rt.game.puzzle_id = None
         rt.game.puzzle_state = None
-        rt.game.room_idx = 1
+        rt.game.room_idx = len(ROOM_PLAN) - 1  # room 7
         rt.game.phase = "intro"
         await rt.apply(Advance())
 
-    client.portal.call(to_wordle)
-    assert rt.game.phase == PHASE_PUZZLE and rt.game.puzzle_id == "cursed_wordle"
+    client.portal.call(to_sahur)
+    assert rt.game.phase == PHASE_PUZZLE and rt.game.puzzle_id == "sahur_dice"
     s = rt.game.puzzle_state
     ids = [p.id for p in rt.game.players]
     payloads = all_payloads(rt)
-    for pid in ids:
-        letter = s.letters[pid]
-        own = json.loads(payloads[pid])["view"]
-        assert own["letter"] == letter
-        for other in ["tv"] + [x for x in ids if x != pid]:
-            view = json.loads(payloads[other])["view"]
-            if other == "tv":
-                assert "letter" not in view
-            else:
-                assert view["letter"] != letter  # distinct letters: B never sees A's
     tv_view = json.loads(payloads["tv"])["view"]
-    assert "letter" not in tv_view and "your_turn" not in tv_view
-    for text in payloads.values():
-        assert s.target not in text
-        assert '"target"' not in text
+    assert [step["drum"] for step in tv_view["seq"]] == [step["drum"] for step in s.seq]
+    for pid in ids:
+        own = json.loads(payloads[pid])["view"]
+        assert own["drums"] == [d for d, owners in s.owners.items() if pid in owners]
+        assert "seq" not in own and "hits" not in own and "trap" not in payloads[pid]
+    for token in toks.values():
+        assert all(token not in text for text in payloads.values())

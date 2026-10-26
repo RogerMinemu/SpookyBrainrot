@@ -60,19 +60,153 @@ body.play .hold-status { font-weight: 600; }
   body.play main { padding-top: .6rem; gap: .6rem; }
 }
 
-/* ------------------------------------------------------------------ cursed_wordle */
-body.play .wordle-form { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: stretch; }
-body.play .wordle-form button { width: auto; min-width: 6rem; padding-inline: 1rem; }
-body.play .wordle-input { min-width: 0; text-transform: uppercase; letter-spacing: .1em; font-size: 1.2rem; padding-inline: .5rem; text-align: center; -webkit-user-select: text; user-select: text; }
-body.play .wordle-input:disabled, body.play .wordle-form button:disabled { opacity: .55; }
-body.play .turn-line { font-weight: 600; }
-body.play .curse { font-weight: 600; color: var(--danger); }
-body.play .curse:empty { display: none; }
-body.play .wgrid { display: grid; gap: .4rem; justify-content: center; margin: .2rem 0; }
-body.play .wrow { display: flex; gap: .4rem; justify-content: center; }
+/* TV absent: input is paused until it comes back */
+.tv-offline { position: fixed; left: 0; right: 0; top: 0; z-index: 70; padding: .7rem 1rem; text-align: center; font-weight: 600;
+  background: var(--danger); color: #FFF5E2; border-bottom: 3px solid var(--ink); }
 
-.wgrid.small .wcell, body.play .wcell { width: 2.9rem; height: 2.9rem; font-size: 1.5rem; }
-body.play .wcell.correct::after { font-size: .65rem; right: 3px; }
-@media (max-width: 380px) { .wgrid.small .wcell, body.play .wcell { width: 2.6rem; height: 2.6rem; } }
-body.play .wordle-input::placeholder { letter-spacing: 0; font-size: 1rem; text-transform: none; color: #6A5D76; opacity: 1; }
-body.play .wordle-input:disabled { background: color-mix(in srgb, var(--surface) 70%, #BDB2C6); }
+/* ------------------------------------------------------------------ shared hold pad (static/js/shared/input.js) */
+/* The pad lives in the thumb zone: pinned to the bottom edge, arrows bottom-left, action (SALTAR) bottom-right.
+   --me is the player's join colour (set by js/play/identity.js); without it the room button colour is used. */
+body.play .pad-host { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; width: auto; pointer-events: none;
+  padding: .6rem 12px calc(.8rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, color-mix(in srgb, var(--me, var(--room-c)) 40%, transparent), transparent); }
+body.play main:has(.pad-host .pad) { padding-bottom: calc(clamp(8.5rem, 28vh, 16rem) + 2.6rem); }
+body.play .pad { --pad-h: clamp(8.5rem, 28vh, 16rem); width: 100%; max-width: 900px; margin: 0 auto; display: flex; gap: 1rem; justify-content: space-between; align-items: stretch;
+  pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+body.play .pad-move, body.play .pad-act { display: flex; gap: .7rem; }
+body.play .pad-move { flex: 1 1 62%; }
+body.play .pad-act { flex: 1 1 34%; }
+body.play .pad-left .pad-label, body.play .pad-right .pad-label { font-size: 3.4rem; line-height: 1; }
+body.play .pad-move:empty, body.play .pad-act:empty { display: none; }
+body.play .pad-act:first-child { flex: 1 1 100%; }
+body.play .pad-btn { flex: 1; height: var(--pad-h, 28vh); min-height: 8.5rem; padding: .4rem; font-size: 2.4rem; touch-action: none; -webkit-touch-callout: none;
+  color: #fff; text-shadow: 2px 2px 0 var(--ink), -2px 2px 0 var(--ink), 2px -2px 0 var(--ink), -2px -2px 0 var(--ink);
+  background: radial-gradient(80% 60% at 30% 20%, rgba(255, 255, 255, .35), transparent 70%), var(--me, var(--btn));
+  border: 5px solid var(--ink); border-image: none; border-radius: 28px 32px 26px 34px / 32px 26px 34px 28px;
+  box-shadow: 5px 6px 0 var(--ink); transition: transform .06s ease, box-shadow .06s ease; }
+body.play .pad-btn:hover { transform: none; }
+body.play .pad-btn.down { transform: translate(4px, 5px); color: #FFF5E2; text-shadow: none; background: var(--ink); box-shadow: 1px 1px 0 var(--ink), inset 0 0 0 6px var(--me, var(--room-c)); }
+body.play .pad-label { letter-spacing: .05em; pointer-events: none; }
+body.play .pad-jump .pad-label { font-size: 1.9rem; }
+@media (orientation: landscape) and (max-height: 520px) {
+  body.play .pad { --pad-h: clamp(5.5rem, 44vh, 10rem); max-width: none; }
+  body.play .pad-btn { min-height: 5.5rem; }
+  body.play main:has(.pad-host .pad) .phone-panel { display: none; } /* the pad owns the lower half: the TV carries the instructions */
+  body.play .pad-move { flex: 0 1 42%; }
+  body.play .pad-act { flex: 0 1 30%; margin-left: auto; }
+  body.play main:has(.pad-host .pad) { padding-bottom: calc(clamp(5.5rem, 44vh, 10rem) + 1.4rem); }
+}
+
+/* "Eres el rojo": your blob in your colour, so you can find yourself among 4-12 identical blobs on the TV */
+body.play .me-card { --me: var(--btn); width: 100%; display: flex; align-items: center; justify-content: center; gap: .9rem; padding: .5rem 1rem;
+  background: var(--surface); color: var(--ink); border: 4px solid var(--me); border-radius: 22px 26px 20px 28px / 26px 20px 28px 22px; box-shadow: 4px 5px 0 var(--ink); }
+body.play .me-blob { position: relative; flex: 0 0 auto; width: 3.6rem; height: 3.3rem; background: var(--me); border: 3px solid var(--ink); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; gap: .55rem; padding-top: .2rem; }
+body.play .me-blob::after { content: ""; position: absolute; left: 22%; top: 18%; width: 22%; height: 14%; border-radius: 50%; background: rgba(255, 255, 255, .4); transform: rotate(-25deg); }
+body.play .me-blob .eye { display: block; width: .6rem; height: .6rem; background: #fff; border: 2px solid var(--ink); border-radius: 50%; box-shadow: inset .12rem 0 0 0 var(--ink); }
+body.play .me-text { display: grid; text-align: left; line-height: 1.1; }
+body.play .me-label { font-family: var(--font-title); font-size: 1.7rem; }
+body.play .me-name { color: var(--ink-soft); font-size: 1rem; font-weight: 600; }
+body.play .me-card:not(:has(.me-name:not(:empty))) { display: none; }
+@media (orientation: landscape) and (max-height: 520px) { body.play .me-card { padding: .3rem .8rem; } body.play .me-blob { width: 2.6rem; height: 2.4rem; } body.play .me-label { font-size: 1.3rem; } }
+
+/* ------------------------------------------------------------------ sahur_dice */
+body.play .drum-row { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: .8rem; touch-action: manipulation; }
+body.play .drum-btn { width: min(100%, 28vh); min-width: 7rem; justify-self: center; height: auto; aspect-ratio: 1 / 1; font-size: 2.6rem; border-radius: 50%; touch-action: manipulation; -webkit-touch-callout: none;
+  color: var(--ink); border: 4px solid var(--ink); border-image: none; box-shadow: 5px 6px 0 var(--ink); transition: transform .06s ease, box-shadow .06s ease; }
+body.play .drum-btn:hover { transform: none; }
+body.play .drum-btn.down { transform: translate(4px, 5px); box-shadow: 1px 1px 0 var(--ink); background: var(--room-c); }
+body.play .drum-row.idle .drum-btn { opacity: .55; }
+body.play .drum-n { pointer-events: none; font-family: var(--font-title); }
+
+/* ------------------------------------------------------------------ shape_count (two buttons: -1 / +1) */
+body.play .count-head { display: flex; align-items: center; justify-content: center; gap: 1rem; }
+body.play .count-badge .shape-icon { display: block; width: 5.5rem; height: 5.5rem; filter: drop-shadow(3px 4px 0 var(--ink)); }
+body.play .count-label { display: grid; gap: .1rem; text-align: left; font-size: 1.1rem; }
+body.play .count-label strong { font-family: var(--font-title); font-size: 1.9rem; font-weight: 400; letter-spacing: .03em; }
+body.play .count-number { font-family: var(--font-title); font-size: clamp(5rem, 28vw, 9rem); line-height: 1; }
+body.play .count-number.ok { color: #1F7A45; }
+body.play .count-number.bad { color: var(--danger); }
+body.play .count-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+body.play .count-btn { height: 24vh; min-height: 8rem; font-size: 5rem; line-height: 1; touch-action: manipulation; -webkit-touch-callout: none;
+  border: 5px solid var(--ink); border-image: none; border-radius: 28px 32px 26px 34px / 32px 26px 34px 28px; box-shadow: 5px 6px 0 var(--ink);
+  transition: transform .06s ease, box-shadow .06s ease; }
+body.play .count-btn:hover { transform: none; }
+body.play .count-btn.down { transform: translate(4px, 5px); box-shadow: 1px 1px 0 var(--ink); background: var(--room-c); }
+body.play .count-btn.idle { opacity: .5; }
+
+/* ------------------------------------------------------------------ backrooms_trivia */
+body.play .trivia-q { font-size: 1.35rem; font-weight: 600; line-height: 1.3; }
+body.play .trivia-options { display: grid; gap: .8rem; }
+body.play .trivia-btn { display: flex; align-items: center; gap: .8rem; min-height: 4.2rem; padding: .6rem 1rem; text-align: left;
+  font-family: var(--font-body); font-size: 1.15rem; font-weight: 600; line-height: 1.2; letter-spacing: 0;
+  border: 4px solid var(--ink); border-image: none; border-radius: 18px; box-shadow: 4px 5px 0 var(--ink); }
+body.play .trivia-btn:hover { transform: none; }
+body.play .trivia-btn .trivia-letter { flex: 0 0 auto; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%;
+  background: var(--surface); border: 3px solid var(--ink); font-family: var(--font-title); font-size: 1.4rem; }
+/* my vote: paper + a thick ink ring (green and red stay for the reveal) */
+body.play .trivia-btn.mine { background: var(--surface); outline: 4px solid var(--ink); outline-offset: 3px; }
+body.play .trivia-btn.idle { opacity: .6; }
+body.play .trivia-btn.right { opacity: 1; background: #7FCB8E; }
+body.play .trivia-btn.wrong { opacity: 1; background: #E58A8A; }
+body.play .trivia-status { font-weight: 600; }
+
+/* ------------------------------------------------------------------ bomb_defusal */
+body.play .bomb-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+body.play .bomb-clock { font-family: "Courier New", ui-monospace, monospace; font-weight: 700; font-size: 2.6rem; letter-spacing: .08em; line-height: 1.1;
+  color: #FF4A3D; background: #1A0E10; border: 3px solid var(--ink); border-radius: 12px; padding: .1rem .9rem; text-shadow: 0 0 8px rgba(255, 74, 61, .8); }
+body.play .bomb-clock.hurry { animation: bomb-blink 1s steps(2) infinite; }
+@keyframes bomb-blink { 50% { opacity: .45; } }
+body.play .bomb-strikes { display: flex; gap: .4rem; }
+body.play .bomb-strikes span { font-size: 1.7rem; color: color-mix(in srgb, var(--ink) 25%, transparent); }
+body.play .bomb-strikes span.on { color: var(--danger); }
+body.play .bomb-serial { font-family: "Courier New", ui-monospace, monospace; font-size: 1.5rem; letter-spacing: .12em; }
+body.play .bomb-card { text-align: left; }
+body.play .bomb-card.solved { opacity: .7; }
+body.play .bomb-card-title { display: flex; align-items: center; gap: .6rem; margin: 0; font-size: 1.5rem; }
+body.play .bomb-led { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 3px solid var(--ink);
+  background: #5A1A1A; color: #fff; font-size: .85rem; line-height: 1; }
+body.play .bomb-card.solved .bomb-led { background: #2F9E5C; box-shadow: 0 0 10px #2F9E5C; }
+body.play .wire-list { display: grid; gap: .55rem; }
+body.play .wire { display: grid; grid-template-columns: 2rem 1fr 6.5rem; align-items: center; gap: .7rem; min-height: 3.3rem; padding: .3rem .8rem;
+  font-family: var(--font-body); font-size: 1.05rem; font-weight: 600; letter-spacing: 0; text-align: left; color: var(--ink); background: var(--surface);
+  border: 3px solid var(--ink); border-image: none; border-radius: 14px; box-shadow: 3px 4px 0 var(--ink); }
+body.play .wire:hover { transform: none; }
+body.play .wire-n { font-family: var(--font-title); font-size: 1.4rem; }
+body.play .wire-band { height: 1rem; border-radius: 999px; background: var(--wire); border: 2px solid var(--ink); }
+body.play .wire.cut { opacity: .6; }
+body.play .wire.cut .wire-band { background: linear-gradient(90deg, var(--wire) 0 42%, transparent 42% 58%, var(--wire) 58%); border-style: dashed; }
+body.play .wire.cut .wire-name::after { content: " ✂"; }
+body.play .bomb-button-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; }
+body.play .bomb-button { width: min(100%, 13rem); height: auto; aspect-ratio: 1 / 1; justify-self: center; border-radius: 50%; font-size: 1.4rem;
+  background: var(--btn-color); color: var(--ink); border: 5px solid var(--ink); border-image: none; box-shadow: 5px 7px 0 var(--ink);
+  touch-action: none; -webkit-touch-callout: none; }
+body.play .bomb-button span { background: var(--surface); padding: .1rem .5rem; border: 2px solid var(--ink); border-radius: 8px; }
+body.play .bomb-button:hover { transform: none; }
+body.play .bomb-button.down, body.play .bomb-button.held { transform: translate(4px, 5px); box-shadow: 1px 1px 0 var(--ink); }
+body.play .bomb-strip { width: 6.5rem; display: grid; gap: .4rem; justify-items: center; font-size: .95rem; font-weight: 600; text-align: center; }
+body.play .bomb-strip::before { content: ""; width: 2.2rem; height: 7rem; border-radius: 999px; border: 3px dashed var(--ink); background: var(--strip, transparent); }
+body.play .bomb-strip.lit::before { border-style: solid; box-shadow: 0 0 16px var(--strip); }
+body.play .bomb-keypad { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+body.play .bomb-key { min-height: 5.5rem; font-size: 3rem; line-height: 1; background: var(--surface); border: 4px solid var(--ink); border-image: none;
+  border-radius: 16px; box-shadow: 4px 5px 0 var(--ink); }
+body.play .bomb-key:hover { transform: none; }
+body.play .bomb-key.pressed { background: #9BE38A; box-shadow: inset 0 0 0 4px #2F9E5C; transform: translate(3px, 4px); }
+body.play .pw-cols { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4rem; }
+body.play .pw-col { display: grid; gap: .3rem; }
+body.play .pw-arrow { min-width: 0; min-height: 2.8rem; padding: .2rem; font-size: 1.2rem; background: var(--btn); border: 3px solid var(--ink); border-image: none;
+  border-radius: 10px; box-shadow: 2px 3px 0 var(--ink); }
+body.play .pw-letter { display: grid; place-items: center; min-height: 3.4rem; font-family: "Courier New", ui-monospace, monospace; font-weight: 700; font-size: 2.2rem;
+  color: #9BE38A; background: #1A0E10; border: 3px solid var(--ink); border-radius: 10px; }
+body.play .pw-submit { margin-top: .6rem; }
+body.play .manual { text-align: left; }
+body.play .manual h2 { margin: 0; font-size: 1.5rem; text-align: center; }
+body.play .manual-page { display: grid; gap: .45rem; padding: .7rem .9rem; font-size: 1.02rem; line-height: 1.35; background: #FBF6EA; border: 2px solid var(--ink); border-radius: 12px; }
+body.play .manual-page h3 { margin: 0; font-family: var(--font-title); font-weight: 400; font-size: 1.25rem; }
+body.play .manual-page p { margin: 0; }
+body.play .manual-symbols { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .3rem; font-size: 1.8rem; text-align: center; }
+body.play .manual-symbols span { display: grid; justify-items: center; padding: .15rem 0; background: var(--surface); border: 2px solid var(--ink); border-radius: 8px; }
+body.play .manual-symbols small { font-size: .75rem; color: var(--ink-soft); }
+body.play .manual-words { display: flex; flex-wrap: wrap; gap: .35rem; }
+body.play .manual-words span { padding: .1rem .45rem; font-family: "Courier New", ui-monospace, monospace; font-weight: 700; background: var(--surface); border: 2px solid var(--ink); border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { body.play .bomb-clock.hurry { animation: none; } }

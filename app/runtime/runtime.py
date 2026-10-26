@@ -11,7 +11,7 @@ from random import Random
 from app.content import RIDDLE_PLACEHOLDER
 from app.core import brainrot
 from app.core.clock import Clock
-from app.core.engine import Engine, Outcome, Presence, Tick, TvPresence
+from app.core.engine import Engine, Outcome, Presence, Tick, TvAction, TvPresence
 from app.core.game import (
     PHASE_INTRO,
     PHASE_SEARCH,
@@ -100,8 +100,8 @@ class GameRuntime:
                 self.persist()  # R3.7: save after every accepted command
             elif getattr(result, "persist", False):
                 self.persist()
-            if changed:
-                await self.notifier.broadcast_state(self)
+            if changed or getattr(result, "broadcast", False):
+                await self.notifier.broadcast_state(self)  # `broadcast` alone pushes without bumping seq
             for name, data, to in events:
                 await self.notifier.send_event(self, name, data, to)
             return result
@@ -116,13 +116,17 @@ class GameRuntime:
     async def apply(self, cmd: Any) -> Outcome:
         return await self.run(lambda g: self.engine.apply(g, cmd))
 
+    async def tv_action(self, data: dict) -> Outcome:
+        """TV-reported sim outcome: same lock -> mutate -> persist -> broadcast path as any command."""
+        return await self.apply(TvAction(data))
+
     async def set_presence(self, pid: str, connected: bool) -> bool:
         out = await self.apply(Presence(pid, connected))
         return out.changed
 
     async def set_tv_presence(self, count: int) -> bool:
         out = await self.apply(TvPresence(count))
-        return out.changed
+        return out.changed or out.broadcast  # True = the state was already pushed to everyone
 
     async def tick(self) -> Outcome:
         """Ticker entry point: engine Tick plus a periodic clock flush (R3.4)."""
@@ -161,6 +165,7 @@ class GameRuntime:
             "band": brainrot.band(g.brainrot),
             "degradation": brainrot.degradation_level(g.brainrot),
             "clock_ms": g.clock_ms,
+            "tv_online": g.tv_connected > 0,
             "players": [{"id": p.id, "name": p.name, "connected": p.connected} for p in g.players],
         }
         if role == "tv":

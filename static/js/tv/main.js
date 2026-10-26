@@ -5,9 +5,10 @@ import { handleEvent } from "/static/js/tv/effects.js";
 import { applyState } from "/static/js/ui/theme.js";
 import { panel, button, title } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
+import { unlockAudio, isUnlocked } from "/static/js/shared/audio.js";
 
 // composition root: the art starts once, immediately (the splash is already painted by it)
-startArt({ layout: "tv" });
+const art = startArt({ layout: "tv" });
 
 const gameId = location.pathname.split("/").filter(Boolean).pop();
 const splash = document.getElementById("splash");
@@ -22,7 +23,16 @@ let active = null; // { kind, mod } puzzle module currently mounted
 let latest = null; // newest state (the module import is async)
 let loadToken = 0;
 
-const ctx = { advance: () => socket && socket.send("advance") };
+const ctx = {
+  advance: () => socket && socket.send("advance"),
+  // realtime lane: sim outcome reports and effects for the phones
+  sendSim: (report) => socket && socket.sendSim(report),
+  sendFx: (to, kind, data) => socket && socket.sendFx(to, kind, data),
+  // painted cast: puzzles and screens get characters ONLY through this handle (silhouette until the art is ready)
+  sprite: (id) => art.sprite(id),
+};
+// Last mask per phone. Relayed inputs can arrive before the puzzle module is mounted (replay on connect).
+const masks = new Map();
 
 function leavePuzzle() {
   if (active) { active.mod.unmount(); active = null; }
@@ -40,6 +50,7 @@ function updateMeter(state) {
     meterText.textContent = `Brainrot ${r}%`;
     meter.dataset.band = String(r >= 75 ? 3 : r >= 50 ? 2 : r >= 25 ? 1 : 0);
   }
+  art.setDegradation(live ? Number(meter.dataset.band) : 0); // the worse the brainrot, the faster the characters boil
 }
 
 // 4001 takeover look (html[data-takeover] + .takeover on the screen); cleared by any new state.
@@ -103,24 +114,39 @@ async function render(state) {
     if (token !== loadToken) return; // a newer view superseded this one
     leavePuzzle();
     clear(screen);
-    mod.mount(screen, { gameId });
+    mod.mount(screen, { gameId, ...ctx });
     active = { kind, mod };
+    if (mod.onInput) for (const [pid, mask] of masks) mod.onInput({ pid, mask });
   }
   active.mod.update(latest.view, latest);
 }
 
+// /tv/<id>?demo=1 (embedded by /admin/demo): the bots read the TV's newest state and its live sim from here.
+// Any click on the TV unlocks sound, even when the demo page started it without a gesture.
+if (new URLSearchParams(location.search).has("demo")) {
+  // unlock()/sound(): the demo page calls them from ITS click handlers. A click on the parent document gives the frame
+  // tree sticky user activation (same-origin iframe), so ctx.resume() succeeds without a click inside the TV itself.
+  window.__sbtv = { state: () => latest, host: null, unlock: () => unlockAudio(), sound: () => isUnlocked() };
+  document.addEventListener("pointerdown", () => unlockAudio(), { capture: true });
+}
+
 function start() {
+  unlockAudio(); // the splash click is the user gesture that lets WebAudio run
   splash.classList.add("hidden");
   screen.classList.remove("hidden");
   const el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  if (el.requestFullscreen && !window.__sbtv) el.requestFullscreen().catch(() => {}); // embedded in /admin/demo: stay in the frame
   socket = new GameSocket({
     hello: () => ({ role: "tv", game_id: gameId }),
     onState: render,
+    onInput: (m) => {
+      masks.set(m.pid, m.mask);
+      if (active && active.mod.onInput) active.mod.onInput(m);
+    },
     onEvent: (ev) => {
       // per-puzzle hook first (may consume the event), then the global handler
       if (active && active.mod.onEvent && active.mod.onEvent(ev) === true) return;
-      handleEvent(ev);
+      handleEvent(ev, ctx);
     },
     onStatus: (s) => connBadge.classList.toggle("hidden", s === "open"),
     onFatal: (code) => {

@@ -69,7 +69,7 @@ async function select(id) {
     if (panel !== mine) return;
     try {
       const data = await fetchJson(`/admin/api/games/${id}/debug`);
-      if (panel === mine) mine.update(data.game);
+      if (panel === mine) mine.update({ ...data.game, tv_view: data.tv_view, peek: data.peek || "" });
     } catch (_) { /* transient: keep the last values */ }
   }, POLL_MS);
   refreshGames();

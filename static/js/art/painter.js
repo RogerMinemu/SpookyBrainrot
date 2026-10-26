@@ -42,6 +42,7 @@ export function createPainter({ layout }) {
   const inflight = new Map();
   const grains = new Map();
   const urls = [];
+  const timings = []; // { name, variant, ms } of the last plates: paint + redraw time, for the dev pages
   let P = null, E = null, disposed = false, chain = Promise.resolve();
   const [WC, HC] = layout === "tv" ? [TV_W, TV_H] : (() => { const S = flexSize(innerWidth, innerHeight, devicePixelRatio); return [S, S]; })();
 
@@ -106,19 +107,23 @@ export function createPainter({ layout }) {
     if (disposed) throw new Error("disposed");
     const spec = PLATE_SPECS[name], recipe = RECIPES[name];
     if (!spec || !recipe) throw new Error(`unknown plate ${name}`);
-    if (document.documentElement.dataset.room !== o.room) throw new Error("stale");
+    // character plates are global (they do not depend on the room): they are never stale
+    if (!spec.global && document.documentElement.dataset.room !== o.room) throw new Error("stale");
     const [w, h] = fit(...spec.size(o));
     if (w > WC || h > HC) throw new Error(`plate ${name} ${w}x${h} exceeds work canvas ${WC}x${HC}`);
     const pal = readPalette(), m = Math.min(w, h) / 1080;
     E.resize(w, h);
+    const t0 = performance.now();
     P.__job = () => {
       P.push(); P.translate(-WC / 2, -HC / 2); P.clear();
-      E.setBoil(o.variant || 0); E.boilSeed(`${name}|${o.room}|${o.seed || 0}`);
+      E.setBoil(o.variant || 0); E.boilSeed(`${name}|${spec.global ? "*" : o.room}|${o.seed || 0}`);
       recipe(E, pal, { ...o, w, h, m });
       P.pop();
     };
     await P.redraw();
     P.__job = null;
+    timings.push({ name, variant: o.variant || 0, ms: Math.round(performance.now() - t0) });
+    if (timings.length > 64) timings.shift();
     const blob = await toBlob(toCanvas(w, h, spec));
     await frame();
     const url = URL.createObjectURL(blob);
@@ -130,7 +135,7 @@ export function createPainter({ layout }) {
   function plate(name, o = {}) {
     const spec = PLATE_SPECS[name];
     const [w, h] = spec ? fit(...spec.size(o)) : [0, 0];
-    const key = `${layout}:${w}x${h}:${o.room}:${name}:${o.variant || 0}:${o.seed || 0}:${ART_VERSION}`;
+    const key = `${layout}:${w}x${h}:${spec && spec.global ? "*" : o.room}:${name}:${o.variant || 0}:${o.seed || 0}:${ART_VERSION}`;
     if (cache.has(key)) return Promise.resolve(cache.get(key));
     if (inflight.has(key)) return inflight.get(key);
     const job = chain.then(() => paintOne(name, o)).then((res) => { cache.set(key, res); return res; });
@@ -152,5 +157,5 @@ export function createPainter({ layout }) {
     host.remove();
   }
 
-  return { ready, plate, dispose, onContextLost, size: [WC, HC], stats: () => ({ cached: cache.size, inflight: inflight.size }) };
+  return { ready, plate, dispose, onContextLost, size: [WC, HC], timings, stats: () => ({ cached: cache.size, inflight: inflight.size }) };
 }

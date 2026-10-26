@@ -1,0 +1,67 @@
+/* /admin/demo: the TV (real 1920x1080 viewport) and four phones (real 390x844) side by side on one screen.
+   Frames are scaled with a CSS transform; demo.js sets --tv-s / --ph-s from the room that is left. Paper look as in debug.css. */
+body.demo-page { margin: 0; padding: 0 12px 12px; }
+/* the shared .dbg-btn tokens live on .dbg-panel; the demo bar sits outside it, so define them here (the danger button had none) */
+.demo-bar { --d-ink: var(--ink); --d-accent: var(--accent); --d-danger: var(--danger); --d-surface: var(--surface); }
+.demo-head { --d-ink: var(--ink); --d-accent: var(--accent); }
+.demo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .5rem 0; }
+.demo-bar h1 { margin: 0; font-size: 1.6rem; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.demo-actions .dbg-btn { flex: 0 0 auto; min-height: 2.6rem; font-size: 1rem; padding: .2rem .9rem; }
+.demo-actions .dbg-btn.danger { background: #B8323A; color: #FFF5E2; border-color: #2B2233; }
+.demo-actions .dbg-btn[aria-pressed=true] { background: #9CCB8A; }
+.demo-actions .dbg-btn:disabled { background: #E7D9C6; color: var(--ink-soft); box-shadow: 2px 3px 0 rgba(43, 34, 51, .35); cursor: not-allowed; }
+.demo-actions select { font: inherit; font-size: 1rem; color: var(--ink); background: var(--surface); border: 3px solid var(--ink);
+  border-radius: 12px; padding: .3rem .6rem; min-height: 2.6rem; max-width: 16rem; }
+.demo-status { margin: 0; font-weight: 600; flex: 1 1 18rem; min-width: 12rem; }
+.demo-hint { margin: 0; flex: 1 1 100%; color: var(--ink-soft); font-size: .9rem; }
+
+.demo-main { display: grid; gap: 14px; align-items: start; justify-content: start; max-width: none; margin: 0; padding: 0; }
+.demo-main[data-mode=side] { grid-template-columns: auto auto; grid-template-areas: "tv phones" "under phones"; }
+.demo-main[data-mode=stack] { grid-template-columns: auto; grid-template-areas: "tv" "phones" "under"; }
+.demo-tv { grid-area: tv; }
+.demo-phones { grid-area: phones; display: grid; gap: 14px; align-content: start; }
+.demo-main[data-mode=side] .demo-phones { grid-template-columns: repeat(2, auto); }
+.demo-main[data-mode=stack] .demo-phones { grid-template-columns: repeat(4, auto); }
+.demo-under { grid-area: under; display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); gap: 14px; align-items: start; min-width: 0; }
+
+.demo-head { display: flex; align-items: center; gap: .6rem; min-height: 2rem; margin: 0 0 4px; font-family: var(--font-title); font-size: 1.15rem; }
+.demo-chip { font: 600 .8rem var(--font-body); padding: .1rem .6rem; border: 2px solid var(--ink); border-radius: 999px; background: var(--surface); }
+.demo-chip.bot { background: #CFE6C6; }
+.demo-chip.you { background: var(--accent); }
+.demo-chip.off { background: #E7D9C6; color: var(--ink-soft); }
+.demo-head button.dbg-btn.demo-take, .demo-head button.dbg-btn.demo-sound { margin: 0 0 0 auto; flex: 0 0 auto; width: auto; white-space: nowrap; font-size: .8rem; line-height: 1.1;
+  min-height: 1.8rem; padding: 0 .6rem; border-radius: 10px; border-width: 2px; box-shadow: 2px 3px 0 var(--ink); }
+.demo-head button.dbg-btn.demo-sound { margin-left: .4rem; }
+.demo-head button.dbg-btn.demo-sound[aria-pressed=true] { background: #9CCB8A; }
+.demo-phone .demo-head { flex-wrap: nowrap; gap: .2rem .4rem; font-size: 1rem; }
+.demo-head button.dbg-btn.demo-take[aria-pressed=true] { background: var(--accent); }
+
+.demo-slot { position: relative; overflow: hidden; border: 3px solid var(--ink); border-radius: 14px; background: #1c1824;
+  box-shadow: 4px 5px 0 rgba(43, 34, 51, .35); }
+.demo-slot iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #1c1824; }
+.demo-slot-empty { display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem; color: #F3EBDC; font-size: 1rem; }
+.demo-phone { outline: 0 solid transparent; border-radius: 16px; padding: 4px; margin: -4px; }
+.demo-phone.manual { outline: 6px solid var(--accent); box-shadow: 0 0 0 10px rgba(232, 170, 56, .35); }
+.demo-phone:focus { outline: 6px solid var(--accent); }
+/* key hint overlays the bottom of the phone, so it never changes the card height */
+.demo-keys { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; padding: .3rem .5rem; font-size: .72rem; line-height: 1.2;
+  background: rgba(43, 34, 51, .9); color: #FFF5E2; pointer-events: none; }
+.demo-keys:empty { display: none; }
+@media (max-height: 900px) { .demo-log { height: 5.2rem; } }
+
+.demo-logbox h2 { margin: 0 0 .3rem; font-size: 1.2rem; }
+.demo-log { list-style: none; margin: 0; padding: .4rem .6rem; height: 9.5rem; overflow-y: auto; background: var(--surface); border: 3px solid var(--ink);
+  border-radius: 12px; font-size: .9rem; }
+.demo-log li { padding: .1rem 0; border-bottom: 1px dashed rgba(43, 34, 51, .2); }
+.demo-log li.bad { color: var(--danger); font-weight: 700; }
+.demo-log li.shortcut { color: #8A5A00; font-weight: 700; }
+.demo-log li.good { color: #2E6B2E; font-weight: 600; }
+.demo-log time { font-family: var(--font-body); font-weight: 700; color: var(--ink-soft); margin-right: .3rem; }
+.demo-debug { background: var(--surface); border: 3px solid var(--ink); border-radius: 12px; padding: .4rem .7rem; }
+.demo-debug summary { cursor: pointer; font-family: var(--font-title); font-size: 1.05rem; }
+.demo-debug .dbg-panel { font-size: 15px; margin-top: .6rem; }
+
+@media (max-width: 900px) {
+  .demo-under { grid-template-columns: minmax(0, 1fr); }
+}

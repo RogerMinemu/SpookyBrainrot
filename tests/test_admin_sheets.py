@@ -23,8 +23,9 @@ def test_sheet_does_not_distinguish_anchors_from_decoys(client):
 
 
 def test_sheet_flags_missing_riddles_in_non_printed_notice(client):
-    assert "Faltan 7 pistas" in client.get("/admin/qr-sheet").text
-    for i in range(1, 8):
+    # anchor 5 has no room since room 5 was dropped: its missing riddle is not nagged about
+    assert "Faltan 6 pistas" in client.get("/admin/qr-sheet").text
+    for i in (1, 2, 3, 4, 6, 7):
         client.put(f"/api/house/{i}", json={"riddle": f"pista {i}"})
     assert "Faltan" not in client.get("/admin/qr-sheet").text
 
@@ -46,8 +47,8 @@ def test_key_maps_labels_to_roles_and_riddles(client):
     client.put("/api/house/2", json={"riddle": "Tras el espejo", "place": "Bano"})
     key = client.get("/admin/qr-key").text
     assert "Tras el espejo" in key and "Bano" in key
-    assert key.count("FALTA") == 6
-    assert "Ancla 7 (salida)" in key
+    assert key.count("FALTA") == 5  # anchors 1, 3, 4, 6 and 7 (2 is written, 5 is unused)
+    assert "Ancla 7 (salida)" in key and "Ancla 5 (sin uso" in key
     for c in CAMEOS:
         assert c in key
     sheet_labels = re.findall(r'class="label">(#\d\d)<', client.get("/admin/qr-sheet").text)

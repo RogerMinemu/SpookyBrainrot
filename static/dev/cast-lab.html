@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es" data-room="poolrooms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Laboratorio del reparto (solo desarrollo)</title>
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/theme.css">
+<style>
+  body{margin:0;padding:8px;color:var(--ink);background:#6b5a48;font:14px/1.3 system-ui,sans-serif}
+  #bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;position:relative;z-index:3}
+  #grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;position:relative;z-index:2}
+  .cell{background:#F3EBDC;border:2px solid #2B2233;border-radius:8px;position:relative;height:500px}
+  .cell canvas{width:100%;height:100%;display:block}
+  .cell b{position:absolute;left:8px;top:4px;font-size:13px}
+  #atlases{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;position:relative;z-index:2}
+  #atlases figure{margin:0;background:#fff;border:2px solid #2B2233;padding:4px;font-size:12px}
+  #atlases img{width:100%;display:block;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/16px 16px}
+  #log{white-space:pre-wrap;font:12px/1.3 monospace;background:#fff8;padding:4px;position:relative;z-index:2}
+</style>
+<script src="/static/vendor/p5/2.3.3/p5.min.js"></script>
+<script src="/static/vendor/p5.brush/2.2.3/p5.brush.js"></script>
+</head>
+<body>
+<div id="bar">
+  <label>emocion <select id="emote"></select></label>
+  <label>boca <select id="mouth"><option value="">auto</option><option>closed</option><option>mid</option><option>open</option><option>scary</option></select></label>
+  <label><input type="checkbox" id="dance"> baile</label>
+  <label>solo <select id="only"><option value="">todos</option></select></label>
+  <span id="status">pintando...</span>
+</div>
+<div id="grid"></div>
+<div id="atlases"></div>
+<div id="log" role="status"></div>
+<script type="module" src="/static/dev/cast-lab.js"></script>
+</body>
+</html>

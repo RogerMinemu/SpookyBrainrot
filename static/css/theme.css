@@ -37,6 +37,23 @@ html[data-room="poolrooms"] {
   --room-a: #3A9C98; --room-b: #1F5E66; --room-c: #CFE9E4;
   --btn: #F7D86B; --on-bg: #17121D; --on-bg-soft: #1D2A2E;
 }
+html[data-room="mall"] {
+  --room-a: #1E2A3A; --room-b: #3B2F5C; --room-c: #F27BB0;
+  --btn: #6FD3C7; --on-bg: #FFF5E2; --on-bg-soft: #D8D0EC;
+}
+html[data-room="site19"] {
+  --room-a: #1C2420; --room-b: #2F4A3A; --room-c: #9BE38A;
+  --btn: #E8AA38; --on-bg: #EAF5E2; --on-bg-soft: #BFD6BF;
+}
+html[data-room="hangar"] {
+  --room-a: #3A3424; --room-b: #5E4E2E; --room-c: #E8C23D;
+  --btn: #D9643A; --on-bg: #FFF5E2; --on-bg-soft: #E8DCC2;
+}
+
+html[data-room="sahur"] {
+  --room-a: #2A1414; --room-b: #5C1F1A; --room-c: #E8C07A;
+  --btn: #D9643A; --on-bg: #FFF5E2; --on-bg-soft: #E6CFC2;
+}
 
 html { background: var(--room-a); }
 body { background: transparent; color: var(--on-bg); font-family: var(--font-body); font-size: 18px; position: relative; }
@@ -64,6 +81,9 @@ html[data-boil="on"] #art .art-bg[data-v="0"] { animation-delay: 0ms; }
 html[data-boil="on"] #art .art-bg[data-v="1"] { animation-delay: calc(var(--boil-ms) * -1ms); }
 html[data-boil="on"] #art .art-bg[data-v="2"] { animation-delay: calc(var(--boil-ms) * -2ms); }
 @media (prefers-reduced-motion: reduce) { html[data-boil="on"] #art .art-bg { animation: none; } html[data-boil="on"] #art.on .art-bg[data-v="0"] { opacity: 1; } }
+/* realtime rooms (tv.js sets html[data-realtime]): the sim owns the frame budget, so the background stays still */
+html[data-realtime="1"][data-boil="on"] #art .art-bg { animation: none; }
+html[data-realtime="1"][data-boil="on"] #art.on .art-bg[data-v="0"] { opacity: 1; }
 
 /* loading: an ink blot that breathes while the first plate is painted */
 @keyframes blot { 0%, 100% { transform: scale(.82) rotate(-4deg); opacity: .2; } 50% { transform: scale(1.1) rotate(5deg); opacity: .42; } }
@@ -123,27 +143,6 @@ a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 4px; 
 .card { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 4px 5px 0 rgba(12, 6, 22, .45); }
 .card .muted { color: var(--ink-soft); }
 .toast { background: var(--surface); color: var(--ink); border: 3px solid var(--ink); box-shadow: 4px 5px 0 rgba(12, 6, 22, .5); }
-
-/* ---------------------------------------------------------------- wordle tiles (TV grid + phone board) */
-/* painted tiles, shared by the TV grid and the phone board. State is carried by colour AND by shape
-   (check / ring / strike / ink blot) so it reads in the dark and for colour-blind players. */
-.wcell { position: relative; overflow: hidden; isolation: isolate; width: 4.2rem; height: 4.2rem; display: grid; place-content: center;
-  font-family: var(--font-title); font-size: 2.2rem; line-height: 1; color: var(--ink); background-color: var(--surface);
-  border: 3px solid var(--ink); border-radius: 12px 9px 13px 8px / 9px 13px 8px 12px; box-shadow: 2px 3px 0 var(--ink); }
-.wcell::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .9; pointer-events: none;
-  background: radial-gradient(75% 65% at 30% 25%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(70% 70% at 80% 90%, rgba(43, 34, 51, .16), transparent 75%); }
-.wcell:nth-child(even) { transform: rotate(.7deg); }
-.wcell:nth-child(odd) { transform: rotate(-.6deg); }
-.wcell.correct { background-color: #5BAE72; background-image: linear-gradient(160deg, #7CC78F, #3F9A5C); }
-.wcell.correct::after { content: "\2713"; position: absolute; right: 4px; top: 1px; font-family: var(--font-body); font-size: .8rem; font-weight: 700; }
-.wcell.present { background-color: #F0C75A; background-image: linear-gradient(160deg, #F7DA85, #E5B23A); }
-.wcell.present::after { content: ""; position: absolute; inset: 5px; border: 2.5px dashed var(--ink); border-radius: 50%; opacity: .55; z-index: -1; }
-.wcell.absent { background-color: #CFC4D4; color: #4A3F55; background-image: linear-gradient(160deg, #DAD1DE, #BCB0C3); box-shadow: 1px 2px 0 var(--ink); }
-.wcell.absent::after { content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 2.5px; background: var(--ink); opacity: .35; transform: rotate(-24deg); z-index: -1; }
-/* hidden by a salpicon: an ink blot swallows the letter */
-.wcell.covered { background-color: #2B1530; background-image: var(--tex-splat), radial-gradient(70% 70% at 40% 35%, #5B1F3C, #1E0E24); background-size: 92% 92%, auto;
-  background-position: center; background-repeat: no-repeat; color: #FFD7DC; border-color: var(--ink); }
-.wcell.covered::before { background: radial-gradient(60% 55% at 70% 30%, rgba(184, 50, 58, .45), transparent 70%); }
 
 /* ---------------------------------------------------------------- Brainrot% degradation (html[data-rot] 0..5)
    Cheap by construction: filters live ONLY on #art (behind the DOM), the horror layers are fixed pseudo-elements

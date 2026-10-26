@@ -1,4 +1,4 @@
-"""End-to-end Room 0 over WebSocket: two players hold, FakeClock advances, game moves to Room 2 intro."""
+"""End-to-end Room 0 over WebSocket: two players hold, FakeClock advances, game moves to Room 1 intro."""
 import json
 
 
@@ -39,7 +39,7 @@ def setup(client, names=("Ana", "Bea")):
     return g["id"], toks
 
 
-def test_two_players_hold_together_and_reach_room2_intro(client, clock):
+def test_two_players_hold_together_and_reach_room1_intro(client, clock):
     gid, (ta, tb) = setup(client)
     rt = client.app.state.manager.get(gid)
     with client.websocket_connect("/ws") as tv, client.websocket_connect("/ws") as wa, \
@@ -74,9 +74,9 @@ def test_two_players_hold_together_and_reach_room2_intro(client, clock):
         assert s["game"]["room_no"] == 0
         assert next_of(tv, "event")["payload"]["name"] == "puzzle_solved"
 
-        # advance -> Room 2 intro (the wordle plugin arrives in batch C)
+        # advance -> Room 1 intro
         wa.send_text(env("advance"))
-        s = state_until(tv, lambda p: p["game"]["room_no"] == 2)
+        s = state_until(tv, lambda p: p["game"]["room_no"] == 1)
         assert s["game"]["phase"] == "intro" and s["view"]["kind"] == "intro"
 
 

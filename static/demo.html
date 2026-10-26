@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%80%3C/text%3E%3C/svg%3E">
+  <title>SpookyBrainrot - Demo con bots</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/paper.css">
+  <link rel="stylesheet" href="/static/css/debug.css">
+  <link rel="stylesheet" href="/static/css/demo.css">
+</head>
+<body class="demo-page">
+  <header class="demo-bar">
+    <h1>Demo</h1>
+    <div class="demo-actions">
+      <button type="button" id="btn-new" class="dbg-btn go">Nueva demo</button>
+      <button type="button" id="btn-auto" class="dbg-btn" aria-pressed="false">Piloto automático: no</button>
+      <select id="sel-room" aria-label="Sala a la que saltar" disabled></select>
+      <button type="button" id="btn-jump" class="dbg-btn" disabled>Saltar a sala</button>
+      <button type="button" id="btn-delete" class="dbg-btn danger" disabled>Borrar demo</button>
+    </div>
+    <p id="status" class="demo-status" role="status">Sin partida. Pulsa «Nueva demo».</p>
+    <p class="demo-hint">Sonido: cualquier clic en esta página activa el de la tele. Los móviles van en silencio hasta que tomes el control de uno. <a href="/admin/debug">Modo debug</a></p>
+  </header>
+  <main id="demo-main" class="demo-main" data-mode="side">
+    <section class="demo-tv" aria-label="Tele">
+      <div class="demo-head"><strong>Tele</strong><span id="tv-chip" class="demo-chip">sin partida</span><button type="button" id="btn-sound" class="dbg-btn demo-sound" aria-pressed="false">Activar sonido</button></div>
+      <div id="tv-slot" class="demo-slot demo-slot-tv"></div>
+    </section>
+    <section id="phones" class="demo-phones" aria-label="Móviles"></section>
+    <section class="demo-under">
+      <div class="demo-logbox">
+        <h2>Qué hacen los bots</h2>
+        <ol id="log" class="demo-log"></ol>
+      </div>
+      <details class="demo-debug">
+        <summary>Depuración (saltos, Brainrot, eventos)</summary>
+        <div id="debug-slot"></div>
+      </details>
+    </section>
+  </main>
+  <script type="module" src="/static/js/admin/demo.js"></script>
+</body>
+</html>

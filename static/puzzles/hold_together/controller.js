@@ -41,6 +41,10 @@ export function mount(root, ctx) {
   on(document, "visibilitychange", () => { if (document.hidden) release(); });
   on(window, "pagehide", release);
   s.release = release;
+  // /admin/demo seat: the bots press the very same button through its pointer handlers
+  if (window.__sb) {
+    window.__sb.hold = (down) => button.dispatchEvent(new PointerEvent(down ? "pointerdown" : "pointerup", { bubbles: true, cancelable: true }));
+  }
 }
 
 export function update(view) {
@@ -55,5 +59,6 @@ export function update(view) {
 export function unmount() {
   if (!state) return;
   state.cleanup.forEach((fn) => fn());
+  if (window.__sb) window.__sb.hold = null;
   state = null;
 }

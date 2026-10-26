@@ -6,8 +6,8 @@ from app.runtime.manager import GameManager
 from tests.fakes import FakeClock, seeded_rng
 
 
-class FakeWordle:
-    id = "cursed_wordle"
+class FakePlatformer:
+    id = "coop_platformer"
     title = "fake"
     min_players = 1
 
@@ -21,14 +21,14 @@ class FakeWordle:
         return dict(d)
 
 
-PUZZLES = {"cursed_wordle": FakeWordle()}
+PUZZLES = {"coop_platformer": FakePlatformer()}
 
 
 def make_manager(path):
     return GameManager(Database(path), FakeClock(), seeded_rng(), PUZZLES)
 
 
-def test_roundtrip_room2_attempt3_brainrot20_new_instance(tmp_path):
+def test_roundtrip_room1_level3_brainrot20_new_instance(tmp_path):
     path = tmp_path / "s.db"
     m1 = make_manager(path)
     rt = m1.create("Casa")
@@ -39,16 +39,16 @@ def test_roundtrip_room2_attempt3_brainrot20_new_instance(tmp_path):
     g.brainrot = 20
     g.decoys_hit = [3]
     g.clock_ms = 1200000
-    g.puzzle_id = "cursed_wordle"
-    g.puzzle_state = {"attempts": 3, "target": "SAHUR"}
+    g.puzzle_id = "coop_platformer"
+    g.puzzle_state = {"level": 3, "epoch": 1}
     asyncio.run(m1.join(rt, "Ana"))
     rt.persist()
     m1.db.close()
 
     m2 = make_manager(path)
     g2 = m2.get(g.id).game
-    assert (g2.room_idx, g2.room_no, g2.phase, g2.brainrot) == (1, 2, "puzzle", 20)
-    assert g2.puzzle_state == {"attempts": 3, "target": "SAHUR"}
+    assert (g2.room_idx, g2.room_no, g2.phase, g2.brainrot) == (1, 1, "puzzle", 20)
+    assert g2.puzzle_state == {"level": 3, "epoch": 1}
     assert g2.decoys_hit == [3] and g2.clock_ms == 1200000
     assert [p.name for p in g2.players] == ["Ana"]
     assert all(not p.connected for p in g2.players)  # R1.4
@@ -57,7 +57,8 @@ def test_roundtrip_room2_attempt3_brainrot20_new_instance(tmp_path):
 def test_serialize_has_expected_keys():
     g = Game(id="a", code="ABCD", name="n")
     s = g.serialize_state({})
-    assert set(s) == {"v", "room_idx", "phase", "brainrot", "brainrot_log", "decoys_hit",
+    assert s["v"] == 2 and s["room_no"] == 0
+    assert set(s) == {"v", "room_idx", "room_no", "phase", "brainrot", "brainrot_log", "decoys_hit",
                       "clock_ms", "seq", "puzzle", "ending"}
     assert s["puzzle"] is None
 

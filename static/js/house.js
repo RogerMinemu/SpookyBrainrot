@@ -16,6 +16,11 @@ function card(a) {
       status.textContent = res.ok ? "Guardada" : "La pista no puede estar vacía";
     },
   }, "Guardar");
+  if (a.in_use === false) {
+    return h("div", { class: "card" },
+      h("strong", {}, `Ancla ${a.idx} (sin uso)`),
+      h("p", { class: "muted" }, "Ninguna sala usa esta ancla: no hace falta esconderla ni escribirle pista."));
+  }
   return h("div", { class: "card" },
     h("strong", {}, a.idx === 7 ? "Ancla 7 (salida)" : `Ancla ${a.idx}`), riddle, place,
     h("div", { class: "row" }, save, status));

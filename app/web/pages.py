@@ -4,7 +4,7 @@ from __future__ import annotations
 from html import escape
 from typing import Dict, Optional, Sequence, Tuple
 
-from app.content import CAMEOS, RIDDLE_PLACEHOLDER
+from app.content import ANCHORS_IN_USE, CAMEOS, RIDDLE_PLACEHOLDER
 from app.core.engine import (
     SCAN_ALREADY,
     SCAN_FINISHED,
@@ -109,7 +109,11 @@ td,th{padding:.5rem;text-align:left;vertical-align:top}
 def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict]) -> str:
     out = []
     for label, e in rows:
-        if e.kind == "anchor":
+        if e.kind == "anchor" and e.idx not in ANCHORS_IN_USE:
+            role = f"Ancla {e.idx} (sin uso: no hace falta esconderla)"
+            riddle_html = '<span class="muted">-</span>'
+            place_html = '<span class="muted">-</span>'
+        elif e.kind == "anchor":
             cfg = house.get(e.idx) or {}
             riddle = (cfg.get("riddle") or "").strip()
             place = (cfg.get("spot_id") or "").strip()

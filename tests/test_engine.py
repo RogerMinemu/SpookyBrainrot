@@ -5,6 +5,7 @@ from app.core.engine import (
     SCAN_ALREADY,
     SCAN_FINISHED,
     SCAN_SLEEPING,
+    SCAN_UNLOCKED,
     Advance,
     Engine,
     Join,
@@ -78,7 +79,8 @@ class FakePuzzle:
 
 def make(min_players=1, players=("a", "b"), connect=True):
     clock = FakeClock()
-    puzzles = {"hold_together": FakePuzzle("hold_together"), "cursed_wordle": FakePuzzle("cursed_wordle")}
+    ids = ("hold_together", "coop_platformer", "red_light", "shape_count", "backrooms_trivia", "bomb_defusal", "sahur_dice")
+    puzzles = {pid: FakePuzzle(pid) for pid in ids}
     eng = Engine(puzzles, clock, seeded_rng(), min_players=min_players)
     g = Game(id="g", code="ABCD", name="G")
     for pid in players:
@@ -195,23 +197,34 @@ def test_join_notifies_active_puzzle():
     assert g.puzzle_state["presence_calls"] == 1
 
 
-def test_full_pass_through_both_rooms_and_frozen_ending():
+def test_full_pass_through_all_rooms_and_frozen_ending():
     eng, g, _ = make()
     to_puzzle(eng, g)
     eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 0 -> unlocked
     assert (g.room_no, g.phase) == (0, PHASE_UNLOCKED)
 
-    out = eng.apply(g, Advance())  # -> room 2 intro
-    assert out.changed and (g.room_no, g.phase) == (2, PHASE_INTRO) and g.status == STATUS_RUNNING
+    rooms = [(1, "coop_platformer"), (2, "red_light"), (3, "shape_count"), (4, "backrooms_trivia"), (6, "bomb_defusal")]
+    for room_no, puzzle_id in rooms:
+        out = eng.apply(g, Advance())  # -> next room intro
+        assert out.changed and (g.room_no, g.phase) == (room_no, PHASE_INTRO) and g.status == STATUS_RUNNING
+        to_puzzle(eng, g)
+        assert g.puzzle_id == puzzle_id
+        eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # solved -> search
+        assert g.phase == PHASE_SEARCH and g.puzzle_state is None
+        assert eng.apply(g, Scan("anchor", 7)).scan_result == SCAN_SLEEPING  # not this room's anchor
+        assert eng.apply(g, Scan("anchor", room_no)).scan_result == SCAN_UNLOCKED
+        assert g.phase == PHASE_UNLOCKED
+
+    assert eng.apply(g, Advance()).changed and (g.room_no, g.phase) == (7, PHASE_INTRO)
     to_puzzle(eng, g)
-    assert g.puzzle_id == "cursed_wordle"
+    assert g.puzzle_id == "sahur_dice"
     eng.apply(g, PuzzleAction("a", {"do": "rot", "amount": 42}))
-    eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 2 solved -> search
+    eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 7 solved -> search
     assert g.phase == PHASE_SEARCH and g.puzzle_state is None
 
-    assert eng.apply(g, Scan("anchor", 1)).scan_result == SCAN_SLEEPING
+    assert eng.apply(g, Scan("anchor", 1)).scan_result == SCAN_ALREADY
     assert g.phase == PHASE_SEARCH
-    out = eng.apply(g, Scan("anchor", 2))
+    out = eng.apply(g, Scan("anchor", 7))
     assert out.changed and out.scan_result == SCAN_FINISHED
     assert g.status == STATUS_FINISHED
     assert g.ending["band"] == brainrot.BAND_PASSENGER and g.ending["brainrot"] == 42
@@ -219,14 +232,14 @@ def test_full_pass_through_both_rooms_and_frozen_ending():
     # frozen: nothing moves anymore
     assert eng.apply(g, Advance()).error[0] == "wrong_phase"
     assert eng.apply(g, PuzzleAction("a", {"do": "rot"})).error[0] == "no_puzzle"
-    assert eng.apply(g, Scan("anchor", 2)).scan_result == SCAN_ALREADY
+    assert eng.apply(g, Scan("anchor", 7)).scan_result == SCAN_ALREADY
     assert g.brainrot == 42 and g.status == STATUS_FINISHED
 
 
 def test_scan_before_search_is_sleeping_and_has_no_effect():
     eng, g, _ = make()
     to_puzzle(eng, g)
-    out = eng.apply(g, Scan("anchor", 2))
+    out = eng.apply(g, Scan("anchor", 1))
     assert out.scan_result == SCAN_SLEEPING and not out.changed and g.brainrot == 0
 
 
@@ -282,7 +295,8 @@ def test_tv_presence_settles_elapsed_time_before_dropping():
     clock.advance(20 * 60)
     out = eng.apply(g, TvPresence(0))
     assert g.clock_ms == 20 * 60 * 1000
-    assert out.persist and not out.changed  # persisted, but no state broadcast
+    assert out.persist and not out.changed  # persisted, no seq bump
+    assert out.broadcast  # but phones are told the TV left (tv_online)
 
 
 def test_tv_presence_same_count_is_noop():

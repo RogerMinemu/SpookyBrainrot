@@ -29,6 +29,7 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 ## QR fijos (se imprimen UNA vez)
 
 - **7 anclas** (una por nivel, la última es la salida) + **8 trampas**. Tokens aleatorios generados una sola vez y guardados en el servidor.
+- Desde que se quitó la sala 5, el **ancla 5 no la usa ninguna sala**: sigue impresa, pero no hace falta esconderla ni escribirle pista (`/admin/house` y la clave de QR lo indican). Si alguien la escanea, solo «duerme».
 - Cada QR lleva `{PUBLIC_URL}/k/<token>` y se escanea con la **cámara normal** del móvil (sin HTTPS ni permisos de cámara).
 - **¿Qué partida abre?**
   1. La del mando, si ese navegador ya está en `/play` (cookie).
@@ -43,13 +44,14 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 | # | Nivel | Guardián | Puzzle | Tipo | Min |
 |---|---|---|---|---|---|
 | 0 | Prólogo: Noclip | — | Agarraos fuerte | Tutorial / sincronía | 5 |
-| 1 | Nivel 0: Habitaciones amarillas | Brr Brr Patapim | Laberinto a ciegas | Coordinación | 12 |
-| 2 | Las Piscinas | Tralalero Tralala | Wordle maldito | Palabras | 10 |
-| 3 | Centro comercial de las 3 AM | Lirilì Larilà | La fila del tiempo | Ordenar | 10 |
-| 4 | Sitio-19 | Cappuccino Assassino | El infiltrado | Trivia + deducción social | 12 |
-| 5 | Galería liminal | Ballerina Cappuccina | El cuadro que te mira | Rompecabezas + observación | 12 |
-| 6 | Hangar abandonado | Bombardiro Crocodilo | Desactiva la bomba | Información asimétrica | 12 |
-| 7 | Final | Tung Tung Tung Sahur | Responde al Sahur | Ritmo / Simon | 8 |
+| 1 | Nivel 0: Habitaciones amarillas | Brr Brr Patapim | Plataformas cooperativas (4 niveles) | Coordinación en tiempo real | 12 |
+| 2 | Las Piscinas | Tralalero Tralala | Un, dos, tres… ¡Tralalero! | Reflejos en tiempo real | 10 |
+| 3 | Centro comercial de las 3 AM | Lirilì Larilà | Contad las formas | Observación / conteo | 10 |
+| 4 | Sitio-19 | Ballerina Cappuccina | Trivia de las Backrooms | Trivia por consenso | 12 |
+| 6 | Hangar abandonado | Bombardiro Crocodilo | Desactivad la bomba | Información repartida (Keep Talking) | 12 |
+| 7 | Final | Tung Tung Tung Sahur | Sahur dice | Ritmo / Simon con trampas | 8 |
+
+> **Estado:** todas las salas del plan son jugables: 0, 1, 2, 3, 4, 6 y 7. La **sala 5 se ha quitado** (la numeración no cambia: de la 4 se pasa a la 6). Ballerina Cappuccina, que guardaba la sala 5, pasa a presentar la trivia de la sala 4.
 
 ### 0 · Prólogo — Noclip
 
@@ -62,68 +64,67 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 
 Moqueta húmeda, zumbido de fluorescentes. Patapim tiene los pies hundidos en la moqueta y os pide llegar hasta su ancla.
 
-- **Laberinto a ciegas**: la tele enseña el laberinto a oscuras, solo se ve el círculo de linterna alrededor del grupo.
-- Un jugador, el **Guía** (rota en cada intento), ve el mapa completo en su móvil.
-- El resto se reparte las direcciones: cada móvil solo mueve hacia un lado (↑, ↓, ←, →).
-- Un **Smiler** (una sonrisa en la oscuridad) patrulla. Si os pilla: vuelta al inicio y sube el Brainrot%.
-- Con más jugadores hay direcciones repetidas: hay que coordinar quién pulsa.
+- **Plataformas cooperativas**: el móvil es un mando (izquierda, derecha, saltar) y cada jugador es un bichito de su color en la tele. Son **4 niveles** seguidos; se juega de verdad en tiempo real y la tele es quien hace la física.
+- **Nivel 1, Torre humana**: la campana está demasiado alta. Alguien se sube a otro jugador para tocarla y que se abra la puerta.
+- **Nivel 2, El botón pesado**: una verja se abre si el grupo mantiene pulsado un botón con suficiente peso (la mitad del grupo, mínimo 2) durante 1 s.
+- **Nivel 3, Todos a bordo**: un foso demasiado ancho y una plataforma móvil que solo parte cuando todos los del lado izquierdo van a bordo.
+- **Nivel 4, La llave**: hay que subir a una repisa con ayuda, coger la llave y llevarla a la puerta. Si el portador cae o se desconecta, la llave vuelve a su sitio.
+- Un nivel se supera cuando **todos** los jugadores conectados han entrado por la puerta. Caerse al vacío solo devuelve a ese jugador al inicio y cuesta un poco de Brainrot% (con enfriamiento y tope).
+- Al superar el nivel 4 se pasa a la búsqueda del ancla.
 
 ### 2 · Las Piscinas · Tralalero Tralala
 
 Azulejos blancos infinitos, agua que no refleja. Tralalero nada con sus Nike.
 
-- **Wordle maldito** colaborativo: 6 intentos compartidos y cada intento lo escribe un jugador distinto, por turnos.
-- Cada móvil recibe en secreto una letra que **no** está en la palabra. Hay que decirlo en voz alta.
-- **Salpicón**: cada 2 intentos, Tralalero tapa una casilla ya revelada y hay que recordarla.
-- Palabras del lore: `NOCLIP`, `SMILER`, `KETER`, `SAHUR`…
+- **Un, dos, tres… ¡Tralalero!**: cada jugador tiene un carril y nada hacia Tralalero **solo mientras la luz está en verde**. Cuando se pone en rojo, hay que quedarse quieto: quien se mueva fuera de la ventana de gracia (300 ms) vuelve al inicio y sube el Brainrot%.
+- Hay **falsos giros**: Tralalero se da la vuelta a medias y vuelve a mirar al frente; hay que leerlos bien.
+- Quien ya ha llegado puede **distraer** a Tralalero (un solo uso compartido cada 6 s): durante 2 s el rojo no pilla a nadie.
+- Se supera cuando todos los jugadores conectados han llegado a la meta.
 
 ### 3 · Centro comercial de las 3 AM · Lirilì Larilà
 
-Centro comercial vacío, hilo musical a cámara lenta. Lirilì, el elefante-cactus con reloj, ha desordenado el tiempo.
+Centro comercial vacío, hilo musical a cámara lenta. Lirilì, el elefante-cactus con reloj, ha parado todos los relojes a las tres.
 
-- **La fila del tiempo**: cada móvil recibe una carta de una peli de terror. No es el póster, sino una frase o un objeto icónico: *«¿Te gustan las películas de miedo?»*, un triciclo en un pasillo de hotel, una cinta VHS que dice «7 días».
-- Los jugadores se ponen **en fila de verdad** por año de estreno y cada uno marca su posición en el móvil. La tele dice cuántos están bien colocados, no cuáles (estilo Mastermind).
-- **Ronda 1**: décadas separadas (Psicosis 1960, Halloween 1978, Scream 1996, Hereditary 2018…).
-- **Ronda 2**: años cercanos (Alien 1979 / El resplandor 1980 / Pesadilla en Elm Street 1984).
-- **Ronda 3, trampa**: Lirilì cuela una peli que no existe. Hay que detectarla y sacarla de la fila.
+- **Contad las formas**: la tele muestra un campo de formas (círculos, triángulos, cuadrados, estrellas, corazones, cruces, lunas y rombos) de colores al azar. **El color da igual: solo cuenta la forma.**
+- A cada jugador se le asigna **una forma** (distinta mientras haya formas libres; con más jugadores que formas, se repiten y todos deben acertar). El móvil solo tiene **dos botones: −1 y +1** sobre su propio contador.
+- Cuenta atrás por ronda (30, 35 y 40 s). Al acabar, la tele enseña quién acertó y cuántas había de verdad. Si **todos** aciertan, siguiente ronda; si alguien falla, Brainrot% y la misma ronda con formas nuevas.
+- **3 rondas**: 4, 6 y 8 formas distintas en pantalla (más si hay más jugadores) y cada vez más figuras. En la ronda 3 las formas **se mueven**.
+- Nadie ve el contador de los demás hasta la comprobación.
 
-### 4 · Sitio-19 · Cappuccino Assassino
+### 4 · Sitio-19 · Ballerina Cappuccina
 
-Terminal de la Fundación, expedientes con barras de [REDACTADO]. Cappuccino Assassino se ha infiltrado en el equipo.
+Terminal de la Fundación, expedientes con barras de [REDACTADO]. Ballerina Cappuccina hace de presentadora.
 
-- **El infiltrado**: trivia de SCP, Backrooms y terror. Cada pregunta se vota desde el móvil y cuenta la mayoría.
-- Un jugador, al azar y en secreto, está **poseído**. Su móvil le da «pistas» falsas pero convincentes, y su objetivo es que el grupo falle sin que lo descubran.
-- Al final, votación: ¿quién es el infiltrado? Si aciertan, baja el Brainrot%. Si fallan, sube.
-- Cada acierto destapa un trozo del expediente censurado, que contiene la pista del ancla.
-- Ejemplos:
-  - ¿Qué hace SCP-173 si dejas de mirarlo?
-  - ¿Cuál es la clase de objeto más peligrosa: Safe, Euclid o Keter?
-  - ¿Qué entidad de las Backrooms organiza fiestas y firma con `=)`?
-
-### 5 · Galería liminal · Ballerina Cappuccina
-
-Cuadros de espacios liminales: piscina vacía, parque infantil de noche, pasillo de hotel. Suena una caja de música.
-
-- **Parte 1, rompecabezas**: el cuadro está roto y las piezas se reparten entre los móviles. Cada jugador **lanza** su pieza a la tele con un gesto hacia arriba y luego la coloca.
-- **Parte 2, ¿qué ha cambiado?**: con el cuadro completo, se apaga la imagen 2 s. Al volver, algo es distinto: una figura al fondo, una puerta que no estaba. Hay que tocar en el móvil dónde está el cambio.
-- 3 rondas, cada una más sutil. Cada fallo: la bailarina avanza un paso hacia la pantalla.
+- **Trivia de las Backrooms**, en español: el origen de la creepypasta (4chan, 2019), el texto original, los niveles, las entidades (Smilers, Partygoers, Facelings…), el agua de almendras, las organizaciones de la wiki y la serie de Kane Pixels.
+- Se resuelve **entre todos**: cada móvil vota A, B, C o D y puede cambiar su voto. La respuesta **solo se envía cuando todos votan lo mismo** (2,5 s de acuerdo; si alguien cambia de idea, se cancela). La tele enseña quién ha votado qué y quién falta.
+- Al responder, la tele revela la buena con un dato curioso. Acierto: suma. Fallo: Brainrot% y siguiente pregunta.
+- Hay que llegar a **6 aciertos**. Las preguntas no se repiten hasta agotar el banco.
 
 ### 6 · Hangar abandonado · Bombardiro Crocodilo
 
-Bombardiro suelta una bomba en mitad de la sala.
+Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody Explodes* con el manual hecho pedazos.
 
-- **Desactiva la bomba**: la bomba se ve en la tele, pero solo el móvil del **Artificiero** (rota en cada módulo) puede tocarla.
-- El manual de desactivación está repartido en páginas entre el resto de móviles.
-- 3 módulos temáticos: cables de colores, símbolos de brainrots y un botón que hay que soltar en el momento justo.
-- Cuenta atrás de 5 min; cada error resta tiempo.
+- **Solo un móvil tiene la bomba**: el del **artificiero**. Ni la tele ni los demás la ven: la tele solo enseña el reloj, los errores y qué módulos quedan.
+- **El manual se reparte** entre los demás móviles: 14 páginas (reglas de cables según cuántos haya, botón, cada columna de símbolos y cada lista de contraseñas) repartidas en el número de jugadores. Cuantos más sois, menos sabe cada uno y más hay que hablar. Si el artificiero está solo, tiene también el manual entero.
+- **4 módulos**: cables (3 a 6, de colores; las reglas dependen del número de serie), botón (pulsar y soltar, o mantener hasta que salga una tira de color y soltar cuando el reloj muestre cierta cifra), símbolos de brainrots (pulsarlos en el orden de su columna) y contraseña (girar letras hasta formar la única palabra posible de las listas).
+- Cuenta atrás de **5 min**; cada error resta **30 s** y un poco de Brainrot%. Con **3 errores** o el reloj a cero: **¡BUM!**, Brainrot% y una bomba nueva para el siguiente jugador.
+- Si el artificiero se desconecta, la bomba pasa al siguiente jugador conectado tal y como está.
 
-### 7 · Final — La llamada del Sahur · Tung Tung Tung Sahur
+### 7 · Final — Sahur dice · Tung Tung Tung Sahur
 
 *Tung. Tung. Tung.* Algo golpea al otro lado de la pantalla.
 
-- **Responde al Sahur**: cada móvil es un tambor con su color y sonido. La tele toca una secuencia y el grupo la repite en orden, cada uno cuando le toca. La secuencia crece.
-- 3 llamadas. Cada fallo acerca a Tung Tung en la pantalla.
+- **Sahur dice**: la tele toca una secuencia de tambores y el grupo la repite en orden. Los tambores (entre 4 y 6) se reparten entre los móviles: cada móvil solo toca los suyos y **no ve la secuencia**, así que hay que hablar. Si hay menos jugadores que tambores, uno lleva varios.
+- **Rondas con trampa**: en las rondas 2 y 3 algunas órdenes llegan **sin** el «Sahur dice»: esas hay que ignorarlas, no tocarlas.
+- 3 rondas (secuencias de 4, 5 y 6 pasos). Un fallo (tambor equivocado, de otro jugador o fuera de orden) cuesta Brainrot% y repite la ronda con una secuencia nueva.
 - Al superarlo: pista de la última ancla, **la salida**. Escanearla lanza la cinemática del final que os toque.
+
+## Tiempo real y guardado
+
+- **Carril de entrada**: cada móvil envía una máscara de botones (izquierda 1, derecha 2, saltar 4, acción 8) por WebSocket, sin pasar por el bloqueo de la partida. El servidor solo la retransmite a la tele; la tele simula a 60 Hz y solo informa de resultados (nivel superado, penalización, llegada). Cada resultado lleva `epoch` y nivel: un informe viejo se ignora.
+- **Tele desconectada**: los móviles lo avisan en español y dejan de enviar; al volver, se reenvían las máscaras.
+- **Constantes de penalización**: 2 de Brainrot% por fallo de simulación (enfriamiento 2,5 s, tope 12 por sala); 3 por fallo en el Sahur, por contar mal (sala 3) o por fallar una pregunta (sala 4); en la bomba, 1 por error y 5 por explosión. Todas las salas tienen un tope de 12 por partida de sala.
+- **Guardado v2**: las partidas guardan el número de sala. Las partidas v1 se migran a la sala 2 en su introducción, pero una partida v2 **no se puede cargar con el código antiguo**. Para limpiar partidas, bórralas desde la portada; nunca edites `data/` a mano.
 
 ## Cameos (QR trampa)
 

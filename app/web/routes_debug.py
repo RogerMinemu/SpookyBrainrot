@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.config import ROOT_DIR
-from app.content import CAMEOS, ROOM_PLAN
+from app.content import CAMEOS
 from app.core import brainrot
 from app.core.engine import (
     DEBUG_EVENTS,
@@ -25,7 +25,7 @@ from app.core.engine import (
     DebugReset,
     DebugSetBrainrot,
 )
-from app.core.game import STATUS_FINISHED, STATUS_LOBBY
+from app.core.game import STATUS_FINISHED, STATUS_LOBBY, resolve_room
 from app.web.routes_admin import NO_CACHE
 
 router = APIRouter()
@@ -35,6 +35,7 @@ PRESETS = [0, 20, 40, 60, 80, 100]
 class JumpBody(BaseModel):
     room: Any
     phase: Optional[str] = None
+    level: Any = None  # 0-based sub-level (platformer level, Sahur round); the engine validates it
 
 
 class BrainrotBody(BaseModel):
@@ -93,6 +94,18 @@ async def debug_page() -> FileResponse:
     return FileResponse(ROOT_DIR / "static" / "debug.html", media_type="text/html", headers=NO_CACHE)
 
 
+@router.get("/admin/demo")
+async def demo_page() -> FileResponse:
+    return FileResponse(ROOT_DIR / "static" / "demo.html", media_type="text/html", headers=NO_CACHE)
+
+
+@router.get("/admin/api/anchors")
+async def demo_anchors(request: Request) -> Dict[str, Any]:
+    """Anchor tokens by level, so the demo bots can hit the real /k/<token> scan route. Host-only (spoiler)."""
+    entries = request.app.state.qr_repo.entries()
+    return {"anchors": {str(e.idx): e.token for e in entries if e.kind == "anchor"}}
+
+
 @router.get("/admin/api/games")
 async def debug_games(request: Request) -> list:
     state = request.app.state
@@ -118,14 +131,21 @@ async def debug_games(request: Request) -> list:
 
 
 def _room_no(state: Dict[str, Any]) -> int:
-    return ROOM_PLAN[min(state.get("room_idx", 0), len(ROOM_PLAN) - 1)].room_no
+    return resolve_room(state).room_no
 
 
 @router.get("/admin/api/games/{game_id}/debug")
 async def debug_info(game_id: str, request: Request) -> Dict[str, Any]:
     rt = _get(request, game_id)
+    g = rt.game
+    puzzle = rt.puzzles.get(g.puzzle_id) if g.puzzle_id is not None and g.puzzle_state is not None else None
+    peek = getattr(puzzle, "debug_peek", None) if puzzle is not None else None
     return {
         "game": _info(rt, request.app.state.hub),
+        # What the TV sees (host-only peek: e.g. the Sahur sequence with its traps); None outside a puzzle.
+        "tv_view": puzzle.view_tv(g.puzzle_state) if puzzle is not None else None,
+        # Spoiler line for puzzles whose answer is on no screen (trivia answer, bomb solution); "" otherwise.
+        "peek": peek(g.puzzle_state) if peek is not None else "",
         "rooms": rt.engine.debug_rooms(),
         "cameos": list(CAMEOS),
         "events": list(DEBUG_EVENTS),
@@ -135,7 +155,7 @@ async def debug_info(game_id: str, request: Request) -> Dict[str, Any]:
 
 @router.post("/admin/api/games/{game_id}/debug/jump")
 async def debug_jump(game_id: str, body: JumpBody, request: Request) -> Dict[str, Any]:
-    return await _run(request, game_id, DebugJump(room=body.room, phase=body.phase))
+    return await _run(request, game_id, DebugJump(room=body.room, phase=body.phase, level=body.level))
 
 
 @router.post("/admin/api/games/{game_id}/debug/complete")
