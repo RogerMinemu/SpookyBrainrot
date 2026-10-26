@@ -11,16 +11,38 @@ function advanceButton(ctx, label) {
 }
 
 export function renderLobby(root, state, gameId, ctx) {
+  const link = h("a", { class: "join-url" }, "Cargando enlace…");
+  getJoinUrl(gameId).then((url) => {
+    link.href = url;
+    link.textContent = url;
+  }).catch(() => { link.textContent = "No se ha podido cargar el enlace. Recarga la pantalla."; });
   fill(root,
     title("Esperando a los supervivientes"),
     panel([
       h("img", { class: "qr", src: `/api/games/${gameId}/join-qr.svg`, alt: "QR para unirse" }),
       h("div", { class: "lobby-side" },
+        h("p", {}, "Si el QR no funciona, abre esta URL en el móvil:"),
+        link,
+        h("p", { class: "muted" }, "Conecta el móvil a la misma red Wi-Fi que el servidor."),
         h("div", { class: "code" }, state.game.code || ""),
         h("p", { class: "muted" }, `${state.game.players.filter((p) => p.connected).length} conectados`),
         playersList(state.game.players),
         advanceButton(ctx, "Empezar")),
     ], { cls: "lobby-panel" }));
+}
+
+const joinUrls = new Map();
+function getJoinUrl(gameId) {
+  if (!joinUrls.has(gameId)) {
+    joinUrls.set(gameId, fetch(`/api/games/${gameId}/join-url`)
+      .then((response) => {
+        if (!response.ok) throw new Error("join URL unavailable");
+        return response.json();
+      })
+      .then((data) => data.url)
+      .catch((error) => { joinUrls.delete(gameId); throw error; }));
+  }
+  return joinUrls.get(gameId);
 }
 
 export function renderIntro(root, state, gameId, ctx) {

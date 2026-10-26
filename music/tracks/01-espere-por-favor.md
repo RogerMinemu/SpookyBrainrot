@@ -2,146 +2,55 @@
 title: "Espere, por favor"
 track_number: 1
 instrumental: true
-explicit: false
-# genre: ""  # Optional: only when this track's genre differs from the album's
 game_key: "lobby"
 target_file: "static/audio/music/lobby.mp3"
 loop: true
 suno_url: ""
-sheet_music:
-  pdf: ""
-  musicxml: ""
-  midi: ""
+status: "Pendiente de generar"
 ---
 
 # Espere, por favor
 
-## Track Details
+**Uso:** Lobby, trivia de las Backrooms y búsqueda de anclas.
 
-| Attribute | Detail |
-|-----------|--------|
-| **Track #** | 01 |
-| **Title** | Espere, por favor |
-| **Album** | [Backrooms del Brainrot](../README.md) |
-| **Status** | In Progress |
-| **Suno Link** | — |
-| **Stems** | No |
-| **Instrumental** | Yes |
-| **Explicit** | No |
-| **Game Key** | `lobby` |
-| **Target File** | `static/audio/music/lobby.mp3` |
-| **Loop** | Sí: la costura cae en el «ding» del ascensor |
-| **POV** | — (instrumental) |
-| **Role** | Sala de espera: suena en el lobby mientras los jugadores escanean el QR de la tele y ponen su nombre |
-| **Fade Out** | None (loop) |
-| **Target Duration** | Generar 3:00; bucle exportado ≈ 2:30–2:45 |
-| **Sources Verified** | N/A |
+**Objetivo:** 78 BPM · Fa mayor · 2:30–3:00. Duración orientativa: conservar una toma útil y recortarla si hace falta.
 
-## Concept
+Una sala de espera demasiado educada a las tres de la mañana. Debe dejar hablar y pensar al grupo.
 
-Hilo musical de ascensor, del que suena en una planta que no existe. Empieza amable y educado (bossa de sala de espera, vibráfono, Rhodes), pero en cada vuelta se estropea un poco más: la cinta se arrastra, una nota sale torcida, la melodía se desinfla y por debajo asoma el zumbido de los fluorescentes. Al fondo, muy lejos, suenan tres golpes de madera: es la primera vez que se oye la llamada del Sahur, y casi nadie se dará cuenta.
+## Prompt de estilo
 
-Justo cuando todo está a punto de romperse, suena el «ding» del ascensor y la música vuelve a estar perfecta, como si no hubiera pasado nada. Ese «ding» es la costura del bucle: el lobby puede durar lo que haga falta sin que se note el corte, y la propia vuelta a la normalidad ya da mal rollo.
+Copiar en el campo de estilo de Suno. Activar la opción instrumental.
 
-## Cross-References
-
-### References TO This Track
-
-| From Track | Reference Type | Detail |
-|------------|---------------|--------|
-| 04 | motif | El zumbido fluorescente y los tres golpes de madera vuelven al aterrizar en las Backrooms |
-| 08 | motif | Los tres golpes lejanos del [Breakdown] son la llamada del Sahur que manda en la Sala 7 |
-| 10 | callback | La caja de música toca la melodía del hilo musical: volver a casa suena a esta sala de espera |
-| 11 | callback | Un sample deformado y ralentizado de esta melodía aparece en el puente del final malo |
-
-### References FROM This Track
-
-| To Track | Reference Type | Lyric Line | Detail |
-|----------|---------------|------------|--------|
-| — | — | — | Abre el álbum: aquí nacen la melodía del hilo musical, el zumbido y los tres golpes |
-
-**Reference types:** `callback` (echoes earlier lyric/image), `motif` (recurring thematic element), `character` (same character reappears), `contrast` (deliberate inversion of earlier idea), `resolution` (resolves tension from earlier track)
-
-<!-- END CROSS-REFERENCES -->
-
-## Mood & Imagery
-
-El vestíbulo de un hotel a las 3:00: moqueta beige, plantas de plástico, un ascensor con espejo dorado que no tiene botón para vuestra planta. En la tele del salón, el QR y los nombres que van apareciendo uno a uno. Colores crema y amarillo pálido que, vuelta a vuelta, se ponen verdosos como una foto vieja.
-
-## Musical Direction
-
-- **Tempo**: ~92 BPM, bossa en 4/4
-- **Key**: Fa mayor; el «ding» y la vuelta a la normalidad caen en la tónica
-- **Feel**: Muzak educado e inofensivo que se pudre por ciclos: limpio → desafinado → casi roto → «ding» → limpio otra vez
-- **Instrumentation**: Vibráfono (melodía del hilo musical), Rhodes cálido, flauta suave, contrabajo, batería con escobillas; la degradación llega con wow y flutter de cinta, notas desafinadas y zumbido fluorescente; tres golpes de madera lejanos en la parte rota
-- **Leitmotif**: La melodía del hilo musical es una frase de 4 compases en el vibráfono, sencilla y tarareable. Vuelve en la 10 (caja de música) y en la 11 (sample deformado)
-
-<!-- SERVICE: suno -->
-## Suno Inputs
-
-### Style Box
-*Copy this into Suno's "Style of Music" field:*
-
-```
-Elevator muzak, lounge bossa nova, 92 BPM, F major. Vibraphone melody, warm Rhodes, soft flute, upright bass, brushed drums. Polite and pleasant, then tape warble, detuned wrong notes and buzzing fluorescent hum creep in. Liminal, uncanny, lo-fi.
+```text
+Liminal elevator lounge instrumental, 78 BPM, F major. Soft vibraphone, muted electric piano, rounded bass, brushed percussion, warm analog pads. A polite waiting-room melody with subtle tape wow and flutter, distant fluorescent ambience and occasional uneasy chromatic notes. Cozy, uncanny, gently absurd horror comedy. Sparse arrangement, restrained dynamics, short repeating motifs, stable pulse, background game soundtrack. Immediate soft groove, consistent instrumentation, open repeating turnaround.
 ```
 
-### Exclude Styles
-*Paste into Suno's **Exclude Styles** field (Advanced Mode → More Options), not the Style Box. Bare elements, comma-separated — `drums, electric guitar` — never "no drums":*
+## Estilos a excluir
 
+Si la interfaz ofrece un campo de exclusiones, copiar ahí:
+
+```text
+vocals, spoken word, choir, vocal chops, loud drums, jump scares, alarm sounds, dramatic builds, EDM drops
 ```
-vocals, choir, humming, trap, distorted guitar, heavy drums
+
+## Estructura opcional
+
+Si permite indicaciones para instrumentales, usar estas etiquetas. Si canta las instrucciones, dejar el campo de letra vacío y conservar el prompt de estilo.
+
+```text
+[Instrumental]
+[Main theme: soft vibraphone and electric piano, gentle lounge pulse]
+[Variation: warm pads, subtle tape wobble, same volume and tempo]
+[Main theme: sparse melody, plenty of space]
+[Turnaround: maintain groove and unresolved harmony]
 ```
 
-### Generation Settings
-*Set these in Suno's Advanced Mode → More Options. Keep Variety Off so the Style Box above is used verbatim.*
+## Selección y reutilización
 
-| Setting | Value |
-|---------|-------|
-| **Model** | v6 |
-| **Variety** | Off |
-| **Max Mode** | On |
-| **Vocal Gender** | — |
-| **Duration** | 3:00 |
-| **Weirdness** | 45 |
-| **Style Influence** | 65 |
+Usar más baja durante la trivia. En las búsquedas sirve de descanso entre juegos. Evitar golpes de madera y señales que parezcan avisos del juego.
 
-### Lyrics Box
-*Copy this into Suno's "Lyrics" field:*
+Elegir tempo y volumen estables, sin voces ni grandes cambios. Recortar un tramo de compases completos y ajustar la unión de oído: pedir un bucle no garantiza una costura perfecta.
 
-```
-[Intro - elevator chime ding, soft brushed bossa, 2 bars]
+**Archivo previsto:** `static/audio/music/lobby.mp3`.
 
-[Main Theme - smooth lounge bossa, vibraphone melody, warm Rhodes]
-
-[Main Theme - flute doubles the melody, still polite and pleasant]
-
-[Variation - tape warble creeps in, one wrong note, slightly detuned]
-
-[Variation - melody slows and sags, fluorescent hum grows louder]
-
-[Breakdown - warped and dissonant, music almost stops, three distant wooden knocks]
-
-[Turnaround - elevator chime ding, music snaps back to normal]
-
-[Main Theme - smooth lounge bossa, clean again]
-
-[End]
-```
-<!-- /SERVICE: suno -->
-
-## Production Notes
-
-- **Bucle**: desde el primer «ding» (el tiempo fuerte del [Intro]) hasta justo antes del segundo «ding» del [Turnaround]. Cortad en línea de compás y sin fundido; si chasca, fundido cruzado de 10–30 ms en la costura. El [Main Theme] final y el [End] se descartan.
-- **Si Suno no pone el «ding»** (pasa a menudo): cortad en el primer tiempo de un [Main Theme] limpio. El SFX `ring` del juego (dos notas sinusoidales agudas) ya suena a timbre de ascensor y puede tapar la costura.
-- Los tres golpes de madera tienen que quedar lejos y bajos: es un aviso, no un susto. Si salen en primer plano, regenerad.
-- Mezcla: no hay narración encima, pero sí los «blips» de los móviles al unirse (≈660 Hz). Si la flauta tapa esa zona, bajadla en la edición.
-- **Suno settings**: Instrumental On, Max Mode On (más de 2:00), Variety Off. Weirdness 45: queremos que se tuerza un poco, no que se rompa del todo. Style Influence 65 para que no pierda la bossa.
-
-## Generation Log
-
-Mark keepers with ✓ in the Rating column. Checkpoint verification looks for at least one ✓ per track.
-
-| # | Date | Model | Result | Notes | Rating |
-|---|------|-------|--------|-------|--------|
-| — | — | — | — | — | — |
+**Toma elegida:** pendiente. Añadir el enlace de Suno y los puntos de corte al exportar.

@@ -13,6 +13,17 @@ def test_healthz(client):
     assert client.get("/healthz").json() == {"status": "ok"}
 
 
+def test_join_url_matches_qr(client, monkeypatch):
+    game = client.post("/api/games", json={"name": "G"}).json()
+    url = f"http://play.test/play?code={game['code']}"
+    assert client.get(f"/api/games/{game['id']}/join-url").json() == {"url": url}
+    encoded = []
+    monkeypatch.setattr("app.web.routes_api.svg_for_url", lambda value: encoded.append(value) or "<svg/>")
+    assert client.get(f"/api/games/{game['id']}/join-qr.svg").status_code == 200
+    assert encoded == [url]
+    assert client.get("/api/games/unknown/join-url").status_code == 404
+
+
 def test_create_trims_name_and_lists(client):
     r = client.post("/api/games", json={"name": "  Casa Embrujada  "})
     assert r.status_code == 201

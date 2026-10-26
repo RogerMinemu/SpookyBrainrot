@@ -21,7 +21,8 @@ body.tv { overflow: hidden; height: 100vh; }
 .lead { margin: 0; font-size: 2rem; line-height: 1.35; }
 .riddle { max-width: 38ch; font-style: italic; }
 .lobby-panel { display: grid; grid-template-columns: auto minmax(420px, 1fr); gap: 3rem; align-items: center; padding: 2.4rem 3.4rem; text-align: center; }
-.lobby-side { display: grid; gap: 1.2rem; justify-items: center; }
+.lobby-side { display: grid; gap: 1.2rem; justify-items: center; min-width: 0; }
+.join-url { font-size: 1.6rem; font-weight: 600; overflow-wrap: anywhere; max-width: 100%; color: inherit; user-select: text; }
 .qr { width: min(36vh, 40vw); height: auto; background: #fff; padding: 2.2rem; border: 3px solid var(--ink); border-radius: 14px; margin: 0; display: block;
   border-image: var(--tex-frame) 64 / 34px stretch; box-shadow: none; }
 .code { font-family: var(--font-title); font-size: 4.2rem; letter-spacing: .28em; padding-left: .28em; line-height: 1;

@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import os
+import socket
+from ipaddress import IPv4Address
+from urllib.parse import urlsplit, urlunsplit
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Optional
@@ -9,6 +12,26 @@ from typing import Mapping, Optional
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_PORT = 8000
 DEFAULT_MIN_PLAYERS = 2
+
+
+def detect_lan_ipv4() -> str:
+    """Ask the routing table for the LAN address; UDP connect sends no data."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("192.0.2.1", 80))
+            address = sock.getsockname()[0]
+            if not IPv4Address(address).is_loopback and not IPv4Address(address).is_unspecified:
+                return address
+    except OSError:
+        pass
+    try:
+        for address in socket.gethostbyname_ex(socket.gethostname())[2]:
+            ip = IPv4Address(address)
+            if not ip.is_loopback and not ip.is_unspecified and not ip.is_link_local:
+                return address
+    except OSError:
+        pass
+    return "127.0.0.1"
 
 
 def _valid_int(raw: Optional[str]) -> Optional[int]:
@@ -51,7 +74,13 @@ class Settings:
         port = resolve_port(env)
         raw_url = (env.get("PUBLIC_URL") or "").strip()
         defaulted = not raw_url
-        public_url = (raw_url or f"http://localhost:{port}").rstrip("/")
+        public_url = (raw_url or f"http://{detect_lan_ipv4()}:{port}").rstrip("/")
+        parts = urlsplit(public_url)
+        if parts.hostname in {"localhost", "127.0.0.1", "0.0.0.0", "::1"}:
+            authority = detect_lan_ipv4()
+            if parts.port is not None:
+                authority += f":{parts.port}"
+            public_url = urlunsplit(parts._replace(netloc=authority))
         raw_db = (env.get("DB_PATH") or "").strip()
         db_path = Path(raw_db) if raw_db else ROOT_DIR / "data" / "spooky.db"
         if not db_path.is_absolute():

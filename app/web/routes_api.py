@@ -72,11 +72,17 @@ async def delete_game(game_id: str, request: Request) -> Response:
 
 @router.get("/api/games/{game_id}/join-qr.svg")
 async def join_qr(game_id: str, request: Request) -> Response:
+    url = (await join_url(game_id, request))["url"]
+    return Response(content=svg_for_url(url), media_type="image/svg+xml", headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/api/games/{game_id}/join-url")
+async def join_url(game_id: str, request: Request) -> Dict[str, str]:
     rt = request.app.state.manager.get(game_id)
     if rt is None:
         raise HTTPException(status_code=404, detail="game not found")
     url = f"{request.app.state.settings.public_url}/play?code={rt.game.code}"
-    return Response(content=svg_for_url(url), media_type="image/svg+xml")
+    return {"url": url}
 
 
 @router.post("/api/join")

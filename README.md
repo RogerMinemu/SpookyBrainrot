@@ -34,7 +34,7 @@ lobby con el móvil (`/play`).
 | --- | --- | --- |
 | `SERVER_PORT` | (vacía) | Puerto del servidor. Tiene prioridad. |
 | `PORT` | (vacía) | Puerto alternativo. Si ninguno es válido, se usa `8000`. |
-| `PUBLIC_URL` | `http://localhost:<puerto>` | URL pública que se codifica en los QR (`<PUBLIC_URL>/k/<token>`). Sin barra final. |
+| `PUBLIC_URL` | IPv4 local automática | URL que se codifica en los QR. Vacía detecta la IPv4 del servidor y usa el puerto configurado. Las direcciones localhost se sustituyen por la IPv4 local. |
 | `DB_PATH` | `data/spooky.db` | Ruta de la base de datos SQLite (la carpeta se crea sola). |
 | `ADMIN_KEY` | (vacía) | Si se define, protege `/admin/*` y `/api/house*`. Vacía = abierto. |
 | `MIN_PLAYERS` | `2` | Jugadores conectados mínimos para salir del lobby. |

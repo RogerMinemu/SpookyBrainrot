@@ -58,7 +58,7 @@ def create_app(
     clock = clock or SystemClock()
     rng = rng or Random()
     if settings.public_url_defaulted:
-        log.warning("PUBLIC_URL not set; QR codes will point to %s", settings.public_url)
+        log.info("Automatic server URL for QR codes: %s", settings.public_url)
 
     settings.ensure_db_dir()
     db = Database(settings.db_path)

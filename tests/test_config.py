@@ -19,11 +19,32 @@ def test_public_url_trailing_slash_trimmed():
     assert not s.public_url_defaulted
 
 
-def test_public_url_defaults_to_localhost_port():
+def test_public_url_defaults_to_lan_port(monkeypatch):
+    monkeypatch.setattr("app.config.detect_lan_ipv4", lambda: "192.168.1.42")
     s = Settings.from_env({"PORT": "8100"})
-    assert s.public_url == "http://localhost:8100"
+    assert s.public_url == "http://192.168.1.42:8100"
     assert s.public_url_defaulted
     assert s.host == "0.0.0.0"
+
+
+def test_explicit_localhost_url_uses_lan_ip(monkeypatch):
+    monkeypatch.setattr("app.config.detect_lan_ipv4", lambda: "192.168.1.42")
+    for host in ("localhost", "127.0.0.1", "0.0.0.0", "[::1]"):
+        s = Settings.from_env({"PUBLIC_URL": f"http://{host}:9000/"})
+        assert s.public_url == "http://192.168.1.42:9000"
+
+
+def test_lan_detection_without_network(monkeypatch):
+    from app.config import detect_lan_ipv4
+
+    def unavailable(*args):
+        raise OSError("offline")
+
+    monkeypatch.setattr("app.config.socket.socket", unavailable)
+    monkeypatch.setattr("app.config.socket.gethostbyname_ex", lambda host: (host, [], ["127.0.0.1", "192.168.1.42"]))
+    assert detect_lan_ipv4() == "192.168.1.42"
+    monkeypatch.setattr("app.config.socket.gethostbyname_ex", unavailable)
+    assert detect_lan_ipv4() == "127.0.0.1"
 
 
 def test_min_players_parse_and_default():
