@@ -230,3 +230,15 @@ body.play .manual-symbols small { font-size: .75rem; color: var(--ink-soft); }
 body.play .manual-words { display: flex; flex-wrap: wrap; gap: .35rem; }
 body.play .manual-words span { padding: .1rem .45rem; font-family: "Courier New", ui-monospace, monospace; font-weight: 700; background: var(--surface); border: 2px solid var(--ink); border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { body.play .bomb-clock.hurry { animation: none; } }
+
+/* ------------------------------------------------------------------ admin menu (admin player only) */
+body.play .admin-toggle { position: fixed; top: .6rem; left: .6rem; z-index: 80; width: auto; min-height: 2.6rem; padding: .2rem .8rem;
+  font: 700 .95rem var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: #FFF5E2; background: var(--ink);
+  border: 2.5px solid #FFF5E2; border-radius: 999px; box-shadow: 2px 3px 0 rgba(12, 6, 22, .55); cursor: pointer; }
+body.play .admin-toggle[aria-expanded=true] { background: var(--danger); }
+body.play.has-admin main { padding-top: 3.6rem; }
+/* the debug drawer, as a full-screen sheet; the phone's big full-width buttons would stack every preset on its own row */
+body.play .dbg-drawer.admin-sheet { left: 0; width: auto; padding: 1rem 16px 2rem; border-left: 0; box-shadow: none;
+  -webkit-user-select: text; user-select: text; }
+body.play .admin-sheet button { width: auto; min-height: 3rem; font-size: 1.1rem; }
+body.play .admin-sheet .dbg-close { min-height: 2.6rem; }

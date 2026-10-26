@@ -92,6 +92,10 @@ class PlayersRepo:
         r = self.c.execute("SELECT * FROM players WHERE token=?", (token,)).fetchone()
         return _player(r) if r else None
 
+    def get(self, id: str) -> Optional[PlayerRow]:
+        r = self.c.execute("SELECT * FROM players WHERE id=?", (id,)).fetchone()
+        return _player(r) if r else None
+
     def list_for_game(self, game_id: str) -> List[PlayerRow]:
         rows = self.c.execute(
             "SELECT * FROM players WHERE game_id=? ORDER BY joined_at, rowid", (game_id,)

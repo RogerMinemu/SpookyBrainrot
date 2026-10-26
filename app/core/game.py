@@ -63,6 +63,11 @@ def normalize_name(raw: str) -> str:
     return " ".join((raw or "").split())[:MAX_NAME_LEN].strip()
 
 
+def same_name(a: str, b: str) -> bool:
+    """Names match ignoring case and extra spaces ("  roger " is Roger)."""
+    return normalize_name(a).casefold() == normalize_name(b).casefold()
+
+
 @dataclass
 class Game:
     id: str
@@ -97,18 +102,9 @@ class Game:
     def player(self, pid: str) -> Optional[Player]:
         return next((p for p in self.players if p.id == pid), None)
 
-    def unique_name(self, raw: str) -> str:
-        base = normalize_name(raw)
-        taken = {p.name.lower() for p in self.players}
-        if base.lower() not in taken:
-            return base
-        n = 2
-        while True:
-            suffix = f" {n}"
-            candidate = base[: MAX_NAME_LEN - len(suffix)].rstrip() + suffix
-            if candidate.lower() not in taken:
-                return candidate
-            n += 1
+    def player_named(self, raw: str) -> Optional[Player]:
+        """The player who already goes by this name: joining with it again resumes that seat."""
+        return next((p for p in self.players if same_name(p.name, raw)), None)
 
     def add_player(self, pid: str, name: str) -> Player:
         p = Player(id=pid, name=name, connected=False)

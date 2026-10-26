@@ -100,19 +100,28 @@ class GameManager:
 
     # --- join -------------------------------------------------------------------
     async def join(self, rt: GameRuntime, raw_name: str) -> Tuple[Player, str]:
-        """Create a player in the game. Returns (player, token)."""
+        """Create a player in the game, or resume the one with the same name. Returns (player, token).
+
+        A phone that lost its token (new browser, cleared cookies) types its name again and gets its old seat
+        back instead of a duplicate; its other screen, if any, is replaced (4001) when this one connects.
+        """
         token = secrets.token_urlsafe(24)
-        created: List[Player] = []
+        found: List[Tuple[Player, str]] = []
 
         def mutate(g: Game):
-            name = g.unique_name(raw_name)
+            existing = g.player_named(raw_name)
+            row = self.players.get(existing.id) if existing is not None else None
+            if row is not None:
+                found.append((existing, row.token))
+                return False
+            name = normalize_name(raw_name)
             pid = "p" + uuid.uuid4().hex[:10]
             self.players.create(pid, g.id, token, name, self.clock.now_ms())
-            created.append(g.add_player(pid, name))
+            found.append((g.add_player(pid, name), token))
             return self.engine.apply(g, Join(pid))
 
         await rt.run(mutate)
-        return created[0], token
+        return found[0]
 
     def find_by_token(self, token: str) -> Optional[Tuple[GameRuntime, Player]]:
         row = self.players.get_by_token(token)

@@ -83,7 +83,10 @@ class Hub:
         await self._to_tvs(conn.game_id, {"pid": conn.pid, "mask": mask})
 
     async def _to_tvs(self, game_id: str, data: dict) -> None:
-        text = protocol.envelope("input", data)
+        await self.to_tvs(game_id, "input", data)
+
+    async def to_tvs(self, game_id: str, t: str, data: dict) -> None:
+        text = protocol.envelope(t, data)
         for tv in self._tvs(game_id):
             await self._send(tv, text)
 

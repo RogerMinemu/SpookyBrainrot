@@ -35,10 +35,24 @@ def test_empty_name_422(client):
     assert join(client, code, "   ").status_code == 422
 
 
-def test_duplicate_names_get_suffix(client):
-    _, code = new_game(client)
-    names = [join(client, code, "Ana").json()["name"] for _ in range(3)]
-    assert names == ["Ana", "Ana 2", "Ana 3"]
+def test_same_name_resumes_the_old_seat(client):
+    gid, code = new_game(client)
+    first = join(client, code, "Ana").json()
+    for again in ("Ana", "  ana  ", "ANA"):  # ignoring case and extra spaces
+        body = join(client, code, again).json()
+        assert (body["player_id"], body["token"], body["name"]) == (first["player_id"], first["token"], "Ana")
+    other = join(client, code, "Beto").json()
+    assert other["player_id"] != first["player_id"] and other["token"] != first["token"]
+    names = [p.name for p in client.app.state.manager.get(gid).game.players]
+    assert names == ["Ana", "Beto"]  # no duplicates
+    assert len(client.app.state.manager.players.list_for_game(gid)) == 2
+
+
+def test_same_name_in_another_game_is_another_player(client):
+    _, code_a = new_game(client)
+    _, code_b = new_game(client)
+    a, b = join(client, code_a, "Ana").json(), join(client, code_b, "Ana").json()
+    assert a["player_id"] != b["player_id"] and a["token"] != b["token"]
 
 
 def test_bad_code_404(client):

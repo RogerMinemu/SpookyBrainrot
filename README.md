@@ -25,6 +25,10 @@ Abre `http://localhost:8000` en el ordenador conectado a la tele y crea una part
 directamente a la pantalla de la tele (`/tv/<id>`). Toca la pantalla para empezar. Los jugadores escanean el QR del
 lobby con el móvil (`/play`).
 
+Si un móvil pierde la sesión (otro navegador, cookies borradas) y vuelve a unirse con el **mismo nombre**, recupera
+su plaza en vez de crear un jugador duplicado. No distingue mayúsculas ni espacios de más. Si la sesión antigua seguía
+abierta en otra pantalla, esa pantalla muestra «Otra pantalla ha tomado el control».
+
 Entre sala y sala, la tele pone una cinemática en la que los brainrots cuentan la historia (guion en
 `static/js/story/script.js`). Mientras tanto, los móviles muestran «Mirad la tele». En la tele, Espacio, Intro, → o un
 clic pasan de frase, y Esc o «Saltar» terminan la escena. Para tener a los brainrots como recurso gráfico, abre
@@ -42,6 +46,7 @@ clic pasan de frase, y Esc o «Saltar» terminan la escena. Para tener a los bra
 | `PUBLIC_URL` | IPv4 local automática | URL que se codifica en los QR. Vacía detecta la IPv4 del servidor y usa el puerto configurado. Las direcciones localhost se sustituyen por la IPv4 local. |
 | `DB_PATH` | `data/spooky.db` | Ruta de la base de datos SQLite (la carpeta se crea sola). |
 | `ADMIN_KEY` | (vacía) | Si se define, protege `/admin/*` y `/api/house*`. Vacía = abierto. |
+| `ADMIN_PLAYER` | `Roger` | El jugador con este nombre ve el menú de admin en su móvil (sin distinguir mayúsculas). |
 | `MIN_PLAYERS` | `2` | Jugadores conectados mínimos para salir del lobby. |
 
 Las variables del entorno (por ejemplo, las del panel) tienen prioridad sobre `.env`.
@@ -110,6 +115,11 @@ Para probar el juego (y la interfaz acuarela) sin jugar todas las salas:
   no lo ven; mientras está abierto aparece una etiqueta roja "debug".
 - **Desde tu móvil**: abre `/admin/debug` (enlazado desde la portada y desde las páginas de administración), elige
   la partida (en memoria o guardada) y usa los mismos controles sin enseñar nada en la tele.
+- **Menú de admin del jugador**: si juegas con el nombre de `ADMIN_PLAYER` (Roger por defecto), tu móvil muestra un
+  botón «Admin» arriba a la izquierda. Abre los mismos controles para tu partida, sin la línea de spoilers (tú también
+  juegas), y dos botones para la tele: «Saltar escena» (termina la cinemática) y «Refrescar tele» (vuelve a montar la
+  pantalla con el estado actual, por si se ha quedado colgada). Funciona aunque haya `ADMIN_KEY`: el móvil se
+  identifica con su token de jugador, que solo abre la API de debug de su propia partida.
 - **Controles**: saltar a cualquier sala (lobby, Salas 0, 1, 2, 3, 4, 6 y 7, final) y fase (introducción, puzzle, búsqueda del
   ancla, sala desbloqueada) con "Saltar" (el puzzle se reinicia con su `start`); "Completar puzzle"; deslizador de
   Brainrot con atajos 0/20/40/60/80/100 (se aplica al momento); eventos de prueba (jumpscare con el brainrot que

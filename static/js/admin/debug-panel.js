@@ -28,8 +28,10 @@ export function ensureStyles() {
   document.head.append(h("link", { id: "debug-css", rel: "stylesheet", href: "/static/css/debug.css" }));
 }
 
-async function call(gameId, path, method = "GET", body) {
+// `token`: the admin player's phone authenticates with its own player token instead of ADMIN_KEY.
+async function call(gameId, path, method = "GET", body, token = null) {
   const opts = { method, headers: {} };
+  if (token) opts.headers["X-Player-Token"] = token;
   if (body !== undefined) {
     opts.headers["Content-Type"] = "application/json";
     opts.body = JSON.stringify(body);
@@ -39,7 +41,8 @@ async function call(gameId, path, method = "GET", body) {
   try { data = await res.json(); } catch (_) { /* empty body */ }
   if (!res.ok) {
     if (res.status === 401 || res.status === 403) {
-      throw new Error("Acceso denegado: abre /admin/debug?key=TU_CLAVE una vez en este navegador.");
+      throw new Error(token ? "Este móvil no tiene permiso de admin."
+        : "Acceso denegado: abre /admin/debug?key=TU_CLAVE una vez en este navegador.");
     }
     const detail = data && data.detail;
     throw new Error(typeof detail === "string" ? detail : `Error ${res.status}`);
@@ -76,9 +79,11 @@ const roomName = (rooms, key) => {
 /**
  * Builds the controls for one game. Returns { el, update(info), load() }.
  * `info` = { status, room, phase, brainrot, degradation } (see infoFromState).
+ * `token` = player token of the admin phone; `spoilers: false` hides the solution line (that phone also plays).
  */
-export function createDebugPanel({ gameId }) {
+export function createDebugPanel({ gameId, token = null, spoilers = true }) {
   ensureStyles();
+  const call_ = (path, method, body) => call(gameId, path, method, body, token);
   let meta = null;
   let info = null;
   let quietUntil = 0;
@@ -102,7 +107,7 @@ export function createDebugPanel({ gameId }) {
   };
   async function act(path, body, okMsg) {
     try {
-      const next = await call(gameId, path, "POST", body);
+      const next = await call_(path, "POST", body);
       say(okMsg);
       if (next) update(next);
       refreshPeek();
@@ -137,7 +142,7 @@ export function createDebugPanel({ gameId }) {
     levelSel.disabled = !levels.length || phaseSel.value !== "puzzle";
   }
   function showPeek() {
-    peek.textContent = [info && info.peek, peekText(info && info.tv_view)].filter(Boolean).join(" · ");
+    peek.textContent = spoilers ? [info && info.peek, peekText(info && info.tv_view)].filter(Boolean).join(" · ") : "";
     peek.hidden = !peek.textContent;
   }
   // The server spoiler line (trivia answer, bomb solution) is fetched again whenever the puzzle moves on.
@@ -147,7 +152,7 @@ export function createDebugPanel({ gameId }) {
     if (peekBusy) return;
     peekBusy = true;
     try {
-      const data = await call(gameId, "");
+      const data = await call_("");
       info = { ...(info || {}), tv_view: data.tv_view, peek: data.peek || "" };
       peekKey = viewKey(data.tv_view);
       showPeek();
@@ -209,7 +214,7 @@ export function createDebugPanel({ gameId }) {
 
   async function load() {
     try {
-      const data = await call(gameId, "");
+      const data = await call_("");
       meta = data;
       fill(roomSel, data.rooms.map((r) => h("option", { value: String(r.key) }, roomName(data.rooms, r.key))));
       fill(cameoSel, h("option", { value: "" }, "Por defecto (???)"),

@@ -11,6 +11,7 @@ from app.core.engine import Advance, PuzzleAction, Scan
 from app.web import protocol
 from app.web.hub import Conn
 from app.web.realtime import MAX_FRAME_BYTES, frame_ok
+from app.web.routes_admin import is_admin_player
 from app.web.routes_api import COOKIE_NAME
 from app.web.routes_pages import scan_cameo
 
@@ -20,6 +21,8 @@ log = logging.getLogger("spooky.ws")
 DEFAULT_HELLO_TIMEOUT = 5.0
 MAX_TOKEN_LEN = 64
 SCAN_UNKNOWN = "unknown"
+# What the admin player's phone may ask the TV to do (the game itself goes through the debug API).
+TV_ADMIN_ACTIONS = ("story_skip", "tv_refresh")
 
 
 async def _read_hello(ws: WebSocket, timeout: float) -> Optional[dict]:
@@ -85,7 +88,7 @@ async def ws_endpoint(ws: WebSocket) -> None:
     conn = Conn(ws=ws, game_id=rt.game.id, role=role, pid=player.id if player else None)
     welcome = {"role": role, "game_id": rt.game.id}
     if player:
-        welcome.update(player_id=player.id, name=player.name)
+        welcome.update(player_id=player.id, name=player.name, admin=is_admin_player(app.state.settings, player.name))
     await ws.send_text(protocol.envelope("welcome", welcome, rt.game.seq))
     await hub.register(conn)
 
@@ -147,6 +150,16 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
                 continue
             reply = await _scan(ws.app.state, rt, payload.get("token"))
             await ws.send_text(protocol.envelope("scan", reply, rt.game.seq))
+        elif t == "admin":  # admin phone -> TV: skip the cutscene, re-mount the screen
+            player = rt.game.player(conn.pid) if conn.pid is not None else None
+            if player is None or not is_admin_player(ws.app.state.settings, player.name):
+                await ws.send_text(protocol.error_envelope("not_admin", "solo el admin puede hacer esto", rt.game.seq))
+                continue
+            action = payload.get("action")
+            if action not in TV_ADMIN_ACTIONS:
+                await ws.send_text(protocol.error_envelope("unknown_action", f"acción desconocida: {action!r}", rt.game.seq))
+                continue
+            await hub.to_tvs(rt.game.id, "admin", {"action": action})
         elif t == "input":  # realtime lane: no lock, no persist
             if frame_ok(t, raw):
                 await hub.relay_input(conn, payload)

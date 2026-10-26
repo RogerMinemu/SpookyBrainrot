@@ -175,6 +175,11 @@ function start() {
       if (active && active.mod.onEvent && active.mod.onEvent(ev) === true) return;
       handleEvent(ev, ctx);
     },
+    // the admin player's phone: skip the cutscene, or re-mount the screen from the newest state when it got stuck
+    onAdmin: ({ action }) => {
+      if (action === "story_skip") story.skip();
+      else if (action === "tv_refresh" && latest) { leavePuzzle(); loadToken += 1; render(latest); }
+    },
     onStatus: (s) => connBadge.classList.toggle("hidden", s === "open"),
     onFatal: (code) => {
       music.stop();

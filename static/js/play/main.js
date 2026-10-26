@@ -43,6 +43,7 @@ let storyFx = null;
 let storyTimer = 0;
 let loadToken = 0;
 let tvOnline = true; // optimistic until the first state says otherwise
+let admin = null; // admin menu: only on the admin player's phone (the welcome says so)
 
 // Shown while the TV is absent: the phone stops sending input (the TV would not see it anyway)
 const tvOffline = h("div", { id: "tv-offline", class: "tv-offline hidden", role: "status" }, "La tele no está conectada. Esperad un momento...");
@@ -64,6 +65,19 @@ function leavePuzzle() {
 
 function dropScanner() {
   if (scanner) { scanner.stop(); scanner = null; }
+}
+
+async function syncAdmin(welcome) {
+  if (!welcome.admin) { if (admin) { admin.destroy(); admin = null; } return; }
+  if (admin) return;
+  const mod = await import("/static/js/play/admin.js");
+  if (admin || !me || !me.admin) return; // another welcome won the race
+  admin = mod.installAdmin({
+    gameId: welcome.game_id,
+    token: storedToken,
+    sendTv: (action) => !!socket && socket.send("admin", { action }),
+    getState: () => latest,
+  });
 }
 
 // Demo hooks (seat mode only). The bots and the keyboard act through the same send paths as a finger:
@@ -137,6 +151,7 @@ const PLAIN = new Set(["lobby", "idle", "intro", "search", "unlocked", "ending"]
 
 async function render(state) {
   latest = state;
+  if (admin) admin.onState(state);
   applyState(state);
   const kind = state.view.kind;
   if (PLAIN.has(kind)) {
@@ -173,6 +188,7 @@ function connect() {
     hello: () => (SEAT ? { role: "player", player_token: storedToken(), seat: true } : { role: "player", player_token: storedToken() }),
     onWelcome: (w) => {
       me = w;
+      syncAdmin(w).catch((e) => console.error("admin menu failed", e));
       if (window.__sb) window.__sb.ready = true;
       if (active && active.mod.resend) active.mod.resend(); // fresh socket: the TV may have lost our mask
     },
@@ -220,6 +236,7 @@ function connect() {
 
 function showJoin() {
   dropScanner();
+  if (admin) { admin.destroy(); admin = null; }
   localStorage.removeItem(TOKEN_KEY);
   gameSection.classList.add("hidden");
   joinSection.classList.remove("hidden");

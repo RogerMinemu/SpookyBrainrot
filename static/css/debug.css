@@ -1,9 +1,9 @@
 /* Host debug controls (TV drawer + /admin/debug). Paper look from paper.css; every token has a fallback
    so the drawer also works on the TV page, which does not load paper.css. Large touch targets. */
-.dbg-panel { --d-ink: var(--ink, #2B2233); --d-soft: var(--ink-soft, #5A4D66); --d-surface: var(--surface, #FFF5E2);
+.dbg-panel, .dbg-drawer { --d-ink: var(--ink, #2B2233); --d-soft: var(--ink-soft, #5A4D66); --d-surface: var(--surface, #FFF5E2);
   --d-accent: var(--accent, #E8AA38); --d-danger: var(--danger, #B8323A);
   font-family: var(--font-body, "SB Fredoka", "Segoe UI", system-ui, sans-serif); color: var(--d-ink); font-size: 18px; }
-.dbg-panel h3 { margin: 0 0 .4rem; font-family: var(--font-title, "SB Marker", cursive); font-weight: 400; font-size: 1.15rem; }
+.dbg-panel h3, .dbg-drawer h3 { margin: 0 0 .4rem; font-family: var(--font-title, "SB Marker", cursive); font-weight: 400; font-size: 1.15rem; }
 .dbg-now { margin: 0 0 .8rem; padding: .6rem .8rem; background: var(--d-surface); border: 3px solid var(--d-ink);
   border-radius: 12px; font-weight: 600; }
 .dbg-sec { margin: 0 0 1rem; }

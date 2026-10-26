@@ -59,7 +59,7 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 
 ### 0 · Prólogo — Noclip
 
-- La tele muestra un QR para unirse a `/play`. Cada jugador pone su nombre.
+- La tele muestra un QR para unirse a `/play`. Cada jugador pone su nombre. Volver a unirse con el mismo nombre recupera esa plaza (no hay duplicados), y el jugador `ADMIN_PLAYER` (Roger) tiene en el móvil un menú de admin para desatascar la partida.
 - «Empezar» lleva a la **intro de la sala 0**: la Fundación cuenta el prólogo (ver *Historia*) y después «Entrar» empieza el puzzle.
 - **Agarraos fuerte**: todos mantienen pulsado un botón a la vez durante 5 s. Si uno suelta, se reinicia. Al lograrlo: noclip y caída al Nivel 0.
 - Sin ancla: sirve para aprender el mando.

@@ -12,6 +12,7 @@ from typing import Mapping, Optional
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_PORT = 8000
 DEFAULT_MIN_PLAYERS = 2
+DEFAULT_ADMIN_PLAYER = "Roger"  # the player with this name gets the admin menu on the phone
 
 
 def detect_lan_ipv4() -> str:
@@ -61,6 +62,7 @@ class Settings:
     public_url_defaulted: bool = True
     db_path: Path = ROOT_DIR / "data" / "spooky.db"
     admin_key: str = ""
+    admin_player: str = DEFAULT_ADMIN_PLAYER
     min_players: int = DEFAULT_MIN_PLAYERS
 
     @classmethod
@@ -93,6 +95,7 @@ class Settings:
             public_url_defaulted=defaulted,
             db_path=db_path,
             admin_key=(env.get("ADMIN_KEY") or "").strip(),
+            admin_player=(env.get("ADMIN_PLAYER") or "").strip() or DEFAULT_ADMIN_PLAYER,
             min_players=min_players if min_players is not None else DEFAULT_MIN_PLAYERS,
         )
 

@@ -1,6 +1,6 @@
 import asyncio
 
-from app.core.game import Game
+from app.core.game import Game, normalize_name
 from app.db.database import Database
 from app.runtime.manager import GameManager
 from tests.fakes import FakeClock, seeded_rng
@@ -63,13 +63,14 @@ def test_serialize_has_expected_keys():
     assert s["puzzle"] is None
 
 
-def test_unique_names_and_truncation():
+def test_player_named_ignores_case_and_spaces_and_truncation():
     g = Game(id="a", code="ABCD", name="n")
-    g.add_player("1", g.unique_name("  Ana  "))
-    assert g.unique_name("ana") == "ana 2"
-    g.add_player("2", "ana 2")
-    assert g.unique_name("Ana") == "Ana 3"
-    assert len(g.unique_name("x" * 40)) == 24
+    ana = g.add_player("1", normalize_name("  Ana  "))
+    long_name = g.add_player("2", normalize_name("x" * 40))
+    assert ana.name == "Ana" and len(long_name.name) == 24
+    assert g.player_named("ana") is ana and g.player_named(" ANA ") is ana
+    assert g.player_named("x" * 30) is long_name  # what the join form would store for it
+    assert g.player_named("Beto") is None and g.player_named("   ") is None
 
 
 def test_runtime_serializes_commands_under_lock(tmp_path):

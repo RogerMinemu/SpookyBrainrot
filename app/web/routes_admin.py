@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import hmac
+import re
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-from app.config import ROOT_DIR
+from app.config import ROOT_DIR, Settings
 from app.content import ANCHORS_IN_USE
+from app.core.game import same_name
 from app.core.qr import ordered_with_labels, qr_url
 from app.web import pages
 from app.web.qr_svg import svg_scalable
@@ -16,22 +18,45 @@ router = APIRouter()
 ADMIN_COOKIE = "sb_admin"
 ADMIN_COOKIE_MAX_AGE = 30 * 24 * 3600
 NO_CACHE = {"Cache-Control": "no-cache"}
+PLAYER_TOKEN_HEADER = "X-Player-Token"
+# The debug API of one game: the only /admin path the admin player's phone may reach with its own token.
+GAME_DEBUG_PATH = re.compile(r"^/admin/api/games/([^/]+)/debug(?:/[a-z]+)?$")
 
 
 def is_guarded(path: str) -> bool:
     return path == "/admin" or path.startswith("/admin/") or path == "/api/house" or path.startswith("/api/house/")
 
 
+def is_admin_player(settings: Settings, name: str) -> bool:
+    return same_name(name, settings.admin_player)
+
+
+def admin_player_allowed(request: Request) -> bool:
+    """The admin player's phone (X-Player-Token) may drive the debug API of its own game, nothing else."""
+    token = request.headers.get(PLAYER_TOKEN_HEADER)
+    match = GAME_DEBUG_PATH.match(request.url.path)
+    if not token or match is None:
+        return False
+    found = request.app.state.manager.find_by_token(token)
+    if found is None:
+        return False
+    rt, player = found
+    return rt.game.id == match.group(1) and is_admin_player(request.app.state.settings, player.name)
+
+
 def install_admin_guard(app: FastAPI) -> None:
     """When settings.admin_key is set, /admin/* and /api/house* need ?key= or cookie sb_admin.
 
     Missing key -> 401, wrong key -> 403. A valid ?key= sets the cookie. Unset -> open.
+    The admin player's phone gets its own game's debug API with its player token instead of the key.
     """
 
     @app.middleware("http")
     async def admin_guard(request: Request, call_next):
         expected = request.app.state.settings.admin_key
         if not expected or not is_guarded(request.url.path):
+            return await call_next(request)
+        if admin_player_allowed(request):
             return await call_next(request)
         query_key = request.query_params.get("key")
         cookie_key = request.cookies.get(ADMIN_COOKIE)
