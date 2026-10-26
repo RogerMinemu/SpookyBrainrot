@@ -23,6 +23,12 @@ def _page(name: str) -> FileResponse:
     return FileResponse(STATIC_DIR / name, media_type="text/html", headers=NO_CACHE)
 
 
+def scan_cameo(entry: dict) -> Optional[str]:
+    """Who a decoy wakes up (the scan answers name it); None for anchors."""
+    idx = entry["idx"]
+    return CAMEOS[idx - 1] if entry["kind"] == "decoy" and 1 <= idx <= len(CAMEOS) else None
+
+
 @router.get("/")
 async def home() -> FileResponse:
     return _page("index.html")
@@ -67,5 +73,4 @@ async def scan(token: str, request: Request, g: Optional[str] = None) -> HTMLRes
     if rt is None:
         return HTMLResponse(pages.no_game(), headers=NO_CACHE)
     out = await rt.apply(Scan(kind=entry["kind"], idx=entry["idx"]))
-    cameo = CAMEOS[entry["idx"] - 1] if entry["kind"] == "decoy" and 1 <= entry["idx"] <= len(CAMEOS) else None
-    return HTMLResponse(pages.scan_page(out.scan_result, cameo), headers=NO_CACHE)
+    return HTMLResponse(pages.scan_page(out.scan_result, scan_cameo(entry)), headers=NO_CACHE)

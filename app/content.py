@@ -29,7 +29,7 @@ ROOM_PLAN: List[RoomSpec] = [
 ANCHORS_IN_USE: FrozenSet[int] = frozenset(r.anchor for r in ROOM_PLAN if r.anchor is not None)
 
 # Shown while the host has not written the riddle for an anchor yet (batch D).
-RIDDLE_PLACEHOLDER = "La pista aún no ha sido escrita... buscad el ancla por vuestra cuenta."
+RIDDLE_PLACEHOLDER = "La pista aún no ha sido escrita... buscad el QR por vuestra cuenta."
 
 # 8 decoys, each with a brainrot cameo shown on jumpscare.
 CAMEOS: List[str] = [

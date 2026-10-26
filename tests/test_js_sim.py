@@ -13,6 +13,7 @@ NODE_TESTS = [
     "tests_js/loop.test.mjs",
     "tests_js/platformer.test.mjs",
     "tests_js/puppet.test.mjs",
+    "tests_js/qr.test.mjs",
     "tests_js/red_light.test.mjs",
     "tests_js/sprites.test.mjs",
 ]

@@ -7,16 +7,19 @@ from typing import Optional, Tuple
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app.core.engine import Advance, PuzzleAction
+from app.core.engine import Advance, PuzzleAction, Scan
 from app.web import protocol
 from app.web.hub import Conn
 from app.web.realtime import MAX_FRAME_BYTES, frame_ok
 from app.web.routes_api import COOKIE_NAME
+from app.web.routes_pages import scan_cameo
 
 router = APIRouter()
 log = logging.getLogger("spooky.ws")
 
 DEFAULT_HELLO_TIMEOUT = 5.0
+MAX_TOKEN_LEN = 64
+SCAN_UNKNOWN = "unknown"
 
 
 async def _read_hello(ws: WebSocket, timeout: float) -> Optional[dict]:
@@ -138,6 +141,12 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
                 continue
             out = await rt.apply(PuzzleAction(pid=conn.pid, data=payload))
             await _reply_error(ws, rt, out)
+        elif t == "scan":  # in-app QR camera: the same outcomes as /k/<token>, answered to this phone only
+            if conn.pid is None:
+                await ws.send_text(protocol.error_envelope("not_player", "only players scan", rt.game.seq))
+                continue
+            reply = await _scan(ws.app.state, rt, payload.get("token"))
+            await ws.send_text(protocol.envelope("scan", reply, rt.game.seq))
         elif t == "input":  # realtime lane: no lock, no persist
             if frame_ok(t, raw):
                 await hub.relay_input(conn, payload)
@@ -150,6 +159,15 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
                 await _reply_error(ws, rt, out)
         else:
             await ws.send_text(protocol.error_envelope("unknown_type", f"unsupported message {t}", rt.game.seq))
+
+
+async def _scan(state, rt, token) -> dict:
+    """The phone already belongs to rt's game, so no game resolution: just the token -> Scan."""
+    entry = state.qr_repo.get(token) if isinstance(token, str) and 0 < len(token) <= MAX_TOKEN_LEN else None
+    if entry is None:
+        return {"result": SCAN_UNKNOWN}
+    out = await rt.apply(Scan(kind=entry["kind"], idx=entry["idx"]))
+    return {"result": out.scan_result, "cameo": scan_cameo(entry)}
 
 
 async def _reply_error(ws: WebSocket, rt, out) -> None:

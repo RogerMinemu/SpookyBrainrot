@@ -14,6 +14,7 @@ export class GameSocket {
    * @param {(msg) => void} [o.onWelcome]
    * @param {(msg) => void} [o.onInput]   {pid, mask} phone input relayed to the TV (realtime lane)
    * @param {(msg) => void} [o.onFx]      {kind, data?} TV effect for this phone
+   * @param {(msg) => void} [o.onScan]    {result, cameo?} answer to this phone's in-app QR scan
    * @param {(online: boolean) => void} [o.onTvOnline] fires when the TV presence flag changes (carried by state)
    * @param {(status: string) => void} [o.onStatus] "connecting" | "open" | "closed"
    * @param {(code: number) => void} [o.onFatal]   close codes that must not retry
@@ -101,6 +102,8 @@ export class GameSocket {
         this.o.onFx && this.o.onFx(m.payload);
       } else if (m.t === "event") {
         this.o.onEvent && this.o.onEvent(m.payload);
+      } else if (m.t === "scan") {
+        this.o.onScan && this.o.onScan(m.payload);
       } else if (m.t === "error") {
         this.o.onError && this.o.onError(m.payload);
       }

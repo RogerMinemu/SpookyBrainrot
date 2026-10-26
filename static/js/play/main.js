@@ -5,6 +5,7 @@ import { applyState } from "/static/js/ui/theme.js";
 import { panel, button, title, pill } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
 import { unlockAudio, setMuted, play as playSound } from "/static/js/shared/audio.js";
+import { createScanner } from "/static/js/play/scanner.js";
 
 // composition root: one static plate per page (phones never boil)
 startArt({ layout: "flex" });
@@ -30,6 +31,7 @@ if (SEAT) setMuted(true); // seats are silent until the host takes one over
 let me = null;
 let socket = null;
 let active = null; // { kind, mod } puzzle controller currently mounted
+let scanner = null; // "Pistas" QR camera: lives across the re-renders of the search phase, dies when it ends
 let latest = null;
 let loadToken = 0;
 let tvOnline = true; // optimistic until the first state says otherwise
@@ -52,6 +54,10 @@ function leavePuzzle() {
   if (active) { active.mod.unmount(); active = null; }
 }
 
+function dropScanner() {
+  if (scanner) { scanner.stop(); scanner = null; }
+}
+
 // Demo hooks (seat mode only). The bots and the keyboard act through the same send paths as a finger:
 // the pad (WS input masks), the puzzle buttons (WS puzzle commands) and the advance button.
 if (SEAT) {
@@ -65,6 +71,7 @@ if (SEAT) {
     vote: null,     // Room 4: vote(option), set by its controller
     setMask(mask) { if (sb.pad) sb.pad.force(mask); if (sb.hold) sb.hold(mask !== 0); },
     advance: () => ctx.advance(),
+    scan: (token) => !!socket && socket.send("scan", { token }), // what the "Pistas" camera sends once it reads a QR
     setSound(on) { setMuted(!on); if (on) unlockAudio(); },
     view: () => (latest ? latest.view : null),
   };
@@ -74,17 +81,22 @@ if (SEAT) {
 function renderPlain(state) {
   const players = state.game.players;
   const kind = state.view.kind;
+  const search = kind === "search";
   const advanceLabel = { lobby: "Empezar", intro: "Entrar", unlocked: "Siguiente sala" }[kind];
+  if (search && !scanner) scanner = createScanner({ onToken: (token) => !!socket && socket.send("scan", { token }) });
+  if (!search) dropScanner();
   fill(gameSection,
-    title(state.game.name, { cls: "phone-title" }),
+    title(search ? "Pistas (busca el QR)" : state.game.name, { cls: "phone-title" }),
     panel([
       h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
       h("p", { class: "muted" }, `${players.filter((p) => p.connected).length} de ${players.length} conectados`),
-      kind === "search" ? h("p", { class: "riddle" }, state.game.riddle || "") : null,
+      search ? h("p", { class: "riddle" }, state.game.riddle || "") : null,
       kind === "ending" ? h("p", {}, "Fin de la partida.") : null,
       advanceLabel ? button(advanceLabel, { onclick: ctx.advance }) : null,
       h("div", { class: "players" }, players.map((p) => pill(p.name, { off: !p.connected }))),
-    ], { cls: "phone-panel" }));
+    ], { cls: "phone-panel" }),
+    search ? scanner.el : null);
+  if (scanner) scanner.resume();
 }
 
 const PLAIN = new Set(["lobby", "idle", "intro", "search", "unlocked", "ending"]);
@@ -99,6 +111,7 @@ async function render(state) {
     renderPlain(state);
     return;
   }
+  dropScanner();
   // Puzzle kinds: /static/puzzles/<kind>/controller.js, loaded when view.kind changes
   if (!active || active.kind !== kind) {
     if (!/^[a-z_]+$/.test(kind)) return;
@@ -143,6 +156,8 @@ function connect() {
       if (active && active.mod.onEvent && active.mod.onEvent(ev) === true) return;
       onEvent(ev);
     },
+    // a right QR changes the phase first (the scanner is gone by then): the anchor_unlocked event says it instead
+    onScan: (reply) => scanner && scanner.showResult(reply),
     onError: (err) => onError(err),
     onStatus: (s) => {
       connBadge.classList.toggle("hidden", s === "open");
@@ -155,19 +170,21 @@ function connect() {
         // another tab/phone took over this player: stop retrying, offer to take control back
         connBadge.classList.add("hidden");
         leavePuzzle();
+        dropScanner();
         fill(gameSection,
           title("Otra pantalla ha tomado el control", { cls: "phone-title" }),
           panel([
             h("p", {}, "Tu sesión se ha abierto en otro sitio."),
             button("Recuperar control", { onclick: () => socket.start() }),
           ], { cls: "phone-panel" }));
-      } else if (code === 4010) { leavePuzzle(); fill(gameSection, panel(h("p", {}, "La partida ha sido borrada."), { cls: "phone-panel" })); }
+      } else if (code === 4010) { leavePuzzle(); dropScanner(); fill(gameSection, panel(h("p", {}, "La partida ha sido borrada."), { cls: "phone-panel" })); }
     },
   });
   socket.start();
 }
 
 function showJoin() {
+  dropScanner();
   localStorage.removeItem(TOKEN_KEY);
   gameSection.classList.add("hidden");
   joinSection.classList.remove("hidden");

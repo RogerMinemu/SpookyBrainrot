@@ -5,7 +5,7 @@ import { h, fill } from "/static/js/shared/dom.js";
 const PHASE_LABELS = {
   intro: "Introducción",
   puzzle: "Puzzle",
-  search: "Búsqueda del ancla",
+  search: "Pistas (busca el QR)",
   unlocked: "Sala desbloqueada",
 };
 const EVENT_LABELS = {

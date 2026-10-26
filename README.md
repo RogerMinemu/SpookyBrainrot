@@ -76,6 +76,15 @@ no toques `data/` a mano.
 Los tokens de los QR se generan **una sola vez** en el primer arranque y se guardan en la base de
 datos. Nunca se regeneran, y no existe ningún endpoint para hacerlo.
 
+### Escanear desde el juego
+
+En la fase «Pistas (busca el QR)», el móvil de cada jugador muestra un botón de cámara para escanear el QR
+sin salir de `/play`, así la partida ya va ligada a ese jugador y no hay que elegirla.
+
+- **HTTP normal en la red de casa** (lo habitual): el navegador no deja que una web use la cámara en vivo, así
+  que el botón abre la app de cámara, el jugador hace una foto al QR y el juego la lee.
+- **HTTPS o `localhost`**: el botón abre un visor en vivo dentro de la página que lee el QR solo.
+
 ### Cámara del iPhone
 
 Si el QR se abre en el navegador integrado de la cámara, la cookie del jugador puede no estar
@@ -153,6 +162,7 @@ La tele, el móvil y la portada se pintan al estilo "libro de cuentos de terror"
 | --- | --- | --- |
 | p5.js | 2.3.3 | LGPL-2.1 (sin modificar) |
 | p5.brush | 2.2.3 | MIT |
+| jsQR (lector de QR del móvil) | 1.4.0 | Apache-2.0 |
 | ClaudeAnimationBase (motor de pintura adaptado) | n/a | MIT |
 | Permanent Marker (títulos) | v16 | Apache-2.0 (no es OFL) |
 | Fredoka (texto) | v17 | OFL-1.1 |

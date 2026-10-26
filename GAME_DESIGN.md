@@ -30,7 +30,11 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 
 - **7 anclas** (una por nivel, la última es la salida) + **8 trampas**. Tokens aleatorios generados una sola vez y guardados en el servidor.
 - Desde que se quitó la sala 5, el **ancla 5 no la usa ninguna sala**: sigue impresa, pero no hace falta esconderla ni escribirle pista (`/admin/house` y la clave de QR lo indican). Si alguien la escanea, solo «duerme».
-- Cada QR lleva `{PUBLIC_URL}/k/<token>` y se escanea con la **cámara normal** del móvil (sin HTTPS ni permisos de cámara).
+- Cada QR lleva `{PUBLIC_URL}/k/<token>`. Tras cada sala llega la fase **«Pistas (busca el QR)»**: la tele y el móvil muestran la pista, y el móvil trae un **botón de cámara** para escanear el QR sin salir del juego (mensaje `scan` por WebSocket, mismo resultado que `/k/<token>`, contestado solo a ese móvil).
+  - Con HTTPS o en `localhost`, el botón abre un **visor en vivo** dentro de la página.
+  - En la red de casa por HTTP normal, el navegador no deja que una web use la cámara: el mismo botón abre la **app de cámara** para hacer una foto y la página lee el QR de la foto.
+  - Decodifica el `BarcodeDetector` nativo si existe; si no (iPhone), jsQR (vendorizado).
+  - La cámara normal del móvil sigue funcionando: abre `/k/<token>` como antes.
 - **¿Qué partida abre?**
   1. La del mando, si ese navegador ya está en `/play` (cookie).
   2. Si no, la única partida en curso (la que tiene la tele conectada).
@@ -70,7 +74,7 @@ Moqueta húmeda, zumbido de fluorescentes. Patapim tiene los pies hundidos en la
 - **Nivel 3, Todos a bordo**: un foso demasiado ancho y una plataforma móvil que solo parte cuando todos los del lado izquierdo van a bordo.
 - **Nivel 4, La llave**: hay que subir a una repisa con ayuda, coger la llave y llevarla a la puerta. Si el portador cae o se desconecta, la llave vuelve a su sitio.
 - Un nivel se supera cuando **todos** los jugadores conectados han entrado por la puerta. Caerse al vacío solo devuelve a ese jugador al inicio y cuesta un poco de Brainrot% (con enfriamiento y tope).
-- Al superar el nivel 4 se pasa a la búsqueda del ancla.
+- Al superar el nivel 4 se pasa a las pistas (busca el QR).
 
 ### 2 · Las Piscinas · Tralalero Tralala
 

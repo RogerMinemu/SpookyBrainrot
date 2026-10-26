@@ -60,6 +60,19 @@ body.play .hold-status { font-weight: 600; }
   body.play main { padding-top: .6rem; gap: .6rem; }
 }
 
+/* ------------------------------------------------------------------ Pistas: QR scanner (js/play/scanner.js) */
+/* square viewfinder with an inked aim box; the status line under it says what the camera read */
+body.play .scan-view { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; background: #0C0616;
+  border: 4px solid var(--ink); border-radius: 22px 28px 20px 30px / 28px 20px 30px 22px; box-shadow: 4px 5px 0 var(--ink); }
+body.play .scan-video { display: block; width: 100%; height: 100%; object-fit: cover; }
+body.play .scan-aim { position: absolute; inset: 16%; pointer-events: none; border: 4px dashed rgba(255, 245, 226, .9);
+  border-radius: 18px 24px 16px 26px; box-shadow: 0 0 0 100vmax rgba(12, 6, 22, .38); }
+body.play .scan-status { font-weight: 600; min-height: 1.4em; }
+body.play .scan-status:empty { display: none; }
+body.play .scan-status.good { color: #1F7A45; }
+body.play .scan-status.bad { color: var(--danger); }
+body.play .scan-close { min-height: 3rem; font-size: 1.15rem; }
+
 /* TV absent: input is paused until it comes back */
 .tv-offline { position: fixed; left: 0; right: 0; top: 0; z-index: 70; padding: .7rem 1rem; text-align: center; font-weight: 600;
   background: var(--danger); color: #FFF5E2; border-bottom: 3px solid var(--ink); }

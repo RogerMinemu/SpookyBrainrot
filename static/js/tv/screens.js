@@ -57,9 +57,10 @@ export function renderIntro(root, state, gameId, ctx) {
 
 export function renderSearch(root, state) {
   fill(root,
-    title("Buscad el ancla"),
+    title("Pistas (busca el QR)"),
     panel([
       h("p", { class: "lead riddle" }, state.game.riddle || ""),
+      h("p", { class: "muted" }, "Cuando lo encontréis, escanead el QR con el botón de la cámara de vuestro móvil."),
       playersList(state.game.players),
     ], { cls: "stack" }));
 }

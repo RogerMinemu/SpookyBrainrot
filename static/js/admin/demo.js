@@ -78,7 +78,7 @@ function refreshButtons() {
 function roomText(g) {
   if (g.status === "lobby") return "Lobby";
   if (g.status === "finished") return "Final";
-  const phase = { intro: "introducción", puzzle: "puzzle", search: "búsqueda del ancla", unlocked: "puerta abierta" }[g.phase] || g.phase;
+  const phase = { intro: "introducción", puzzle: "puzzle", search: "pistas (busca el QR)", unlocked: "puerta abierta" }[g.phase] || g.phase;
   return `Sala ${g.room_no} · ${phase}`;
 }
 
@@ -424,7 +424,7 @@ function onEnter(st, view) {
     case "backrooms_trivia": say("Sala 4: trivia. Los bots no se saben las respuestas: uno propone y los demás le siguen."); break;
     case "bomb_defusal": say(`Sala 6: ${view.defuser} tiene la bomba y los demás el manual. Los bots no saben leerlo: atajo en unos segundos.`); break;
     case "sahur_dice": say(`Sahur dice, ronda ${view.round} de ${view.rounds}: los bots esperan a que acabe la secuencia.`); break;
-    case "search": say("Búsqueda del ancla: los bots mirarán por la casa (unos 3 s)."); break;
+    case "search": say("Pistas (busca el QR): los bots mirarán por la casa (unos 3 s)."); break;
     case "unlocked": say("La puerta se abre.", "good"); break;
     case "ending": say(`Final de la partida (Brainrot ${Math.round(g.brainrot || 0)}%).`, "good"); break;
     default: break;
@@ -451,6 +451,13 @@ async function scanAnchor(view, key) {
     const tokens = await ensureAnchors();
     const token = tokens[String(view.anchor)];
     const finder = state.seats[(view.anchor || 0) % state.seats.length];
+    const sb = seatApi(finder);
+    // the phone's own camera path (WS "scan"); the /k/ page (phone camera app) when the seat is not ready
+    if (sb && sb.ready && sb.scan(token)) {
+      say(`${finder.name} escanea el QR del ancla ${view.anchor} con la cámara de su móvil.`);
+      state.scannedKey = key;
+      return;
+    }
     say(`${finder.name} escanea el QR del ancla ${view.anchor} (ruta real /k/...).`);
     const res = await fetch(`/k/${token}?g=${state.game.id}`);
     if (res.ok) { state.scannedKey = key; say(`Ancla ${view.anchor} encontrada.`, "good"); }

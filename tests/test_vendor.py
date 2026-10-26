@@ -20,6 +20,7 @@ def sha256(p: Path) -> str:
 def entries():
     yield "p5", META["p5"]
     yield "p5.brush", META["p5.brush"]
+    yield "jsqr", META["jsqr"]
     for name, e in META["fonts"].items():
         yield f"font:{name}", e
 
@@ -40,6 +41,7 @@ def test_p5_pinned_version_and_unmodified_marker():
     assert META["p5"]["version"] == "2.3.3"
     assert "2.3.3" in META["p5"]["path"]
     assert META["p5.brush"]["version"] == "2.2.3"
+    assert META["jsqr"]["version"] == "1.4.0" and "1.4.0" in META["jsqr"]["path"]
     # the npm build has no banner and an internal "2.3.1" constant; the sha256 above is the proof
     head = (VENDOR / META["p5"]["path"]).read_bytes()[:40]
     assert head.startswith(b"var p5=function(){")
@@ -52,6 +54,7 @@ def test_licence_notices_name_library_and_licence():
     assert "GNU LESSER GENERAL PUBLIC LICENSE" in lic(META["p5"]["licenseFile"])
     assert "Version 2.1" in lic(META["p5"]["licenseFile"])
     assert "MIT License" in lic(META["p5.brush"]["licenseFile"])
+    assert "Apache License" in lic(META["jsqr"]["licenseFile"]) and META["jsqr"]["license"] == "Apache-2.0"
     assert "p5.js 2.3.3" in lic("p5/2.3.3/NOTICE") and "github.com/processing/p5.js" in lic("p5/2.3.3/NOTICE")
     assert "MIT License" in lic("claude-animation-base/LICENSE") and "John Heibel" in lic("claude-animation-base/LICENSE")
     # Permanent Marker is Apache-2.0 (NOT OFL); Fredoka is OFL

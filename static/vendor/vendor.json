@@ -15,6 +15,14 @@
     "licenseFile": "p5.brush/2.2.3/LICENSE.md",
     "source": "npm p5.brush@2.2.3 dist/p5.brush.js (unmodified)"
   },
+  "jsqr": {
+    "version": "1.4.0",
+    "path": "jsqr/1.4.0/jsQR.js",
+    "sha256": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859",
+    "license": "Apache-2.0",
+    "licenseFile": "jsqr/1.4.0/LICENSE",
+    "source": "npm jsqr@1.4.0 dist/jsQR.js (unmodified)"
+  },
   "fonts": {
     "permanent-marker": {
       "path": "fonts/permanent-marker/permanent-marker-latin.woff2",
