@@ -136,7 +136,7 @@ function ballerina(E) {
     for (const sx of [-1, 1]) {
       p.ln([[256 + sx * 52 - 18, 150], [256 + sx * 52, 161], [256 + sx * 52 + 18, 150]], 2.3, INK, "ink", .5);
       p.ln([[256 + sx * 70, 150], [256 + sx * 79, 143]], 1.3, INK, "ink", .3);
-      blush(p, 256 + sx * 76, 170, 18, 9);
+      blush(p, 256 + sx * 76, 170, 18, 9, sx);
     }
     p.ln([[240, 172], [256, 182], [272, 172]], 1.8, INK, "ink", .5);
   }
@@ -213,12 +213,11 @@ function lirili(E) {
     // trunk
     p.rib([[256, 150], [256, 214], [244, 258], [276, 276]], 62, 36, wc(c.grey, dark(c.grey, .3), { fillOp: 120, bleed: 0 }), 1.6);
     for (const y of [180, 200, 222]) p.ln([[236, y], [256, y + 4], [276, y]], .8, dark(c.grey, .35), "inkfine", .5);
-    // tiny tusks, big shiny eyes, brows, rosy cheeks
+    // tiny tusks, big shiny eyes (no brows at rest, like the reference), rosy cheeks
     for (const sx of [-1, 1]) {
       p.sh([[256 + sx * 40, 214], [256 + sx * 54, 214], [256 + sx * 60, 244]], fl(c.clockFace, { sw: .8 }), .6);
-      p.ln([[256 + sx * 30, 104], [256 + sx * 54, 97], [256 + sx * 76, 106]], 1.6, dark(c.grey, .5), "ink", .5);
       minemiEye(p, 256 + sx * 54, 140, 23, 26, "#3B4A7A", { glance: -sx * 2, side: sx });
-      blush(p, 256 + sx * 76, 182, 18, 10);
+      blush(p, 256 + sx * 76, 182, 18, 10, sx);
     }
     // a little cactus flower on the head
     p.ell(300, 74, 14, 11, fl(PAL.rose, { sw: .9 }), .8);
@@ -283,10 +282,8 @@ function chimpanzini(E) {
     hp.sh([[196, 156], [226, 128], [256, 144], [286, 128], [316, 156], [310, 214], [256, 240], [202, 214]], wc(c.face, dark(c.face, .2), { fillOp: 90, bleed: 0, sw: 1 }), 1.8);
     for (const sx of [-1, 1]) {
       minemiEye(hp, 256 + sx * 34, 166, 20, 23, "#5A3418", { glance: -sx * 2, side: sx });
-      blush(hp, 256 + sx * 50, 204, 13, 7);
+      blush(hp, 256 + sx * 50, 204, 13, 7, sx);
     }
-    hp.ln([[214, 132], [234, 127], [250, 134]], 1.7, dark(c.fur, .5), "ink", .4);
-    hp.ln([[298, 132], [278, 127], [262, 134]], 1.7, dark(c.fur, .5), "ink", .4);
     hp.ell(256, 200, 26, 17, wc(light(c.face, .1), c.face, { fillOp: 60, sw: 1 }), 1);
     hp.ell(247, 196, 4, 3, fl(INK, { ink: null }), .3);
     hp.ell(265, 196, 4, 3, fl(INK, { ink: null }), .3);

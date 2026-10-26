@@ -97,35 +97,50 @@ export function makePen(E, key, cell, mirror = false, xf = null) {
   return pen;
 }
 
-export const BLUSH = "#F29AAE";
+export const BLUSH = "#FF8FA3", BLUSH_LINE = "#E0607E";
+const HIGHLIGHT = "#FFF8E8";
 
-/** Soft rosy cheek (the Minemi blush): a translucent blot over painted skin, never on bare plate. */
-export function blush(pen, cx, cy, rx = 24, ry = 13) {
-  pen.ell(cx, cy, rx, ry, { wash: BLUSH, washOp: 165, ink: null }, 1.2);
-  pen.ell(cx - rx * .25, cy - ry * .15, rx * .45, ry * .4, { wash: light(BLUSH, .35), washOp: 150, ink: null }, .6);
+/**
+ * Rosy cheek, as the reference Minemi wears it (MinemiSongs src/minemi.js): a soft blot with three short diagonal
+ * strokes on top. side (-1 | 1) mirrors the strokes; painted over skin, never on bare plate.
+ */
+export function blush(pen, cx, cy, rx = 24, ry = 13, side = 1) {
+  pen.ell(cx, cy, rx, ry, { wash: BLUSH, washOp: 150, ink: null }, 1.2);
+  const u = rx / .58;
+  for (let k = 0; k < 3; k++) {
+    pen.ln([[cx + side * (-.3 + k * .25) * u, cy + .1 * u], [cx + side * (-.18 + k * .25) * u, cy - .13 * u]], .8, BLUSH_LINE, "inkfine", 0);
+  }
 }
 
 /**
- * A big shiny Minemi eye centred at (cx, cy): white, a large dark iris that fills it, a lighter glow in the lower
- * half, a big highlight up-left and a small one down-right, and a thick lash line. glance = pupil shift in x.
- * angry draws a heavy slanted lid over it.
+ * A big shiny Minemi eye centred at (cx, cy), measured on the reference (MinemiSongs src/minemi.js, white .66s x .8s):
+ * an unlined white, an iris dark at the top and light at the bottom, a dark pupil, two cream highlights (big up-left,
+ * small down-right), a heavy upper lash that starts at the outer corner with a filled ink wing, and a fine lower lash.
+ * side = which eye (-1 left, 1 right: the wing goes outward). angry draws a heavy slanted lid instead of the lashes.
  */
 export function minemiEye(pen, cx, cy, rx, ry, iris, { glance = 0, angry = false, lid = "#7A5233", side = 1, lash = true } = {}) {
-  pen.ell(cx, cy, rx, ry, { wash: "#FFFDF4", washOp: 255, ink: INK, sw: 1.6 }, 1.2);
-  const ix = cx + glance, irx = rx * .8, iry = ry * .86;
-  pen.ell(ix, cy + ry * .06, irx, iry, { wash: iris, washOp: 255, ink: null }, .8);
-  pen.ell(ix, cy + ry * .42, irx * .7, iry * .38, { wash: light(iris, .38), washOp: 255, ink: null }, .6);
-  pen.ell(ix, cy + ry * .04, irx * .44, iry * .5, { wash: dark(iris, .55), washOp: 255, ink: null }, .4);
-  pen.ell(ix - irx * .38, cy - iry * .34, irx * .3, iry * .26, { wash: "#FFFFFF", washOp: 255, ink: null }, .3);
-  pen.ell(ix + irx * .36, cy + iry * .36, irx * .13, iry * .12, { wash: "#FFFFFF", washOp: 255, ink: null }, .2);
+  const sx = rx / .66, sy = ry / .8; // reference units
+  pen.ell(cx, cy, rx, ry, { wash: "#FFFDF8", washOp: 255, ink: null }, 1);
+  const ix = cx + glance, ir = rx * .79, iy = ry * .83;
+  pen.ell(ix, cy + .08 * sy, ir, iy, { wash: iris, washOp: 255, ink: null }, .8);
+  pen.ell(ix, cy - .22 * sy, ir * .92, iy * .4, { wash: dark(iris, .5), washOp: 150, ink: null }, .6);
+  pen.ell(ix, cy + .34 * sy, ir * .8, iy * .45, { wash: light(iris, .42), washOp: 255, ink: null }, .6);
+  pen.ell(ix, cy + .04 * sy, ir * .46, iy * .5, { wash: dark(iris, .62), washOp: 255, ink: null }, .4);
+  pen.ell(ix - .2 * sx, cy - .2 * sy, .17 * sx, .19 * sy, { wash: HIGHLIGHT, washOp: 255, ink: null }, .3);
+  pen.ell(ix + .2 * sx, cy + .3 * sy, .08 * sx, .08 * sy, { wash: HIGHLIGHT, washOp: 255, ink: null }, .2);
   if (angry) {
     const inner = cx - side * rx, outer = cx + side * rx, top = cy - ry - 6;
     pen.poly([[inner - side * 4, cy - ry * .1], [outer + side * 5, cy - ry * .75], [outer + side * 5, top], [inner - side * 4, top]], { wash: lid, washOp: 255, ink: null }, .5);
-    pen.ln([[inner - side * 3, cy - ry * .1], [cx, cy - ry * .55], [outer + side * 3, cy - ry * .8]], 2.2, INK, "ink", .5);
-  } else if (lash) {
-    pen.ln([[cx - rx * 1.04, cy - ry * .05], [cx - rx * .55, cy - ry * .86], [cx + rx * .55, cy - ry * .9], [cx + rx * 1.06, cy - ry * .2]], 2.3, INK, "ink", .5);
-    pen.ln([[cx + side * rx * 1.02, cy - ry * .2], [cx + side * (rx * 1.02 + 9), cy - ry * .5]], 1.4, INK, "ink", .4);
+    pen.ln([[inner - side * 3, cy - ry * .1], [cx, cy - ry * .55], [outer + side * 3, cy - ry * .8]], 2.4, INK, "ink", .5);
+    return;
   }
+  if (!lash) return;
+  // the ink brush is heaviest where a stroke starts: start at the outer corner, hug the top, end inside
+  pen.ln([[cx + side * .74 * sx, cy - .4 * sy], [cx + side * .6 * sx, cy - .64 * sy], [cx + side * .18 * sx, cy - .86 * sy],
+    [cx - side * .3 * sx, cy - .8 * sy], [cx - side * .58 * sx, cy - .52 * sy]], 2.6, INK, "ink", .5);
+  pen.poly([[cx + side * .35 * sx, cy - .8 * sy], [cx + side * .8 * sx, cy - .56 * sy], [cx + side * 1.02 * sx, cy - .56 * sy],
+    [cx + side * .76 * sx, cy - .3 * sy], [cx + side * .55 * sx, cy - .55 * sy]], { wash: INK, washOp: 255, ink: null }, .4);
+  pen.ln([[cx - side * .25 * sx, cy + .76 * sy], [cx + side * .25 * sx, cy + .77 * sy]], .9, INK, "inkfine", .3);
 }
 
 /**
@@ -144,9 +159,9 @@ export function eyePair(E, key, cell, kind, look) {
       continue;
     }
     if ((kind === "open" || kind === "angry") && iris) {
-      // the big shiny Minemi eye (kept inside the 288x96 cell: lashes need ~6 px above the white)
-      const er = Math.min(rx, 144 - sep - 16), eh = Math.min(ry, 33);
-      if (brow && kind === "open") { const by = Math.max(14, cy - eh - 9); pen.ln([[cx - er, by + 2], [cx, by - 3], [cx + er, by + 3]], 1.6, brow, "ink", .5); }
+      // the big shiny Minemi eye, kept inside the 288x96 cell: the outer lash wing reaches 1.55 rx past the centre
+      // (no brow at rest: the reference only draws brows for an expression, here the angry lid)
+      const er = Math.min(rx, (144 - 12 - sep) / 1.55), eh = Math.min(ry, 33);
       minemiEye(pen, cx, cy + 2, er, eh, iris, { glance: side * -2, angry: kind === "angry", lid, side });
       continue;
     }

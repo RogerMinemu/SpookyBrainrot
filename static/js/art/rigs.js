@@ -135,8 +135,8 @@ function patapim(E) {
     // cheek wrinkles and rosy cheeks
     p.ln([[108, 220], [124, 236]], .8, dark(skin, .35), "inkfine", .6);
     p.ln([[212, 220], [196, 236]], .8, dark(skin, .35), "inkfine", .6);
-    blush(p, 104, 196, 20, 11);
-    blush(p, 216, 196, 20, 11);
+    blush(p, 104, 196, 20, 11, -1);
+    blush(p, 216, 196, 20, 11, 1);
   }
 
   // ---- eyes (big shiny Minemi eyes; the scary "wide" pair stays glowing and small-pupilled)
@@ -231,8 +231,8 @@ function tralalero(E) {
     }
     p.ell(146, 150, 4, 3, fl(skinDk, { ink: null, washOp: 200 }), .4);
     p.ell(174, 150, 4, 3, fl(skinDk, { ink: null, washOp: 200 }), .4);
-    blush(p, 74, 194, 22, 12);
-    blush(p, 246, 194, 22, 12);
+    blush(p, 74, 194, 22, 12, -1);
+    blush(p, 246, 194, 22, 12, 1);
   }
   const look = { sep: 74, rx: 30, ry: 32, pupil: 14, lid: c.skin, brow: skinDk, iris: "#24508F" };
   for (const k of ["open", "closed", "angry"]) eyePair(E, `${id}|eyes.${k}`, RIG_CELLS.eyes[k], k, look);
@@ -297,8 +297,8 @@ function sahur(E) {
     p.shade(262, 220, 14, 34, c.wood);
     p.ell(86, 238, 12, 16, wc(dark(c.wood, .2), grain, { fillOp: 80, sw: .7 }), 1);
     p.ln([[210, 250], [216, 270]], .8, grain, "inkfine", 1);
-    blush(p, 74, 214, 24, 13);
-    blush(p, 246, 214, 24, 13);
+    blush(p, 74, 214, 24, 13, -1);
+    blush(p, 246, 214, 24, 13, 1);
   }
   const look = { sep: 72, rx: 40, ry: 36, pupil: 12, lid: dark(c.wood, .2), cy: 50, iris: "#4A2C16" };
   for (const k of ["open", "closed", "angry"]) eyePair(E, `${id}|eyes.${k}`, RIG_CELLS.eyes[k], k, look);
