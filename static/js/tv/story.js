@@ -57,7 +57,7 @@ function roundRect(g, x, y, w, hh, r) {
  * @param {(to: string, kind: string, data: object) => void} o.sendFx
  * @returns {{ sync(state), active(): boolean, next(), skip(), key(): string|null }}
  */
-export function createStory({ gameId, sprite, sendFx }) {
+export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
   const stage = h("div", { class: "story-stage", "aria-hidden": "true" });
   const alarm = h("div", { class: "story-alarm", "aria-hidden": "true" });
   const cardText = h("span", {}, "");
@@ -197,6 +197,7 @@ export function createStory({ gameId, sprite, sendFx }) {
     clearTimeout(cur.shakeTimer);
     if (cur.mount) cur.mount.destroy();
     cur = null;
+    onActive(false);
     root.classList.add("hidden");
     root.classList.remove("shake", "alarm-on", "is-riddle");
     document.documentElement.classList.remove("story-on", "story-show-meter");
@@ -216,6 +217,7 @@ export function createStory({ gameId, sprite, sendFx }) {
     const sceneStart = new Map();
     for (const b of c.beats) if (!sceneStart.has(b.scene)) sceneStart.set(b.scene, b.start);
     cur = { key, c, base: nowMs(), index: -1, lastShown: 0, lastBlip: 0, sceneStart, mount: null, heartbeat: 0, shakeTimer: 0 };
+    onActive(true);
     root.classList.remove("hidden");
     document.documentElement.classList.add("story-on");
     card.classList.add("hidden");

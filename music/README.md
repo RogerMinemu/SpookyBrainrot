@@ -51,4 +51,12 @@ La Sala 5 está eliminada del juego. No necesita música.
 - Evitar pitidos, alarmas, cuentas atrás y golpes que parezcan señales del juego.
 - Archivos previstos: los indicados en las fichas bajo `static/audio/music/`. Guardar también los originales.
 
-**Estado:** prompts preparados. La reproducción, los cambios de volumen y las variantes descritas son un plan de integración; estos documentos no los implementan.
+## Integración
+
+Las seis tomas están copiadas a `static/audio/music/` con los nombres de sus fichas. Los originales permanecen en esta carpeta.
+
+La tele reproduce la música después de activar el sonido y permite silenciarla con «Música: sí/no». Las actualizaciones de estado conservan la posición de la pista. La música baja durante las escenas narrativas, se silencia en rojo y durante la demostración y respuesta de Sahur.
+
+El final de escape se reproduce una vez. El del pasajero corta la misma pista a los 35 segundos como máximo. El de brainrots repite un fragmento ralentizado y filtrado del mismo audio. Estos tratamientos no requieren nuevas generaciones.
+
+Los archivos conservan el audio original: los puntos de bucle todavía no tienen un recorte musical revisado de oído. Los bucles actuales repiten la pista completa.

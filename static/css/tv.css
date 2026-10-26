@@ -266,3 +266,4 @@ html.story-show-meter #meter { z-index: 35; transform-origin: top left; animatio
   .story, .story.shake, .story-card .torn, .story-caption, html.story-show-meter #meter { animation: none; }
   .story.alarm-on .story-alarm { animation: none; }
 }
+.music-toggle { position: fixed; left: 1rem; bottom: 1rem; z-index: 70; font-size: 1rem; padding: .4rem .8rem; }

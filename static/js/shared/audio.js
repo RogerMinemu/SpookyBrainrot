@@ -28,6 +28,7 @@ export function unlockAudio() {
 }
 
 export const isUnlocked = () => !!ctx && ctx.state === "running";
+export const audioContext = () => muted ? null : ctx;
 
 /** One enveloped oscillator note. `at` is seconds from now. Safe no-op while locked. */
 export function tone(freq, dur = 0.15, { type = "square", vol = 0.5, at = 0, slide = 0 } = {}) {

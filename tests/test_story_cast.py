@@ -150,7 +150,8 @@ def test_tv_story_draws_through_ctx_sprite_and_is_wired_into_the_tv():
     assert "painter" not in story and "createCanvas" not in story and "window.p5" not in story
     assert "sessionStorage" in story and 'sendFx("all", "story"' in story and "drawAny(" in story
     main = _src(STATIC / "js" / "tv" / "main.js")
-    assert "createStory({ gameId, sprite: ctx.sprite, sendFx: ctx.sendFx })" in main and "story.sync(state)" in main
+    assert "createStory({ gameId, sprite: ctx.sprite, sendFx: ctx.sendFx," in main and "story.sync(state)" in main
+    assert "onActive: (value) => music.setStory(value)" in main
     assert "story: { active:" in main  # the demo bots wait for the cutscene
     assert ".story-caption" in _src(STATIC / "css" / "tv.css")
 

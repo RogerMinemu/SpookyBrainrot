@@ -5,7 +5,8 @@ import { handleEvent } from "/static/js/tv/effects.js";
 import { applyState } from "/static/js/ui/theme.js";
 import { panel, button, title } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
-import { unlockAudio, isUnlocked } from "/static/js/shared/audio.js";
+import { unlockAudio, isUnlocked, audioContext } from "/static/js/shared/audio.js";
+import { createMusic } from "/static/js/tv/music.js";
 import { createStory } from "/static/js/tv/story.js";
 
 // composition root: the art starts once, immediately (the splash is already painted by it)
@@ -23,8 +24,24 @@ let socket = null;
 let active = null; // { kind, mod } puzzle module currently mounted
 let latest = null; // newest state (the module import is async)
 let loadToken = 0;
+const music = createMusic(audioContext);
+const musicButton = button("Música: sí", { onclick: () => {
+  const enabled = musicButton.getAttribute("aria-pressed") !== "true";
+  musicButton.setAttribute("aria-pressed", String(enabled));
+  musicButton.textContent = enabled ? "Música: no" : "Música: sí";
+  music.setEnabled(!enabled);
+} });
+musicButton.classList.add("music-toggle");
+musicButton.setAttribute("aria-pressed", "false");
+document.body.append(musicButton);
+document.addEventListener("pointerdown", () => {
+  unlockAudio();
+  const ac = audioContext();
+  if (ac) ac.resume().then(() => music.unlock()).catch(() => {});
+}, { capture: true });
 
 const ctx = {
+  musicRed: (value) => music.setRed(value),
   advance: () => socket && socket.send("advance"),
   // realtime lane: sim outcome reports and effects for the phones
   sendSim: (report) => socket && socket.sendSim(report),
@@ -33,12 +50,13 @@ const ctx = {
   sprite: (id) => art.sprite(id),
 };
 // Cutscenes between the rooms: the brainrots tell the story (over the screen, keyed by the state)
-const story = createStory({ gameId, sprite: ctx.sprite, sendFx: ctx.sendFx });
+const story = createStory({ gameId, sprite: ctx.sprite, sendFx: ctx.sendFx, onActive: (value) => music.setStory(value) });
 // Last mask per phone. Relayed inputs can arrive before the puzzle module is mounted (replay on connect).
 const masks = new Map();
 
 function leavePuzzle() {
   if (active) { active.mod.unmount(); active = null; }
+  music.setRed(false);
 }
 
 function updateMeter(state) {
@@ -97,6 +115,8 @@ async function render(state) {
   applyState(state);
   updateMeter(state);
   story.sync(state);
+  music.sync(state);
+  music.setStory(story.active());
   const kind = state.view.kind;
   if (screens[kind]) {
     leavePuzzle();
@@ -157,6 +177,7 @@ function start() {
     },
     onStatus: (s) => connBadge.classList.toggle("hidden", s === "open"),
     onFatal: (code) => {
+      music.stop();
       connBadge.classList.add("hidden");
       leavePuzzle();
       loadToken += 1;

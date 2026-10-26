@@ -27,6 +27,7 @@ export function mount(root, ctx) {
     makeSim: createSim,
     report: ctx.sendSim,
     fx: (to, kind, data) => {
+      if (ctx.musicRed && (kind === "red" || kind === "green")) ctx.musicRed(kind === "red");
       if (TV_SOUNDS.has(kind)) play(kind, data);
       ctx.sendFx(to, kind, data);
     },

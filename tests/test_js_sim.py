@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 JS_TESTS = ROOT / "tests_js"
 # explicit list (no globbing at run time): a new .test.mjs must be added here on purpose
 NODE_TESTS = [
+    "tests_js/music.test.mjs",
     "tests_js/demo_bots.test.mjs",
     "tests_js/loop.test.mjs",
     "tests_js/platformer.test.mjs",
