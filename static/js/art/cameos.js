@@ -115,9 +115,12 @@ function ballerina(E) {
     p.sh(T([[256, 114], [236, 100], [244, 94], [256, 100], [268, 94], [276, 100]]), fl(c.coffee, { ink: null }), .6);
     return T;
   };
-  // ---- idle: ballerina on pointe, cup for a head, serene
+  // ---- idle: ballerina on pointe, cup for a head, serene. Chibi (the Minemi look): the dancer shrinks toward her
+  // pointes and the cup grows on the new neck, two pens re-proportioning the same drawing by coordinates
   {
-    const p = makePen(E, `${id}|idle`, CAMEO_CELLS.idle);
+    const BODY_K = .8, HEAD_K = 1.16, neck = 498 - (498 - 214) * BODY_K;
+    const p = makePen(E, `${id}|idle`, CAMEO_CELLS.idle, false, { ox: 256, oy: 498, k: BODY_K });
+    const hp = makePen(E, `${id}|idle.head`, CAMEO_CELLS.idle, false, { ox: 256, oy: 206, k: HEAD_K, ty: neck - 6 });
     // arms in second position (graceful curve)
     for (const sx of [-1, 1]) p.rib([[256 + sx * 34, 232], [256 + sx * 100, 238], [256 + sx * 150, 214], [256 + sx * 176, 190]], 18, 9, wc(skin, skinDk, { fillOp: 90, sw: .9 }), 1.4);
     // legs on pointe
@@ -131,14 +134,14 @@ function ballerina(E) {
     p.sh([[128, 322], [168, 276], [256, 262], [344, 276], [384, 322], [352, 340], [320, 330], [288, 344], [256, 332], [224, 344], [192, 330], [160, 340]], wc(c.tutuLight, c.tutu, { fillOp: 110, bleed: 0 }), 2.4);
     for (let i = 0; i < 6; i++) { const x = 150 + i * 42; p.ln([[256 + (x - 256) * .2, 276], [x, 326]], .8, c.tutu, "inkfine", 1.2); }
     p.sh([[200, 270], [312, 270], [304, 284], [208, 284]], fl(c.tutu, { sw: .8 }), 1);
-    cup(p, 0);
+    cup(hp, 0);
     // serene face on the cup front: happy closed eyes with a lash flick, blush, tiny smile
     for (const sx of [-1, 1]) {
-      p.ln([[256 + sx * 52 - 18, 150], [256 + sx * 52, 161], [256 + sx * 52 + 18, 150]], 2.3, INK, "ink", .5);
-      p.ln([[256 + sx * 70, 150], [256 + sx * 79, 143]], 1.3, INK, "ink", .3);
-      blush(p, 256 + sx * 76, 170, 18, 9, sx);
+      hp.ln([[256 + sx * 52 - 18, 150], [256 + sx * 52, 161], [256 + sx * 52 + 18, 150]], 2.4, INK, "ink", .5);
+      hp.ln([[256 + sx * 70, 150], [256 + sx * 79, 143]], 1.4, INK, "ink", .3);
+      blush(hp, 256 + sx * 76, 170, 18, 9, sx);
     }
-    p.ln([[240, 172], [256, 182], [272, 172]], 1.8, INK, "ink", .5);
+    hp.ln([[240, 172], [256, 182], [272, 172]], 1.9, INK, "ink", .5);
   }
   // ---- scary: the cup tilts, coffee tears, a hollow face, arms rigid
   {
@@ -370,8 +373,8 @@ function trippi(E) {
     p.sh([[320, 204], [340, 204], [330, 216]], fl("#E78AA0", { sw: .8 }), .4);
     p.ln([[330, 216], [330, 224], [314, 232]], 1.2, INK, "ink", .4);
     p.ln([[330, 224], [346, 232]], 1.2, INK, "ink", .4);
-    p.ell(280, 206, 14, 8, fl("#F2A6B8", { ink: null, washOp: 180 }), .8);
-    p.ell(380, 206, 14, 8, fl("#F2A6B8", { ink: null, washOp: 180 }), .8);
+    blush(p, 280, 206, 15, 8, -1);
+    blush(p, 380, 206, 15, 8, 1);
   }
   // ---- scary: huge cat mouth, slit pupils, antennae whipping
   {
