@@ -109,6 +109,21 @@ const SAHUR_PARTS = [
 // Silhouette: flat ink shapes [kind, cx, cy, w, h] (kind ell|rect|tri) + glowing eyes [x, y] (rig space).
 const sil = (shapes, eyes, eyeR = 12) => ({ shapes, eyes, eyeR });
 
+/**
+ * A rig silhouette drawn for the old full-size layout, re-proportioned like the painted puppet: what sat above the
+ * old chin follows the head (CHIBI_HEAD around the new chin), the rest shrinks with the body (CHIBI_BODY around the
+ * feet), so the swap silhouette -> watercolour never jumps. chinOld = old head `at` y; chinNew = new head `at` y.
+ */
+function chibiSil(s, chinOld, chinNew) {
+  const chin = chinNew * CHIBI_BODY;
+  const head = (x, y) => [x * CHIBI_HEAD, chin + (y - chinOld) * CHIBI_HEAD];
+  const shapes = s.shapes.map(([kind, cx, cy, w, h, rot = 0]) => {
+    if (cy < chinOld) { const [x, y] = head(cx, cy); return [kind, x, y, w * CHIBI_HEAD, h * CHIBI_HEAD, rot]; }
+    return [kind, cx * CHIBI_BODY, cy * CHIBI_BODY, w * CHIBI_BODY, h * CHIBI_BODY, rot];
+  });
+  return { shapes, eyes: s.eyes.map(([x, y]) => head(x, y)), eyeR: s.eyeR * CHIBI_HEAD };
+}
+
 const TALK_EMOTES = EMOTES.slice();
 const CAMEO_EMOTES = ["idle", "scary"];
 
@@ -119,14 +134,14 @@ export const ROSTER = [
     box: { w: 420, h: 920 }, foot: Math.round(150 * CHIBI_BODY), // the legs shrink with the body
     palette: { wood: "#C08A55", woodDark: "#9A6A3E", grain: "#5A3A22", rings: "#E0B27A", bat: "#D9B07A", tape: "#2B2233", ring: "#B8323A" },
     parts: SAHUR_PARTS, emotes: TALK_EMOTES,
-    sil: sil([["rect", 0, -253, 250, 506], ["rect", 0, -640, 236, 214], ["ell", 0, -742, 236, 62], ["rect", 152, -440, 70, 480], ["rect", -128, -290, 26, 280], ["rect", -70, 78, 30, 150], ["rect", 70, 78, 30, 150], ["ell", -70, 140, 120, 46], ["ell", 70, 140, 120, 46]], [[-72, -660], [72, -660]], 20),
+    sil: chibiSil(sil([["rect", 0, -253, 250, 506], ["rect", 0, -640, 236, 214], ["ell", 0, -742, 236, 62], ["rect", 152, -440, 70, 480], ["rect", -128, -290, 26, 280], ["rect", -70, 78, 30, 150], ["rect", 70, 78, 30, 150], ["ell", -70, 140, 120, 46], ["ell", 70, 140, 120, 46]], [[-72, -660], [72, -660]], 20), -540, -520),
   },
   {
     id: "tralalero", name: "Tralalero Tralala", kind: "rig", room: 2, voice: "tralalero", seed: 0.58,
     box: { w: 440, h: 930 }, foot: Math.round(146 * CHIBI_BODY),
     palette: { skin: "#5B7AA3", skinLight: "#6E8FB8", belly: "#E7EDF5", sneaker: "#2F6FD6", stripe: "#FFFFFF", sole: "#F3EBDC", drip: "#3A9C98" },
     parts: TRALALERO_PARTS, emotes: TALK_EMOTES,
-    sil: sil([["ell", 0, -250, 300, 500], ["ell", 0, -610, 262, 230], ["tri", 34, -770, 100, 120], ["ell", -122, -250, 62, 270], ["ell", 122, -250, 62, 270], ["rect", -112, 30, 66, 70], ["rect", 112, 30, 66, 70], ["rect", 0, 34, 66, 70], ["rect", -112, 104, 170, 84], ["rect", 112, 104, 170, 84], ["rect", 0, 108, 150, 80]], [[-74, -642], [74, -642]], 15),
+    sil: chibiSil(sil([["ell", 0, -250, 300, 500], ["ell", 0, -610, 262, 230], ["tri", 34, -770, 100, 120], ["ell", -122, -250, 62, 270], ["ell", 122, -250, 62, 270], ["rect", -112, 30, 66, 70], ["rect", 112, 30, 66, 70], ["rect", 0, 34, 66, 70], ["rect", -112, 104, 170, 84], ["rect", 112, 104, 170, 84], ["rect", 0, 108, 150, 80]], [[-74, -642], [74, -642]], 15), -500, -470),
   },
   {
     id: "bombardiro", name: "Bombardiro Crocodilo", kind: "cameo", room: null, voice: "bombardiro", seed: 0.11,
@@ -154,7 +169,7 @@ export const ROSTER = [
     box: { w: 440, h: 1010 }, foot: Math.round(140 * CHIBI_BODY),
     palette: { bark: "#7A5233", barkDark: "#5A3A22", moss: "#6E9F58", mossDark: "#3F6B3A", feet: "#E8C2A0", feetShade: "#C99476", nose: "#C98A6A", hat: "#8A5A3B", hatBand: "#B8323A", mould: "#D9C25A" },
     parts: PATAPIM_PARTS, emotes: TALK_EMOTES,
-    sil: sil([["rect", 0, -263, 250, 530], ["ell", 0, -633, 244, 232], ["ell", 0, -792, 204, 64], ["ell", 0, -834, 126, 84], ["rect", -150, -300, 56, 280], ["rect", 150, -300, 56, 280], ["rect", -86, 28, 60, 80], ["rect", 86, 28, 60, 80], ["ell", -86, 96, 176, 92], ["ell", 86, 96, 176, 92]], [[-54, -672], [54, -672]], 14),
+    sil: chibiSil(sil([["rect", 0, -263, 250, 530], ["ell", 0, -633, 244, 232], ["ell", 0, -792, 204, 64], ["ell", 0, -834, 126, 84], ["rect", -150, -300, 56, 280], ["rect", 150, -300, 56, 280], ["rect", -86, 28, 60, 80], ["rect", 86, 28, 60, 80], ["ell", -86, 96, 176, 92], ["ell", 86, 96, 176, 92]], [[-54, -672], [54, -672]], 14), -520, -500),
   },
   {
     id: "chimpanzini", name: "Chimpanzini Bananini", kind: "cameo", room: null, voice: "chimpanzini", seed: 0.66,

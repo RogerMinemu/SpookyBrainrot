@@ -196,6 +196,19 @@ test("rigs have chibi proportions: a big head on a small body (the Minemi look)"
   assert.ok(CHIBI_HEAD / CHIBI_BODY > 1.6);
 });
 
+test("rig silhouettes share the chibi proportions: their glowing eyes sit where the painted eyes are", () => {
+  for (const id of ["patapim", "tralalero", "sahur"]) {
+    const rig = byId(id);
+    const eyes = poseOps(rig, { reduced: true }, 0.6).ops.find((o) => o.part === "eyes");
+    const [x, y] = [eyes.m[4], eyes.m[5]]; // the eyes cell pivot is the centre of the pair
+    const silY = (rig.sil.eyes[0][1] + rig.sil.eyes[1][1]) / 2;
+    assert.ok(Math.abs(silY - y) < 60, `${id}: silhouette eyes at ${Math.round(silY)}, painted at ${Math.round(y)}`);
+    assert.ok(Math.abs((rig.sil.eyes[0][0] + rig.sil.eyes[1][0]) / 2 - x) < 5, id);
+    const ops = silhouetteOps(rig, { reduced: true }, 0.6).ops;
+    assert.ok(ops.some((o) => o.op === "eye") && ops.some((o) => o.op === "shape"), id);
+  }
+});
+
 test("poseOps: enter / exit slide 450 ms in and out with alpha", () => {
   const x = (st, t) => poseOps(tralalero, st, t).ops[0].m[4];
   assert.equal(poseOps(tralalero, { enterT: 2 }, 1).alpha, 0);
