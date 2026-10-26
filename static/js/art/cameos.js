@@ -229,8 +229,9 @@ function lirili(E) {
     const p = makePen(E, `${id}|scary`, CAMEO_CELLS.scary);
     cactusBody(p, true);
     for (const sx of [-1, 1]) {
-      p.sh([[256 + sx * 60, 96], [256 + sx * 170, 40], [256 + sx * 226, 124], [256 + sx * 214, 220], [256 + sx * 130, 250], [256 + sx * 78, 190]], wc(ear, dark(c.grey, .35), { fillOp: 120, bleed: 0 }), 2.8);
-      p.sh([[256 + sx * 84, 118], [256 + sx * 170, 80], [256 + sx * 198, 140], [256 + sx * 180, 210], [256 + sx * 118, 200]], fl(dark("#E7A9B4", .3), { ink: null, washOp: 170 }), 2);
+      // flared ears, kept inside the 512 cell (the bold ink needs ~12 px of gutter)
+      p.sh([[256 + sx * 60, 96], [256 + sx * 160, 40], [256 + sx * 208, 124], [256 + sx * 198, 220], [256 + sx * 126, 250], [256 + sx * 78, 190]], wc(ear, dark(c.grey, .35), { fillOp: 120, bleed: 0 }), 2.4);
+      p.sh([[256 + sx * 84, 118], [256 + sx * 160, 80], [256 + sx * 184, 140], [256 + sx * 168, 210], [256 + sx * 116, 200]], fl(dark("#E7A9B4", .3), { ink: null, washOp: 170 }), 2);
     }
     p.sh([[148, 150], [166, 96], [256, 66], [346, 96], [364, 150], [334, 212], [256, 236], [178, 212]], wc(dark(c.grey, .1), dark(c.grey, .45), { fillOp: 125, bleed: 0 }), 2.4);
     for (const sx of [-1, 1]) { clock(p, 256 + sx * 54, 134, 40, sx * 2.1 + .4); p.ln([[256 + sx * 54, 134], [256 + sx * 54 + sx * 18, 104]], 1.2, c.clock, "ink", .3); }
@@ -302,8 +303,8 @@ function chimpanzini(E) {
     }
     body(p);
     peel(p, true);
-    for (const sx of [-1, 1]) p.rib([[256 + sx * 54, 266], [256 + sx * 130, 300], [256 + sx * 190, 330], [256 + sx * 226, 380]], 30, 18, wc(c.fur, dark(c.fur, .3), { fillOp: 110 }), 1.6);
-    for (const sx of [-1, 1]) for (const fx of [-14, 0, 14]) p.poly([[256 + sx * 226 + fx - 5, 380], [256 + sx * 226 + fx + 5, 380], [256 + sx * 226 + fx * 1.4, 412]], { wash: TOOTH, washOp: 255, ink: INK, sw: .6 }, .5);
+    for (const sx of [-1, 1]) p.rib([[256 + sx * 54, 266], [256 + sx * 126, 300], [256 + sx * 178, 330], [256 + sx * 204, 380]], 30, 18, wc(c.fur, dark(c.fur, .3), { fillOp: 110 }), 1.6);
+    for (const sx of [-1, 1]) for (const fx of [-14, 0, 14]) p.poly([[256 + sx * 204 + fx - 5, 380], [256 + sx * 204 + fx + 5, 380], [256 + sx * 204 + fx * 1.4, 412]], { wash: TOOTH, washOp: 255, ink: INK, sw: .8 }, .5);
     for (const sx of [-1, 1]) p.ell(256 + sx * 96, 166, 32, 34, wc(c.fur, dark(c.fur, .3), { fillOp: 100 }), 1.4);
     p.sh([[160, 172], [174, 106], [256, 76], [338, 106], [352, 172], [324, 244], [256, 262], [188, 244]], wc(dark(c.fur, .1), dark(c.fur, .5), { fillOp: 120, bleed: 0 }), 2.4);
     p.sh([[194, 160], [224, 128], [256, 146], [288, 128], [318, 160], [312, 224], [256, 252], [200, 224]], wc(dark(c.face, .1), dark(c.face, .35), { fillOp: 90, sw: .8 }), 1.8);
@@ -349,8 +350,9 @@ function trippi(E) {
   };
   const antennae = (p, cx, cy, wild) => {
     for (const sx of [-1, 1]) {
-      p.rib([[cx + sx * 24, cy - 70], [cx + sx * (50 + wild * 14), cy - 130], [cx + sx * (86 + wild * 30), cy - 150], [cx + sx * (118 + wild * 30), cy - 130 + wild * 40]], 9, 3, fl(c.shrimp, { sw: .9 }), 1.2);
-      p.ell(cx + sx * (118 + wild * 30), cy - 130 + wild * 40, 8, 8, fl(c.shrimpDark, { sw: .8 }), .6);
+      // the whipping antennae stay inside the cell: the head sits right of centre (cx 330)
+      p.rib([[cx + sx * 24, cy - 70], [cx + sx * (50 + wild * 10), cy - 130], [cx + sx * (86 + wild * 16), cy - 150], [cx + sx * (118 + wild * 16), cy - 130 + wild * 40]], 9, 3, fl(c.shrimp, { sw: 1.1 }), 1.2);
+      p.ell(cx + sx * (118 + wild * 16), cy - 130 + wild * 40, 8, 8, fl(c.shrimpDark, { sw: 1 }), .6);
     }
   };
   // ---- idle: curled shrimp, tabby cat face, sweet

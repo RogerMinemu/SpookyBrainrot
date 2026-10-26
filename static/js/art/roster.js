@@ -64,7 +64,7 @@ const P = (part, parent, at, pivot, swing = 0, keep = 0, scale = 1) => ({ part, 
 
 // Chibi proportions (the Minemi look): the body and everything hanging from it at CHIBI_BODY, the head (and its
 // eyes, mouth and hat) at CHIBI_HEAD in world size. Scales multiply down the tree, hence the head's local value.
-export const CHIBI_BODY = 0.8, CHIBI_HEAD = 1.36;
+export const CHIBI_BODY = 0.74, CHIBI_HEAD = 1.5;
 const HEAD_LOCAL = CHIBI_HEAD / CHIBI_BODY;
 
 // `at` = where the part's pivot sits relative to its parent's pivot; `pivot` = pivot inside the part's own
