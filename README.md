@@ -31,8 +31,8 @@ su plaza en vez de crear un jugador duplicado. No distingue mayúsculas ni espac
 abierta en otra pantalla, esa pantalla muestra «Otra pantalla ha tomado el control».
 
 Entre sala y sala, la tele pone una cinemática en la que los brainrots cuentan la historia (guion en
-`static/js/story/script.js`). Cada frase la lee en voz alta un jugador al azar: su móvil dice «Te toca leer» y la
-tele no pasa a la siguiente hasta que pulsa «Siguiente»; los demás móviles muestran la frase y quién la lee. En la tele,
+`static/js/story/script.js`). Cada escena la lee en voz alta un jugador al azar (todas sus frases): su móvil dice
+«Te toca leer» y la tele no pasa de frase hasta que pulsa «Siguiente»; los demás móviles muestran la frase y quién lee. En la tele,
 Espacio, Intro, → o un clic pasan de frase, y Esc o «Saltar» terminan la escena. Para tener a los brainrots como recurso gráfico, abre
 `/static/dev/brainrots.html`: pinta a los ocho y descarga cada pose en PNG transparente.
 

@@ -4,16 +4,16 @@
 // - a DOM caption that types the line (shown + rest spans, so the text never reflows), with the speaker's name;
 // - title cards, the Foundation's terminal look, Sahur calling from a phone, the brainrot line-up, alarm and shake.
 // The TV is the clock. It tells the phones which beat it is on (fx "story" {key, scene, beat, done, reader}); they
-// print the same line from the same script. Every line picks a random connected player to read it aloud: once typed,
-// the line stays up until that player presses "Siguiente" on the phone (WS "story" relayed here, readerNext()), so the
-// group has time to read. Title cards, and a TV with nobody connected, still run on the clock.
+// print the same line from the same script. Every scene picks a random connected player who reads all its lines aloud:
+// once typed, a line stays up until that player presses "Siguiente" on the phone (WS "story" relayed here,
+// readerNext()), so the group has time to read. Title cards, and a TV with nobody connected, still run on the clock.
 // Host controls: Space / Enter / -> / a click = next (finish the line first), Esc or "Saltar" = skip the scene.
 // A finished (or skipped) key is remembered for this game in sessionStorage.
 import { h } from "/static/js/shared/dom.js";
 import { tone, play } from "/static/js/shared/audio.js";
 import { VOICES, SPEAKERS } from "/static/js/story/script.js";
 import {
-  storyKeyFor, playlistFor, varsFor, compile, frameAt, nextStop, mouthAt, blips, pickReader, READER_MIN_MS,
+  storyKeyFor, playlistFor, varsFor, compile, frameAt, nextStop, mouthAt, blips, sceneReader, READER_MIN_MS,
 } from "/static/js/story/runner.js";
 import { ROSTER_IDS, byId } from "/static/js/art/roster.js"; // pure cast data; drawing goes through ctx.sprite only
 
@@ -97,11 +97,11 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     reader.textContent = r ? `🎤 ${r.name} lo lee en voz alta y pulsa «Siguiente» en su móvil` : "";
   }
 
-  /** A new reader for the current line: random among the connected players, not the one who read the last line. */
+  /** The reader of the current line: the scene's reader (one per scene); title cards have none. */
   function chooseReader() {
     const b = cur.c.beats[cur.index];
-    cur.reader = b && !b.card ? pickReader(cur.players, cur.prevReader, Math.random) : null;
-    if (cur.reader) cur.prevReader = cur.reader.id;
+    if (b) cur.pick = sceneReader(cur.pick, b.scene, cur.players, Math.random);
+    cur.reader = b && !b.card ? cur.pick : null;
     showReader();
   }
 
@@ -252,7 +252,7 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     stop();
   }
 
-  /** The roster as the newest state has it; a reader who dropped out hands the line to somebody else. */
+  /** The roster as the newest state has it; a reader who dropped out hands the scene to somebody else. */
   function setPlayers(state) {
     cur.players = (state && state.game && state.game.players) || [];
     const r = cur.reader;
@@ -269,7 +269,7 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     const sceneStart = new Map();
     for (const b of c.beats) if (!sceneStart.has(b.scene)) sceneStart.set(b.scene, b.start);
     cur = { key, c, base: nowMs(), index: -1, lastShown: 0, lastBlip: 0, sceneStart, mount: null, heartbeat: 0, shakeTimer: 0,
-      players: [], reader: null, prevReader: null, released: -1, beatAt: 0 };
+      players: [], pick: null, reader: null, released: -1, beatAt: 0 };
     setPlayers(state);
     onActive(true);
     root.classList.remove("hidden");

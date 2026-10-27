@@ -5,7 +5,8 @@
 //   frameAt(c, ms)          -> { index, beat, shown, revealed, ended }
 //   nextStop(c, ms)         -> the ms a "next" press jumps to (finish the line, then the next beat)
 //   mouthAt(beat, shown, ms)-> "closed" | "mid" | "open" | "scary"
-//   pickReader(players, prevId, rnd) -> the connected player who reads the next line aloud (the RNG is passed in)
+//   pickReader(players, prevId, rnd) -> a random connected player, not prevId (the RNG is passed in)
+//   sceneReader(current, scene, players, rnd) -> who reads every line of `scene` aloud (kept for the whole scene)
 import { SCENES, PLAYLISTS, VOICES, SPEAKERS, RIDDLE_PLACEHOLDER } from "./script.js";
 
 export const START_MS = 300;    // a breath before the first beat
@@ -153,6 +154,18 @@ export function pickReader(players, prevId, rnd) {
   const pool = on.length > 1 ? on.filter((p) => p.id !== prevId) : on;
   const p = pool[Math.min(pool.length - 1, Math.floor(rnd() * pool.length))];
   return { id: p.id, name: p.name };
+}
+
+/**
+ * The reader of a scene: ONE player reads all its lines aloud (switching voice every line is too hard on a group).
+ * `current` is the previous answer ({scene, id, name}) or null. It is kept while the scene lasts and its reader stays
+ * connected; a new scene, or a reader who dropped out, picks somebody else at random.
+ */
+export function sceneReader(current, scene, players, rnd) {
+  const here = (id) => (players || []).some((p) => p && p.id === id && p.connected);
+  if (current && current.scene === scene && here(current.id)) return current;
+  const r = pickReader(players, current ? current.id : null, rnd);
+  return r ? { scene, ...r } : null;
 }
 
 /** True for characters that make a voice blip. */

@@ -356,7 +356,7 @@ export const PHONE = {
   title: "Mirad la tele",
   waiting: "La tele os está contando algo...",
   yourTurn: "Te toca leer",
-  readAloud: "Léelo en voz alta para todos y pulsa «Siguiente» cuando lo hayan oído.",
+  readAloud: "Esta escena la lees tú: cada frase en voz alta para todos, y «Siguiente» cuando la hayan oído.",
   next: "Siguiente ▶",
   sent: "Un momento...",
 };

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { SCENES, PLAYLISTS, VOICES, SPEAKERS, SCARES, GUARDED_ROOMS, RIDDLE_PLACEHOLDER } from "../static/js/story/script.js";
 import {
   storyKeyFor, playlistFor, compile, frameAt, nextStop, mouthAt, shownAt, lineFor, fillText, varsFor, riddleOk,
-  revealTimes, holdMs, durationOf, pickReader, CARD_MS, START_MS,
+  revealTimes, holdMs, durationOf, pickReader, sceneReader, CARD_MS, START_MS,
 } from "../static/js/story/runner.js";
 import { ROSTER_IDS } from "../static/js/art/roster.js";
 
@@ -156,4 +156,26 @@ test("pickReader: a random connected player, never the same twice in a row while
   assert.equal(pickReader([players[2]], null, () => 0), null);
   assert.equal(pickReader([], null, () => 0), null);
   assert.equal(pickReader(players, null, () => 1).id, "b", "rnd() = 1 stays in range");
+});
+
+test("sceneReader: one player reads every line of a scene; the next scene goes to somebody else", () => {
+  const players = [
+    { id: "a", name: "Ana", connected: true },
+    { id: "b", name: "Bea", connected: true },
+    { id: "c", name: "Cai", connected: true },
+  ];
+  let calls = 0;
+  const rnd = () => { calls++; return 0; };
+  const first = sceneReader(null, "intro_1", players, rnd);
+  assert.deepEqual(first, { scene: "intro_1", id: "a", name: "Ana" });
+  for (let line = 0; line < 5; line++) assert.equal(sceneReader(first, "intro_1", players, rnd), first, "same scene, same reader");
+  assert.equal(calls, 1, "no new draw inside a scene");
+  const next = sceneReader(first, "riddle_1", players, () => 0);
+  assert.equal(next.scene, "riddle_1");
+  assert.notEqual(next.id, "a", "a new scene does not start with the last reader");
+  const dropped = players.map((p) => (p.id === "a" ? { ...p, connected: false } : p));
+  const handed = sceneReader(first, "intro_1", dropped, () => 0);
+  assert.equal(handed.scene, "intro_1");
+  assert.ok(handed.id !== "a", "a reader who drops out hands the scene over");
+  assert.equal(sceneReader(first, "intro_1", [], () => 0), null);
 });
