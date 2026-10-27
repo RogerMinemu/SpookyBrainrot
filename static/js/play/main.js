@@ -23,6 +23,9 @@ const errorEl = document.getElementById("error");
 const seatParam = new URLSearchParams(location.search).get("seat");
 const SEAT = seatParam && /^\d{1,2}$/.test(seatParam) ? seatParam : null;
 const TOKEN_KEY = SEAT ? `sb_seat_${SEAT}` : COOKIE;
+const NAME_KEY = "sb_name"; // last name typed here: the join form offers it again
+// /play?code=XXXX (the lobby QR): the game this phone was invited to. A stored token of another game is not resumed.
+const inviteCode = (new URLSearchParams(location.search).get("code") || "").trim().toUpperCase();
 const storedToken = () => (SEAT ? localStorage.getItem(TOKEN_KEY) : getCookie(COOKIE) || localStorage.getItem(COOKIE));
 const saveToken = (t) => {
   localStorage.setItem(TOKEN_KEY, t);
@@ -229,7 +232,9 @@ function connect() {
   joinSection.classList.add("hidden");
   gameSection.classList.remove("hidden");
   socket = new GameSocket({
-    hello: () => (SEAT ? { role: "player", player_token: storedToken(), seat: true } : { role: "player", player_token: storedToken() }),
+    hello: () => ({
+      role: "player", player_token: storedToken(), ...(SEAT ? { seat: true } : {}), ...(inviteCode ? { code: inviteCode } : {}),
+    }),
     onWelcome: (w) => {
       me = w;
       syncAdmin(w).catch((e) => console.error("admin menu failed", e));
@@ -259,7 +264,7 @@ function connect() {
       if (s !== "open" && window.__sb) window.__sb.ready = false;
     },
     onFatal: (code) => {
-      // unknown token (4004): back to the name form
+      // unknown token, or a token of another game than ?code= (4004): back to the name form
       if (code === 4004) showJoin();
       else if (code === 4001) {
         // another tab/phone took over this player: stop retrying, offer to take control back
@@ -284,8 +289,9 @@ function showJoin() {
   localStorage.removeItem(TOKEN_KEY);
   gameSection.classList.add("hidden");
   joinSection.classList.remove("hidden");
-  const code = new URLSearchParams(location.search).get("code");
-  if (code) document.getElementById("code").value = code.toUpperCase();
+  if (inviteCode) document.getElementById("code").value = inviteCode;
+  const nameEl = document.getElementById("name");
+  if (!SEAT && !nameEl.value) { try { nameEl.value = localStorage.getItem(NAME_KEY) || ""; } catch (_) { /* private mode */ } }
 }
 
 document.getElementById("join-form").addEventListener("submit", async (e) => {
@@ -304,6 +310,7 @@ document.getElementById("join-form").addEventListener("submit", async (e) => {
   if (!res.ok) { errorEl.textContent = "Nombre no válido."; return; }
   const data = await res.json();
   saveToken(data.token);
+  if (!SEAT) { try { localStorage.setItem(NAME_KEY, data.name); } catch (_) { /* private mode */ } }
   connect();
 });
 

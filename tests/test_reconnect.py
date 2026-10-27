@@ -116,3 +116,17 @@ def test_players_start_disconnected_after_restart(settings):
             w = hello_player(ws, ta)
             assert w["name"] == "Ana"
             assert presence(next_state(ws), w["player_id"]) is True
+
+
+def test_a_token_of_another_game_is_not_resumed_from_a_new_invite(client):
+    """/play?code=<new game> with the cookie of an older game: 4004 (the phone shows the join form) instead of resuming."""
+    g, (ta, _) = two_players(client)
+    new = client.post("/api/games", json={"name": "Nueva"}).json()
+    with client.websocket_connect("/ws") as ws:
+        ws.send_text(env("hello", {"role": "player", "player_token": ta, "code": new["code"]}))
+        with pytest.raises(WebSocketDisconnect) as ei:
+            ws.receive_text()
+        assert ei.value.code == 4004
+    with client.websocket_connect("/ws") as ws:  # the invite of its own game (any case) resumes as before
+        ws.send_text(env("hello", {"role": "player", "player_token": ta, "code": g["code"].lower()}))
+        assert recv(ws)["t"] == "welcome"

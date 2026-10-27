@@ -77,6 +77,11 @@ async def ws_endpoint(ws: WebSocket) -> None:
         if not token and hello.get("seat") is not True:  # demo seats never fall back to the shared cookie
             token = ws.cookies.get(COOKIE_NAME)
         found = manager.find_by_token(token) if isinstance(token, str) and token else None
+        invited = hello.get("code")
+        if found and isinstance(invited, str) and invited.strip() and invited.strip().upper() != found[0].game.code.upper():
+            # the phone opened /play?code=<another game>: its stored token belongs to an older game. "Not found" sends it
+            # back to the join form (pre-filled with that code) instead of resuming the old game.
+            found = None
         if found:
             rt, player = found
     else:
