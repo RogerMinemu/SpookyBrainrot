@@ -140,15 +140,15 @@ def test_jump_to_sub_level():
     e, g = make_engine(), make_game()
     assert e.apply(g, DebugJump(1, "puzzle", level=2)).ok
     assert g.puzzle_state.level == 2 and g.puzzle_state.epoch == 2  # jumping restarts the TV sim
-    assert e.apply(g, DebugJump(7, "puzzle", level=1)).ok
-    assert g.puzzle_state.round == 1 and g.puzzle_state.phase == "show" and len(g.puzzle_state.seq) == 5
+    assert e.apply(g, DebugJump(7, "puzzle", level=1)).ok  # Room 7: Sahur's platformer levels
+    assert g.puzzle_id == "sahur_platformer" and g.puzzle_state.level == 1 and g.puzzle_state.epoch == 2
     assert e.apply(g, DebugJump(1, "puzzle", level=0)).ok and g.puzzle_state.level == 0
 
 
 @pytest.mark.parametrize(
     "room,phase,level",
     [(1, "puzzle", 4), (1, "puzzle", -1), (1, "puzzle", "2"), (1, "puzzle", True), (1, "puzzle", 1.5),
-     (7, "puzzle", 3), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
+     (7, "puzzle", 4), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
      ("lobby", None, 0), ("ending", None, 0)],
 )
 def test_jump_bad_level_is_rejected_without_mutation(room, phase, level):
@@ -234,8 +234,8 @@ def test_debug_rooms_listing():
     assert rooms[1]["phases"] == ["intro", "puzzle", "unlocked"]
     assert rooms[2]["phases"] == ["intro", "puzzle", "search", "unlocked"]
     assert rooms[7]["phases"] == ["intro", "puzzle", "search"]  # the last room ends via the ending
-    # platformer levels, shape rounds, trivia "start with N right answers", Sahur rounds; the bomb has none
-    assert [r["levels"] for r in rooms] == [[], [], [0, 1, 2, 3], [], [0, 1, 2], [0, 1, 2, 3, 4, 5], [], [0, 1, 2], []]
+    # platformer levels, shape rounds, trivia "start with N right answers", Sahur's platformer levels; the bomb has none
+    assert [r["levels"] for r in rooms] == [[], [], [0, 1, 2, 3], [], [0, 1, 2], [0, 1, 2, 3, 4, 5], [], [0, 1, 2, 3], []]
 
 
 # --- HTTP level -----------------------------------------------------------------------------
@@ -386,17 +386,15 @@ def test_private_views_do_not_leak_after_a_jump(client):
             await rt.set_presence(p.id, True)
 
     client.portal.call(connect)
-    assert client.post(url(gid, "/jump"), json={"room": 7, "phase": "puzzle"}).status_code == 200
+    assert client.post(url(gid, "/jump"), json={"room": 6, "phase": "puzzle"}).status_code == 200
     s = rt.game.puzzle_state
-    assert len(s.seq) == 4
-    assert "seq" in rt.state_payload("tv")["view"]
+    assert "bomb" not in rt.state_payload("tv")["view"]  # the TV never sees the bomb
     for p in rt.game.players:
         view = rt.state_payload("player", p.id)["view"]
-        assert "seq" not in view and "hits" not in view and "trap" not in json.dumps(view)
-        assert view["drums"] == [d for d, owners in s.owners.items() if p.id in owners]
+        assert (view["bomb"] is not None) == (p.id == s.defuser), p.name  # only the defuser's phone holds it
     # the host-only debug peek shows the TV view; it never exposes tokens
     body = json.dumps(client.get(url(gid)).json()) + json.dumps(client.get("/admin/api/games").json())
-    assert '"seq"' in body and "token" not in body
+    assert '"defuser"' in body and "token" not in body
 
 
 # --- ADMIN_KEY ---------------------------------------------------------------------------------

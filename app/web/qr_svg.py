@@ -18,6 +18,7 @@ _SIZE_RE = re.compile(r'(<svg\b[^>]*?)\swidth="(\d+)"\sheight="(\d+)"')
 
 
 def svg_scalable(url: str) -> str:
-    """Same QR with a viewBox so CSS can size it (print sheet)."""
-    svg = svg_for_url(url)
+    """Same QR with a viewBox so CSS can size it (print sheet), with the 4-module quiet zone the QR spec asks for:
+    phone decoders find the finder patterns far more reliably with it."""
+    svg = svg_for_url(url, border=4)
     return _SIZE_RE.sub(lambda m: f'{m.group(1)} viewBox="0 0 {m.group(2)} {m.group(3)}" width="{m.group(2)}" height="{m.group(3)}"', svg, count=1)

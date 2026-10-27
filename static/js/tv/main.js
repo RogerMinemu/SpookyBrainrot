@@ -152,7 +152,7 @@ if (new URLSearchParams(location.search).has("demo")) {
   // tree sticky user activation (same-origin iframe), so ctx.resume() succeeds without a click inside the TV itself.
   window.__sbtv = {
     state: () => latest, host: null, unlock: () => unlockAudio(), sound: () => isUnlocked(),
-    story: { active: () => story.active(), key: () => story.key(), skip: () => story.skip() },
+    story: { active: () => story.active(), key: () => story.key(), skip: () => story.skip(), reader: () => story.reader() },
   };
   document.addEventListener("pointerdown", () => unlockAudio(), { capture: true });
 }
@@ -180,6 +180,8 @@ function start() {
       if (action === "story_skip") story.skip();
       else if (action === "tv_refresh" && latest) { leavePuzzle(); loadToken += 1; render(latest); }
     },
+    // the phone picked to read the current line aloud pressed "Siguiente"
+    onStory: (m) => story.readerNext(m),
     onStatus: (s) => connBadge.classList.toggle("hidden", s === "open"),
     onFatal: (code) => {
       music.stop();

@@ -66,6 +66,9 @@ body.play .story-who { justify-self: center; padding: .15rem 1rem .25rem; font-f
   transform: rotate(-1.5deg); }
 body.play .story-line { font-size: 1.3rem; line-height: 1.4; font-weight: 600; }
 body.play .story-line.story-card { font-family: var(--font-title); font-size: 1.8rem; font-weight: 400; }
+body.play .story-reader { font-weight: 700; }
+body.play .story-reader.mine { color: var(--danger, #B3261E); }
+body.play .story-next { min-height: 4.5rem; font-size: 1.6rem; }
 
 /* ------------------------------------------------------------------ Pistas: QR scanner (js/play/scanner.js) */
 /* square viewfinder with an inked aim box; the status line under it says what the camera read */
@@ -75,6 +78,13 @@ body.play .scan-video { display: block; width: 100%; height: 100%; object-fit: c
 body.play .scan-aim { position: absolute; inset: 16%; pointer-events: none; border: 4px dashed rgba(255, 245, 226, .9);
   border-radius: 18px 24px 16px 26px; box-shadow: 0 0 0 100vmax rgba(12, 6, 22, .38); }
 body.play .scan-status { font-weight: 600; min-height: 1.4em; }
+/* typed fallback: the 4 letters printed under each QR */
+body.play .scan-code { display: grid; gap: .4rem; margin: 0; }
+body.play .scan-code-row { display: flex; gap: .5rem; align-items: stretch; }
+body.play .scan-code-input { flex: 1; min-width: 0; padding: .5rem .8rem; font: 700 1.8rem ui-monospace, Consolas, monospace;
+  letter-spacing: .35em; text-transform: uppercase; text-align: center; color: var(--ink); background: #FFF5E2;
+  border: 3px solid var(--ink); border-radius: 14px 18px 12px 20px; }
+body.play .scan-code-go { width: auto; padding-inline: 1.2rem; }
 body.play .scan-status:empty { display: none; }
 body.play .scan-status.good { color: #1F7A45; }
 body.play .scan-status.bad { color: var(--danger); }

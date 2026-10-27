@@ -37,10 +37,14 @@ let scanner = null; // "Pistas" QR camera: lives across the re-renders of the se
 let latest = null;
 // The TV's cutscene beat (fx "story", every beat + a 2 s heartbeat). While it is fresh and matches our state,
 // the phone shows the same line and holds back "Entrar" / "Siguiente sala"; a silent TV releases them.
+// The TV picks a reader per line: that phone gets "Siguiente" (WS "story"), the others see who is reading.
 const STORY_STALE_MS = 6000;
-const STORY_KINDS = new Set(["intro", "unlocked", "ending"]);
+const STORY_KINDS = new Set(["intro", "search", "unlocked", "ending"]);
 let storyFx = null;
 let storyTimer = 0;
+let storyShown = null; // { sig, panel }: a heartbeat repeating the same line must not rebuild it (a tap would be lost)
+let readerLine = null; // the line this phone has to read aloud, while it is ours
+const READER_RETRY_MS = 1500;
 let loadToken = 0;
 let tvOnline = true; // optimistic until the first state says otherwise
 let admin = null; // admin menu: only on the admin player's phone (the welcome says so)
@@ -93,6 +97,8 @@ if (SEAT) {
     vote: null,     // Room 4: vote(option), set by its controller
     setMask(mask) { if (sb.pad) sb.pad.force(mask); if (sb.hold) sb.hold(mask !== 0); },
     advance: () => ctx.advance(),
+    reading: () => !!readerLine,                               // this seat was picked to read the cutscene line
+    storyNext: () => !!readerLine && storyNext(readerLine),     // ...and presses "Siguiente"
     scan: (token) => !!socket && socket.send("scan", { token }), // what the "Pistas" camera sends once it reads a QR
     setSound(on) { setMuted(!on); if (on) unlockAudio(); },
     view: () => (latest ? latest.view : null),
@@ -103,8 +109,15 @@ if (SEAT) {
 /** The line the TV is telling right now, or null when no cutscene is running for this state. */
 function storyLine(state) {
   if (!storyFx || storyFx.data.done || Date.now() - storyFx.at > STORY_STALE_MS) return null;
-  if (storyFx.data.key !== storyKeyFor(state)) return null;
-  return lineFor(storyFx.data.scene, storyFx.data.beat, varsFor(state)) || { name: "", text: PHONE.waiting };
+  const d = storyFx.data;
+  if (d.key !== storyKeyFor(state)) return null;
+  const line = lineFor(d.scene, d.beat, varsFor(state)) || { name: "", text: PHONE.waiting };
+  return { ...line, key: d.key, scene: d.scene, beat: d.beat, reader: d.reader || null, readerName: d.reader_name || "" };
+}
+
+/** The reader's "Siguiente": the TV goes on to the next line (it ignores a press for a line it no longer shows). */
+function storyNext(line) {
+  return !!socket && socket.send("story", { key: line.key, scene: line.scene, beat: line.beat });
 }
 
 function onStoryFx(data) {
@@ -115,13 +128,30 @@ function onStoryFx(data) {
 }
 
 function renderStory(state, line) {
-  fill(gameSection,
-    title(PHONE.title, { cls: "phone-title" }),
-    panel([
-      h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
-      line.name ? h("p", { class: "story-who" }, line.name) : null,
-      h("p", { class: line.card ? "story-line story-card" : "story-line" }, line.text),
-    ], { cls: "phone-panel story-panel" }));
+  const mine = !!line.reader && !!me && line.reader === me.player_id;
+  readerLine = mine ? line : null;
+  const sig = JSON.stringify([line.key, line.scene, line.beat, line.reader, line.readerName, me ? me.name : ""]);
+  if (storyShown && storyShown.sig === sig && storyShown.panel.isConnected) return;
+  let next = null;
+  if (mine) {
+    next = button(PHONE.next, { cls: "story-next", onclick: () => {
+      if (!storyNext(line)) return;
+      next.disabled = true; // until the TV announces the next line (a double tap would skip two)
+      next.textContent = PHONE.sent;
+      // the TV drops a press that comes too soon after the line appeared: let the reader try again
+      setTimeout(() => { if (next.isConnected) { next.disabled = false; next.textContent = PHONE.next; } }, READER_RETRY_MS);
+    } });
+  }
+  const box = panel([
+    h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
+    line.name ? h("p", { class: "story-who" }, line.name) : null,
+    h("p", { class: line.card ? "story-line story-card" : "story-line" }, line.text),
+    mine ? h("p", { class: "story-reader mine" }, PHONE.readAloud)
+      : line.reader ? h("p", { class: "story-reader" }, `🎤 Lee ${line.readerName}`) : null,
+    next,
+  ], { cls: "phone-panel story-panel" });
+  fill(gameSection, title(mine ? PHONE.yourTurn : PHONE.title, { cls: "phone-title" }), box);
+  storyShown = { sig, panel: box };
 }
 
 function renderPlain(state) {
@@ -129,11 +159,17 @@ function renderPlain(state) {
   const kind = state.view.kind;
   const line = STORY_KINDS.has(kind) ? storyLine(state) : null;
   if (line) { dropScanner(); renderStory(state, line); return; }
+  readerLine = null;
   const search = kind === "search";
   const advanceLabel = { lobby: "Empezar", intro: "Entrar", unlocked: "Siguiente sala" }[kind];
-  if (search && !scanner) scanner = createScanner({ onToken: (token) => !!socket && socket.send("scan", { token }) });
+  if (search && !scanner) {
+    scanner = createScanner({
+      onToken: (token) => !!socket && socket.send("scan", { token }),
+      onCode: (code) => !!socket && socket.send("scan", { code }), // the 4 letters under the QR, typed in
+    });
+  }
   if (!search) dropScanner();
-  fill(gameSection,
+  const head = [
     title(search ? "Pistas (busca el QR)" : state.game.name, { cls: "phone-title" }),
     panel([
       h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
@@ -143,7 +179,14 @@ function renderPlain(state) {
       advanceLabel ? button(advanceLabel, { onclick: ctx.advance }) : null,
       h("div", { class: "players" }, players.map((p) => pill(p.name, { off: !p.connected }))),
     ], { cls: "phone-panel" }),
-    search ? scanner.el : null);
+  ];
+  if (search && scanner.el.parentNode === gameSection) {
+    // keep the scanner where it is: re-parenting it would blur the code being typed (and pause the viewfinder)
+    for (const n of [...gameSection.childNodes]) if (n !== scanner.el) n.remove();
+    gameSection.prepend(...head);
+  } else {
+    fill(gameSection, ...head, search ? scanner.el : null);
+  }
   if (scanner) scanner.resume();
 }
 
@@ -161,6 +204,7 @@ async function render(state) {
     return;
   }
   dropScanner();
+  readerLine = null;
   // Puzzle kinds: /static/puzzles/<kind>/controller.js, loaded when view.kind changes
   if (!active || active.kind !== kind) {
     if (!/^[a-z_]+$/.test(kind)) return;

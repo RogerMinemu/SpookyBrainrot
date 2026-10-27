@@ -1,9 +1,10 @@
-"""Room 1, "Nivel 0": four cooperative single-screen levels simulated on the TV.
+"""Cooperative single-screen platformer levels simulated on the TV: Room 1 "Nivel 0" and Room 7 "La salida de Sahur".
 
-The server stores only the sub-level, an epoch and a seed. The TV sim reports outcomes through
-handle_tv (TvAction): `clear` (level done) and `penalty` (a player fell). Both carry epoch + level; stale
-or duplicate reports are rejected with no state change. Clearing the last level completes the puzzle and
-the room goes on to the normal riddle/anchor search phase.
+The two rooms are the same puzzle with a different level set (static/puzzles/coop_platformer/levels.js): the view
+carries `set` and the TV builds that set's sim. The server stores only the sub-level, an epoch and a seed. The TV
+sim reports outcomes through handle_tv (TvAction): `clear` (level done) and `penalty` (a player fell or touched the
+spikes). Both carry epoch + level; stale or duplicate reports are rejected with no state change. Clearing the last
+level completes the puzzle and the room goes on to the normal riddle/anchor search phase.
 """
 from __future__ import annotations
 
@@ -17,10 +18,14 @@ LEVELS = 4
 
 
 class CoopPlatformer:
-    id = "coop_platformer"
-    title = "Nivel 0"
     min_players = 1
-    levels = LEVELS
+
+    def __init__(self, id: str = "coop_platformer", title: str = "Nivel 0", level_set: str = "nivel0",
+                 levels: int = LEVELS) -> None:
+        self.id = id
+        self.title = title
+        self.level_set = level_set  # the key of LEVEL_SETS in levels.js
+        self.levels = levels
 
     # --- Puzzle protocol ---------------------------------------------------------------
     def start(self, ctx: PuzzleCtx, player_ids: List[str]) -> SimGuard:
@@ -35,7 +40,7 @@ class CoopPlatformer:
             raise ActionRejected("bad_action", "se esperaba {action: clear|penalty}")
         s.check(data)
         if action == "clear":
-            if s.level >= LEVELS - 1:
+            if s.level >= self.levels - 1:
                 return [Complete()]
             s.level += 1
             return [Touch()]
@@ -55,7 +60,8 @@ class CoopPlatformer:
 
     # --- views -----------------------------------------------------------------------------
     def _common(self, s: SimGuard) -> dict:
-        return {"kind": self.id, "level": s.level, "levels": LEVELS, "epoch": s.epoch}
+        return {"kind": self.id, "title": self.title, "set": self.level_set, "level": s.level, "levels": self.levels,
+                "epoch": s.epoch}
 
     def view_tv(self, s: SimGuard) -> dict:
         view = self._common(s)
@@ -71,3 +77,8 @@ class CoopPlatformer:
 
     def deserialize(self, d: dict) -> SimGuard:
         return SimGuard.from_dict(d)
+
+
+def sahur_platformer() -> CoopPlatformer:
+    """Room 7: Sahur's four levels (bells, spikes, button, key and the ferry, combined)."""
+    return CoopPlatformer(id="sahur_platformer", title="La salida de Sahur", level_set="sahur", levels=LEVELS)

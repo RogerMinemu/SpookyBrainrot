@@ -5,9 +5,11 @@
 //   frameAt(c, ms)          -> { index, beat, shown, revealed, ended }
 //   nextStop(c, ms)         -> the ms a "next" press jumps to (finish the line, then the next beat)
 //   mouthAt(beat, shown, ms)-> "closed" | "mid" | "open" | "scary"
+//   pickReader(players, prevId, rnd) -> the connected player who reads the next line aloud (the RNG is passed in)
 import { SCENES, PLAYLISTS, VOICES, SPEAKERS, RIDDLE_PLACEHOLDER } from "./script.js";
 
 export const START_MS = 300;    // a breath before the first beat
+export const READER_MIN_MS = 600; // a reader's "Siguiente" is ignored this soon after the line appears (double taps)
 export const CARD_MS = 2400;    // title cards
 export const GAP_MS = 400;      // between scenes
 export const RIDDLE_CPS = 24;   // riddles are read slower
@@ -139,6 +141,18 @@ export function mouthAt(beat, shown, ms) {
   if (!LETTER.test(ch)) return "closed";
   if (beat.emote === "scary") return shown % 4 < 2 ? "scary" : "open";
   return VOWEL.test(ch) ? "open" : "mid";
+}
+
+/**
+ * A random connected player reads the next line aloud: never the same one twice in a row while there is a choice.
+ * `rnd` is a () => [0, 1) source (the TV passes its RNG in, the tests a fixed one). Null when nobody is connected.
+ */
+export function pickReader(players, prevId, rnd) {
+  const on = (players || []).filter((p) => p && p.connected);
+  if (!on.length) return null;
+  const pool = on.length > 1 ? on.filter((p) => p.id !== prevId) : on;
+  const p = pool[Math.min(pool.length - 1, Math.floor(rnd() * pool.length))];
+  return { id: p.id, name: p.name };
 }
 
 /** True for characters that make a voice blip. */

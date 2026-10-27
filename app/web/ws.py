@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.engine import Advance, PuzzleAction, Scan
+from app.core.qr import entry_for_code
 from app.web import protocol
 from app.web.hub import Conn
 from app.web.realtime import MAX_FRAME_BYTES, frame_ok
@@ -20,6 +21,7 @@ log = logging.getLogger("spooky.ws")
 
 DEFAULT_HELLO_TIMEOUT = 5.0
 MAX_TOKEN_LEN = 64
+MAX_CODE_LEN = 16  # the typed 4-letter code, before normalising (spaces, lower case)
 SCAN_UNKNOWN = "unknown"
 # What the admin player's phone may ask the TV to do (the game itself goes through the debug API).
 TV_ADMIN_ACTIONS = ("story_skip", "tv_refresh")
@@ -144,11 +146,11 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
                 continue
             out = await rt.apply(PuzzleAction(pid=conn.pid, data=payload))
             await _reply_error(ws, rt, out)
-        elif t == "scan":  # in-app QR camera: the same outcomes as /k/<token>, answered to this phone only
+        elif t == "scan":  # in-app QR camera (or the typed code): the same outcomes as /k/<token>, to this phone only
             if conn.pid is None:
                 await ws.send_text(protocol.error_envelope("not_player", "only players scan", rt.game.seq))
                 continue
-            reply = await _scan(ws.app.state, rt, payload.get("token"))
+            reply = await _scan(ws.app.state, rt, payload.get("token"), payload.get("code"))
             await ws.send_text(protocol.envelope("scan", reply, rt.game.seq))
         elif t == "admin":  # admin phone -> TV: skip the cutscene, re-mount the screen
             player = rt.game.player(conn.pid) if conn.pid is not None else None
@@ -166,6 +168,9 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
         elif t == "fx":
             if frame_ok(t, raw):
                 await hub.relay_fx(conn, payload)
+        elif t == "story":  # the phone reading the cutscene aloud -> TV: next line
+            if frame_ok(t, raw):
+                await hub.relay_story(conn, payload)
         elif t == "sim":  # TV outcome report: epoch-guarded TvAction under the lock
             if frame_ok(t, raw) and hub.sim_allowed(conn):
                 out = await rt.tv_action(payload)
@@ -174,9 +179,14 @@ async def _receive_loop(ws: WebSocket, rt, conn: Conn, hub) -> None:
             await ws.send_text(protocol.error_envelope("unknown_type", f"unsupported message {t}", rt.game.seq))
 
 
-async def _scan(state, rt, token) -> dict:
-    """The phone already belongs to rt's game, so no game resolution: just the token -> Scan."""
-    entry = state.qr_repo.get(token) if isinstance(token, str) and 0 < len(token) <= MAX_TOKEN_LEN else None
+async def _scan(state, rt, token, code=None) -> dict:
+    """The phone already belongs to rt's game, so no game resolution: just the token (or its typed code) -> Scan."""
+    entry = None
+    if isinstance(token, str) and 0 < len(token) <= MAX_TOKEN_LEN:
+        entry = state.qr_repo.get(token)
+    elif isinstance(code, str) and 0 < len(code) <= MAX_CODE_LEN:
+        found = entry_for_code(state.qr_repo.entries(), code)
+        entry = {"kind": found.kind, "idx": found.idx} if found else None
     if entry is None:
         return {"result": SCAN_UNKNOWN}
     out = await rt.apply(Scan(kind=entry["kind"], idx=entry["idx"]))

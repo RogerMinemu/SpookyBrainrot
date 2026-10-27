@@ -1,10 +1,10 @@
-// Room 1 "Nivel 0" physics. Pure deterministic ES module: no DOM, no globals, fixed 1/60 step.
-// Units are tiles (y grows downwards). Players are solid vertically only: they stack and the supporter
+// Co-op platformer physics (Room 1 "Nivel 0" and Room 7). Pure deterministic ES module: no DOM, no globals, fixed
+// 1/60 step. Units are tiles (y grows downwards). Players are solid vertically only: they stack and the supporter
 // carries its riders, but nobody pushes or blocks anybody sideways (SOLID_SIDES flips that on).
 import { FIXED_DT, ms2steps } from "../../js/sim/loop.js";
 import { BIT, has, axis, clean } from "../../js/sim/bits.js";
 import { overlapX, intersects } from "../../js/sim/aabb.js";
-import { LEVELS, parseLevel } from "./levels.js";
+import { levelsOf, parseLevel } from "./levels.js";
 
 export const SOLID_SIDES = false;
 export const GRAVITY = 60;
@@ -35,17 +35,20 @@ const SIDE_PX = 0.05;
 export const needFor = (n) => Math.min(n, Math.max(2, Math.ceil(n / 2)));
 
 /**
- * @param {{level?:number, roster?:Array<{id:string,name?:string,color?:string}>, seed?:number, solidSides?:boolean}} opts
+ * @param {{level?:number, set?:string, roster?:Array<{id:string,name?:string,color?:string}>, seed?:number, solidSides?:boolean}} opts
  */
-export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } = {}) {
-  const def = LEVELS[level];
+export function createSim({ level = 0, set, roster = [], solidSides = SOLID_SIDES } = {}) {
+  const def = levelsOf(set)[level];
   if (!def) throw new Error(`unknown level ${level}`);
   const map = parseLevel(def.rows);
   const bodies = [];
   const masks = new Map();
   let events = [];
   let tick = 0;
-  const world = { doorOpen: !(map.bell || map.key), gateOpen: false, bellRung: false, hold: 0, weight: 0, need: 0, cleared: false };
+  const world = { doorOpen: !(map.bells.length || map.key), gateOpen: false, bellRung: false, hold: 0, weight: 0, need: 0, cleared: false };
+  const rung = map.bells.map(() => false);
+  // the platform waits for everybody standing on the departure side of the pit (left of the middle of its trip)
+  const departX = map.platform ? (map.platform.x0 + map.platform.x1 + map.platform.w) / 2 : 0;
   const keyHome = map.key ? { x: map.key.x, y: map.key.y } : null;
   const key = map.key ? { state: "home", holder: null, x: keyHome.x, y: keyHome.y } : null;
   const plat = map.platform
@@ -164,11 +167,12 @@ export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } =
     const s = bodies.find((o) => o.id === id);
     return s && !s.entered ? s : null;
   }
-  function respawn(b) {
+  function respawn(b, why = "fall") {
     place(b, bodies.indexOf(b), bodies.length);
     returnKey(b.id);
-    emit({ type: "penalty", why: "fall", id: b.id });
+    emit({ type: "penalty", why, id: b.id });
   }
+  const onSpikes = (b) => map.spikes.some((s) => intersects({ x: b.x, y: b.y, w: BODY_W, h: BODY_H }, s));
   function updateBody(b) {
     const px = b.x;
     const py = b.y;
@@ -203,6 +207,7 @@ export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } =
     b.dx = b.x - px;
     b.dy = b.y - py;
     if (b.y > KILL_Y) respawn(b);
+    else if (onSpikes(b)) respawn(b, "spikes");
   }
 
   // ---- world -------------------------------------------------------------------------------------------
@@ -247,10 +252,12 @@ export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } =
       if (world.hold >= HOLD_STEPS) { world.gateOpen = true; emit({ type: "fx", to: "all", kind: "open" }); }
     }
 
-    if (map.bell && !world.bellRung && live.some((b) => intersects(bodyBox(b), map.bell))) {
-      world.bellRung = true; world.doorOpen = true;
+    map.bells.forEach((bell, i) => {
+      if (rung[i] || !live.some((b) => intersects(bodyBox(b), bell))) return;
+      rung[i] = true;
       emit({ type: "fx", to: "all", kind: "ring" });
-    }
+      if (rung.every(Boolean)) { world.bellRung = true; world.doorOpen = true; }
+    });
 
     if (key) {
       if (key.state === "home") {
@@ -280,7 +287,7 @@ export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } =
 
     if (plat) {
       const aboard = live.filter((b) => !b.entered && b.root.kind === "plat").length;
-      const left = live.filter((b) => !b.entered && b.root.kind === "tile" && b.x + BODY_W / 2 < map.w / 2).length;
+      const left = live.filter((b) => !b.entered && b.root.kind === "tile" && b.x + BODY_W / 2 < departX).length;
       if (plat.state === "wait") {
         plat.aboard = aboard > 0 && left === 0 ? plat.aboard + 1 : 0;
         if (plat.aboard >= ABOARD_STEPS) { plat.state = "out"; emit({ type: "fx", to: "all", kind: "tick" }); }
@@ -309,7 +316,7 @@ export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } =
   setRoster(roster);
 
   return {
-    level: Object.assign({ index: level, id: def.id, title: def.title, hint: def.hint }, map),
+    level: Object.assign({ index: level, set: set || "nivel0", id: def.id, title: def.title, hint: def.hint }, map),
     setRoster,
     setInput(id, mask) { masks.set(id, clean(mask)); },
     step,
@@ -322,6 +329,7 @@ export function createSim({ level = 0, roster = [], solidSides = SOLID_SIDES } =
         doorOpen: world.doorOpen,
         gateOpen: world.gateOpen,
         bellRung: world.bellRung,
+        bells: rung.slice(),
         hold: world.hold,
         weight: world.weight,
         need: world.need,

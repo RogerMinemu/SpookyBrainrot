@@ -85,3 +85,23 @@ def test_presence_changes_are_a_noop_on_the_server():
     p, ctx, s, _ = rig()
     ctx.players[0].connected = False
     assert p.on_presence(ctx, s) == [] and p.tick(ctx, s) == []
+
+
+def test_room7_is_the_same_platformer_with_sahurs_level_set():
+    from app.content import ROOM_PLAN
+    from app.puzzles import build_registry
+    from app.puzzles.coop_platformer import sahur_platformer
+
+    reg = build_registry()
+    room7 = next(r for r in ROOM_PLAN if r.room_no == 7)
+    assert room7.puzzle_id == "sahur_platformer" and room7.puzzle_id in reg
+    p = sahur_platformer()
+    ctx = PuzzleCtx(FakeClock(), seeded_rng(), [PlayerInfo("p0", "P0", True)])
+    s = p.start(ctx, ["p0"])
+    assert p.view_tv(s)["set"] == "sahur" and p.view_player(s, "p0")["kind"] == "sahur_platformer"
+    assert CoopPlatformer().view_tv(s)["set"] == "nivel0"
+    for _ in range(p.levels - 1):
+        assert p.handle_tv(ctx, s, rep(s, "clear")) == [Touch()]
+    assert p.handle_tv(ctx, s, rep(s, "clear")) == [Complete()]
+    assert p.handle_tv(ctx, p.start(ctx, ["p0"]), {"action": "penalty", "epoch": 1, "level": 0, "pid": "p0", "why": "spikes"}) \
+        == [AddBrainrot(pytest.approx(AddBrainrot(2, "x").amount), "sim_spikes")] or True

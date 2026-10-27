@@ -18,7 +18,7 @@ function rig(fetchAudio) {
 }
 
 test("all playable rooms have the intended track and listening phases are silent", () => {
-  const expected = { hold_together: "tension", coop_platformer: "room1_backrooms", red_light: "room2_pools", shape_count: "room1_backrooms", backrooms_trivia: "lobby", bomb_defusal: "tension", sahur_dice: "room7_sahur" };
+  const expected = { hold_together: "tension", coop_platformer: "room1_backrooms", red_light: "room2_pools", shape_count: "room1_backrooms", backrooms_trivia: "lobby", bomb_defusal: "tension", sahur_dice: "room7_sahur", sahur_platformer: "room7_sahur" };
   for (const [kind, track] of Object.entries(expected)) assert.equal(musicFor(state(kind)).track, track);
   for (const phase of ["show", "input"]) assert.equal(musicFor(state("sahur_dice", { phase })).volume, 0);
   assert.ok(musicFor(state("sahur_dice", { phase: "pass" })).volume > 0);
@@ -48,7 +48,7 @@ test("late downloads cannot start an obsolete room or restart a stopped TV", asy
   music.stop(); music.unlock(); assert.equal(sources[0].stops, 1);
 });
 
-test("endings reuse one recording and do not restart after completion", async () => {
+test("endings reuse one recording, play it whole once and do not restart after completion", async () => {
   let downloads = 0;
   const { music, sources } = rig(async () => { downloads++; return { ok: true, arrayBuffer: async () => new ArrayBuffer(1) }; });
   await music.sync(state("ending", { band: "escape" }));
@@ -56,7 +56,10 @@ test("endings reuse one recording and do not restart after completion", async ()
   await music.sync(state("ending", { band: "brainrots" }));
   assert.equal(downloads, 1);
   assert.equal(sources[1].playbackRate.value, 0.72);
-  assert.equal(sources[1].loop, true);
+  assert.equal(sources[1].loop, false);
   await music.sync(state("ending", { band: "brainrots" }));
   assert.equal(sources.length, 2);
+  await music.sync(state("ending", { band: "escape_with_passenger" }));
+  assert.equal(sources[2].loop, false);
+  assert.equal(sources[2].stops, 0, "the passenger ending is not cut short");
 });

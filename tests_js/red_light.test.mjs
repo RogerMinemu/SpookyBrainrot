@@ -183,7 +183,7 @@ test("a disconnect removes the player from the requirement and keeps their progr
 for (const n of SIZES) {
   test(`bots clear the room with N=${n}`, () => {
     const sim = createSim({ roster: roster(n), seed: 2024 });
-    const r = run(sim, botDriver((snap, i) => (snap.players[i].done ? 0 : careful(snap))), { maxSteps: seconds(120) });
+    const r = run(sim, botDriver((snap, i) => (snap.players[i].done ? 0 : careful(snap))), { maxSteps: seconds(300) });
     assert.ok(r.snap.cleared, `cleared in ${r.steps} steps`);
     assert.equal(types(r.events, "penalty").length, 0);
     assert.equal(types(r.events, "arrive").length, n);
@@ -193,7 +193,7 @@ for (const n of SIZES) {
 
 test("a reckless swimmer is caught repeatedly and still can finish later", () => {
   const sim = createSim({ roster: roster(2), seed: 9 });
-  const r = run(sim, botDriver((snap, i) => (i === 0 ? R : careful(snap))), { maxSteps: seconds(300) });
+  const r = run(sim, botDriver((snap, i) => (i === 0 ? R : careful(snap))), { maxSteps: seconds(600) });
   assert.ok(types(r.events, "penalty").length > 0);
   assert.ok(types(r.events, "penalty").every((e) => e.id === "p0"));
 });

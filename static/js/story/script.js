@@ -232,7 +232,7 @@ export const SCENES = {
       say("bombardiro", "¡Bombardiro Crocodilo! Llegáis justo a tiempo: os he traído un regalito. Hace tic, tac."),
       say("bombardiro", "Solo uno de vosotros tiene la bomba en el móvil: el artificiero. Los demás tenéis trozos del manual."),
       say("bombardiro", "El artificiero describe lo que ve. Los demás buscáis la regla y se la decís. Hablad mucho, y rápido."),
-      say("bombardiro", "Cinco minutos. Tres errores y ¡BUM! Pero tranquilos: tengo más bombas. Muchas más.", { emote: "scary", shake: true }),
+      say("bombardiro", "Ocho minutos. Tres errores y ¡BUM! Pero tranquilos: tengo más bombas. Muchas más.", { emote: "scary", shake: true }),
     ],
   },
   riddle_6: {
@@ -263,18 +263,18 @@ export const SCENES = {
   intro_7: {
     title: "Sala final", cast: ["sahur"],
     beats: [
-      card("Sala final · Sahur dice", { sfx: "warn" }),
+      card("Sala final · La salida de Sahur", { sfx: "warn" }),
       say("fundacion", "Tung. Tung. Tung. Perdemos la señal de la Fundación... Estáis solos.", { shake: true }),
       say("sahur", "Os avisé tres veces: tung, tung, tung. La gente educada contesta.", { emote: "angry" }),
-      say("sahur", "Pero bueno, ya que estáis despiertos... jugamos a «Sahur dice». Yo toco, vosotros repetís."),
-      say("sahur", "Cada uno tiene sus tambores en el móvil. Tocad solo lo que yo diga con «¡Sahur dice!». Lo demás es trampa."),
-      say("sahur", "Si falláis, vuelta a empezar. Y mi bate tiene muchísima paciencia. Tung.", { emote: "scary", shake: true }),
+      say("sahur", "Pero bueno, ya que estáis despiertos... la salida está detrás de mis cuatro puertas."),
+      say("sahur", "Volvéis a ser bichitos, como en el Nivel 0. Campanas, pinchos, botones y llaves: o pasáis todos, o no pasa nadie."),
+      say("sahur", "Y quien pise un pincho vuelve al principio. Mi bate tiene muchísima paciencia. Tung.", { emote: "scary", shake: true }),
     ],
   },
   riddle_7: {
     cast: ["sahur"],
     beats: [
-      say("sahur", "Vale, vale. Tocáis mejor de lo que pensaba. Esta es la última ancla: la salida."),
+      say("sahur", "Vale, vale. Saltáis mejor de lo que pensaba. Esta es la última ancla: la salida."),
       riddle("sahur"),
       say("sahur", "Escanead ese QR con el móvil antes de las cuatro y media. Yo voy contando. Tung... tung...", { emote: "happy" }),
     ],
@@ -355,4 +355,8 @@ export const SCARES = {
 export const PHONE = {
   title: "Mirad la tele",
   waiting: "La tele os está contando algo...",
+  yourTurn: "Te toca leer",
+  readAloud: "Léelo en voz alta para todos y pulsa «Siguiente» cuando lo hayan oído.",
+  next: "Siguiente ▶",
+  sent: "Un momento...",
 };

@@ -1,9 +1,8 @@
-"""End-to-end over WebSocket: room 1 (platformer) -> 2 (red light) -> 3, 4, 6 -> 7 (Sahur) -> ending.
+"""End-to-end over WebSocket: room 1 (platformer) -> 2 (red light) -> 3, 4, 6 -> 7 (Sahur's platformer) -> ending.
 
 The TV sim is simulated by sending `sim` reports; rooms 3, 4 and 6 are solved with the host "complete" (their play is
-covered by tests/test_new_rooms_ws.py); the Sahur hits come from the phones that own each drum.
+covered by tests/test_new_rooms_ws.py).
 """
-from app.puzzles.sahur_dice import SHOW_LEAD_MS, SHOW_STEP_MS, SHOW_TAIL_MS
 from tests.test_k_route import tokens
 from tests.test_room0_ws import env, hello, next_of, recv, setup, state_until
 
@@ -110,30 +109,15 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
             s = state_until(tv2, lambda p: p["game"]["room_no"] == 7)
             assert s["game"]["phase"] == "intro"
             tv2.send_text(env("advance"))
-            s = state_until(tv2, lambda p: p["view"].get("kind") == "sahur_dice")
-            drain(wa)
-            drain(wb)
+            s = state_until(tv2, lambda p: p["view"].get("kind") == "sahur_platformer")
 
-            # --- room 7: Sahur dice (3 rounds); phones never get the sequence ----------------------
-            by_name = {"Ana": wa, "Bea": wb}
-            for round_no in range(3):
-                tv_view = s["view"]
-                assert tv_view["round"] == round_no + 1
-                length = len(tv_view["seq"])
-                clock.advance((SHOW_LEAD_MS + length * SHOW_STEP_MS + SHOW_TAIL_MS) / 1000 + 0.1)
-                client.portal.call(rt.tick)
-                tv_view = state_until(tv2, lambda p: p["view"].get("phase") == "input")["view"]
-                pv = state_until(wa, lambda p: p["view"].get("phase") == "input")["view"]
-                assert "seq" not in pv and "hits" not in pv  # the sequence is TV-only
-                owners = {d["id"]: d["owners"] for d in tv_view["drums"]}
-                for step in [x for x in tv_view["seq"] if not x["trap"]]:
-                    who = owners[step["drum"]][0]
-                    by_name[who].send_text(env("puzzle", {"type": "hit", "drum": step["drum"]}))
-                if round_no < 2:
-                    state_until(tv2, lambda p: p["view"].get("phase") == "pass")
-                    clock.advance(1.6)
-                    client.portal.call(rt.tick)
-                    s = state_until(tv2, lambda p: p["view"].get("round") == round_no + 2)
+            # --- room 7: Sahur's four platformer levels, the same TV reports as room 1 ----------------
+            for level in range(4):
+                view = s["view"]
+                assert view["level"] == level and view["levels"] == 4 and view["set"] == "sahur"
+                sim(tv2, view, "clear")
+                if level < 3:
+                    s = state_until(tv2, lambda p, lv=level: p["view"].get("level") == lv + 1)
             s = state_until(tv2, lambda p: p["game"]["phase"] == "search")
             assert s["game"]["room_no"] == 7
 
@@ -142,27 +126,20 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
             assert s["game"]["status"] == "finished"
 
 
-def test_sahur_wrong_owner_fails_the_round_and_phones_see_round_failed(client, clock):
+def test_room7_spikes_cost_brainrot_and_stale_reports_change_nothing(client, clock):
     gid, (ta, tb) = setup(client)
     rt = client.app.state.manager.get(gid)
-    with client.websocket_connect("/ws") as tv, client.websocket_connect("/ws") as wa, \
-            client.websocket_connect("/ws") as wb:
-        for ws, tok in ((wa, ta), (wb, tb)):
-            hello(ws, {"role": "player", "player_token": tok})
+    with client.websocket_connect("/ws") as tv, client.websocket_connect("/ws") as wa:
+        pid = hello(wa, {"role": "player", "player_token": ta})["player_id"]
         hello(tv, {"role": "tv", "game_id": gid})
         tv.send_text(env("advance"))
         state_until(tv, lambda p: p["game"]["status"] == "running")
         jump(client, gid, 7, "puzzle")
-        s = state_until(tv, lambda p: p["view"].get("kind") == "sahur_dice")
-        length = len(s["view"]["seq"])
-        clock.advance((SHOW_LEAD_MS + length * SHOW_STEP_MS + SHOW_TAIL_MS) / 1000 + 0.1)
-        client.portal.call(rt.tick)
-        view = state_until(tv, lambda p: p["view"].get("phase") == "input")["view"]
-        owners = {d["id"]: d["owners"] for d in view["drums"]}
-        drum = view["seq"][0]["drum"]
-        wrong = wb if owners[drum] == ["Ana"] else wa
-        wrong.send_text(env("puzzle", {"type": "hit", "drum": drum}))
-        ev = next_of(wa, "event")
-        assert ev["payload"]["name"] == "round_failed"
-        assert ev["payload"]["data"]["title"] and ev["payload"]["data"]["text"]
-        state_until(tv, lambda p: p["view"].get("phase") == "fail")
+        view = state_until(tv, lambda p: p["view"].get("kind") == "sahur_platformer")["view"]
+        before = rt.game.brainrot
+        sim(tv, view, "penalty", pid=pid, why="spikes")
+        state_until(tv, lambda p: p["game"]["brainrot"] > before)
+        assert rt.game.brainrot > before
+        sim(tv, {**view, "level": view["level"] + 1}, "clear")
+        assert next_of(tv, "error")["payload"]["code"] == "stale"
+        assert rt.game.puzzle_state.level == 0

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { SCENES, PLAYLISTS, VOICES, SPEAKERS, SCARES, GUARDED_ROOMS, RIDDLE_PLACEHOLDER } from "../static/js/story/script.js";
 import {
   storyKeyFor, playlistFor, compile, frameAt, nextStop, mouthAt, shownAt, lineFor, fillText, varsFor, riddleOk,
-  revealTimes, holdMs, durationOf, CARD_MS, START_MS,
+  revealTimes, holdMs, durationOf, pickReader, CARD_MS, START_MS,
 } from "../static/js/story/runner.js";
 import { ROSTER_IDS } from "../static/js/art/roster.js";
 
@@ -140,4 +140,20 @@ test("the whole narrated story stays under ten minutes", () => {
   for (const key of Object.keys(PLAYLISTS)) total += durationOf(key, st("running", "intro", 0));
   for (const n of GUARDED_ROOMS) total += durationOf(`search:${n}`, st("running", "search", n));
   assert.ok(total < 10 * 60 * 1000, `${Math.round(total / 1000)} s`);
+});
+
+test("pickReader: a random connected player, never the same twice in a row while there is a choice", () => {
+  const players = [
+    { id: "a", name: "Ana", connected: true },
+    { id: "b", name: "Bea", connected: true },
+    { id: "c", name: "Cai", connected: false },
+  ];
+  assert.deepEqual(pickReader(players, null, () => 0), { id: "a", name: "Ana" });
+  assert.deepEqual(pickReader(players, null, () => 0.99), { id: "b", name: "Bea" });
+  for (const r of [0, 0.5, 0.999]) assert.equal(pickReader(players, "a", () => r).id, "b", "the last reader is skipped");
+  assert.equal(pickReader(players, "c", () => 0.999).id, "b", "a disconnected player never reads");
+  assert.equal(pickReader([players[0], players[2]], "a", () => 0.5).id, "a", "alone, the same one reads again");
+  assert.equal(pickReader([players[2]], null, () => 0), null);
+  assert.equal(pickReader([], null, () => 0), null);
+  assert.equal(pickReader(players, null, () => 1).id, "b", "rnd() = 1 stays in range");
 });

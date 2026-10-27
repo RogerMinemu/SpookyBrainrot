@@ -53,7 +53,7 @@ for (const n of [2, 4, 6]) {
 test("red light: the live crew crosses without being caught more than a couple of times", () => {
   for (const n of [2, 4]) {
     const sim = createRedLight({ roster: roster(n), seed: 11 });
-    const out = play(sim, createRedLightCrew(), { seconds: 120 });
+    const out = play(sim, createRedLightCrew(), { seconds: 300 });
     assert.equal(out.snap.cleared, true, `n=${n}: not cleared after ${out.seconds.toFixed(1)} s`);
     const caught = out.events.filter((e) => e.type === "penalty").length;
     assert.ok(caught <= 2, `n=${n}: caught ${caught} times`);

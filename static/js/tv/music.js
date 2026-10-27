@@ -7,7 +7,7 @@ export function musicFor(state) {
   if (kind === "search" || kind === "unlocked") return { track: v.room_no === 7 ? "room7_sahur" : "lobby", volume: 0.12 };
   const room = v.room_no ?? state.game?.room_no;
   const tracks = { 0: "tension", 1: "room1_backrooms", 2: "room2_pools", 3: "room1_backrooms", 4: "lobby", 6: "tension", 7: "room7_sahur" };
-  const puzzles = { hold_together: "tension", coop_platformer: "room1_backrooms", red_light: "room2_pools", shape_count: "room1_backrooms", backrooms_trivia: "lobby", bomb_defusal: "tension", sahur_dice: "room7_sahur" };
+  const puzzles = { hold_together: "tension", coop_platformer: "room1_backrooms", red_light: "room2_pools", shape_count: "room1_backrooms", backrooms_trivia: "lobby", bomb_defusal: "tension", sahur_dice: "room7_sahur", sahur_platformer: "room7_sahur" };
   const track = puzzles[kind] || tracks[room] || "lobby";
   const quiet = kind === "sahur_dice" && ["show", "input"].includes(v.phase);
   return { track, volume: quiet ? 0 : room === 3 || kind === "backrooms_trivia" ? 0.1 : 0.16 };
@@ -68,10 +68,7 @@ export function createMusic(getContext, { fetchAudio = (url) => fetch(url) } = {
       filter.frequency.value = plan.band === "brainrots" ? 950 : 20000;
       source.playbackRate.value = plan.band === "brainrots" ? 0.72 : 1;
       source.connect(filter).connect(gain).connect(ac.destination);
-      source.start();
-      // A warped fragment of the same recording supplies the bad ending.
-      if (plan.band === "brainrots") { source.loop = true; source.loopStart = 8; source.loopEnd = Math.min(24, buffer.duration); }
-      if (plan.band === "escape_with_passenger") source.stop(ac.currentTime + Math.min(35, buffer.duration));
+      source.start(); // every ending plays the whole song once; the bad one only slows and muffles it
       volume();
     } catch (error) {
       if (token === request) { failed = key; signature = ""; }

@@ -116,6 +116,16 @@ class Hub:
             if c.role == "player" and (to == "all" or c.pid == to):
                 await self._send(c, text)
 
+    async def relay_story(self, conn: Conn, payload: dict) -> None:
+        """Phone -> TV: the reader pressed "Siguiente" for {key, scene, beat}. The pid comes from the socket; the TV
+        checks it is the reader of the line it shows (anything stale or from somebody else is ignored there)."""
+        if conn.role != "player" or conn.pid is None or not self.relay.bucket(conn.buckets, "story").allow():
+            return
+        key, scene, beat = payload.get("key"), payload.get("scene"), payload.get("beat")
+        if not isinstance(key, str) or not isinstance(scene, str) or isinstance(beat, bool) or not isinstance(beat, int):
+            return
+        await self.to_tvs(conn.game_id, "story", {"pid": conn.pid, "key": key[:64], "scene": scene[:64], "beat": beat})
+
     def sim_allowed(self, conn: Conn) -> bool:
         """Role + rate gate for TV sim reports (the action itself goes through the runtime)."""
         return conn.role == "tv" and self.relay.bucket(conn.buckets, "sim").allow()

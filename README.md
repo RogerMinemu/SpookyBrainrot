@@ -4,7 +4,8 @@ Escape room casero para jugar en casa: una tele muestra la partida, cada jugador
 como mando y 15 códigos QR impresos (7 anclas y 8 señuelos) están escondidos por la casa.
 Salas jugables: Sala 0 (agarraos fuerte), Sala 1 (plataformas cooperativas "Nivel 0", 4 niveles),
 Sala 2 (un, dos, tres… ¡Tralalero!), Sala 3 (contad las formas), Sala 4 (trivia de las Backrooms por consenso),
-Sala 6 (desactivad la bomba, con el manual repartido entre los móviles) y Sala 7 (Sahur dice), más medidor de
+Sala 6 (desactivad la bomba, con el manual repartido entre los móviles) y Sala 7 (la salida de Sahur: 4 niveles más
+de plataformas cooperativas, con campanas, pinchos, botón y llave), más medidor de
 Brainrot, QR y pantalla final. La sala 5 se quitó: el ancla 5 queda impresa pero sin uso (ver `GAME_DESIGN.md`).
 
 ## Requisitos
@@ -30,8 +31,9 @@ su plaza en vez de crear un jugador duplicado. No distingue mayúsculas ni espac
 abierta en otra pantalla, esa pantalla muestra «Otra pantalla ha tomado el control».
 
 Entre sala y sala, la tele pone una cinemática en la que los brainrots cuentan la historia (guion en
-`static/js/story/script.js`). Mientras tanto, los móviles muestran «Mirad la tele». En la tele, Espacio, Intro, → o un
-clic pasan de frase, y Esc o «Saltar» terminan la escena. Para tener a los brainrots como recurso gráfico, abre
+`static/js/story/script.js`). Cada frase la lee en voz alta un jugador al azar: su móvil dice «Te toca leer» y la
+tele no pasa a la siguiente hasta que pulsa «Siguiente»; los demás móviles muestran la frase y quién la lee. En la tele,
+Espacio, Intro, → o un clic pasan de frase, y Esc o «Saltar» terminan la escena. Para tener a los brainrots como recurso gráfico, abre
 `/static/dev/brainrots.html`: pinta a los ocho y descarga cada pose en PNG transparente.
 
 > La plantilla se llama `env.example` (no `.env.example`). Cópiala a `.env`; el fichero `.env`

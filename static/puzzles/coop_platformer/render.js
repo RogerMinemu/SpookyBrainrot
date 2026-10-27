@@ -1,4 +1,5 @@
-// Room 1 scene renderer: tiles, gadgets and blobs on the shared 1920x1080 stage. Render-only, reads sim snapshots.
+// Co-op platformer scene renderer (Rooms 1 and 7): tiles, gadgets and blobs on the shared 1920x1080 stage.
+// Render-only, reads sim snapshots. The colours are the room's theme tokens, so Room 7 gets Sahur's palette.
 import { TILE, STAGE_W, STAGE_H, drawBlob, label, roundRect } from "/static/js/sim/draw.js";
 
 const T = TILE;
@@ -143,6 +144,28 @@ function drawBell(g, k, bell, rung, time) {
   g.restore();
 }
 
+/** A row of ink spikes on the floor of each "^" cell; only their tips (the bottom quarter of the cell) hurt. */
+function drawSpikes(g, k, spikes) {
+  g.fillStyle = k.danger;
+  g.strokeStyle = k.ink;
+  g.lineWidth = 4;
+  g.lineJoin = "round";
+  for (const s of spikes) {
+    const x = s.x * T;
+    const base = (s.y + s.h) * T;
+    const tip = base - T * 0.55; // drawn taller than the part that hurts: readable from the sofa
+    g.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const x0 = x + (i * T) / 3;
+      g.moveTo(x0, base); g.lineTo(x0 + T / 6, tip); g.lineTo(x0 + T / 3, base);
+    }
+    g.closePath();
+    g.fill();
+    g.stroke();
+  }
+  g.lineJoin = "miter";
+}
+
 function drawButton(g, k, level, snap) {
   const b = level.button;
   const pressed = Math.min(1, snap.weight / Math.max(1, snap.need));
@@ -199,8 +222,9 @@ export function drawScene(g, k, level, snap, time) {
   drawTiles(g, k, level);
   if (level.button) drawButton(g, k, level, snap);
   if (level.gate) drawGate(g, k, level.gate, snap.gateOpen, time);
+  if (level.spikes.length) drawSpikes(g, k, level.spikes);
   if (level.door) drawDoor(g, k, level.door, snap.doorOpen);
-  if (level.bell) drawBell(g, k, level.bell, snap.bellRung, time);
+  level.bells.forEach((bell, i) => drawBell(g, k, bell, snap.bells[i], time));
   if (snap.plat) drawPlatform(g, k, snap.plat);
   if (snap.key && snap.key.state !== "used") drawKey(g, k, snap.key, time);
   for (const p of snap.players) {
@@ -216,4 +240,7 @@ export function drawScene(g, k, level, snap, time) {
   label(g, k, level.title, 960, CEIL_H + 52, { size: 44, font: k.fontTitle, weight: 400 });
   label(g, k, level.hint, 960, CEIL_H + 92, { size: 30 });
   label(g, k, `${inside}/${snap.players.length} dentro`, 1880, CEIL_H + 52, { size: 30, align: "right" });
+  if (level.bells.length > 1) {
+    label(g, k, `Campanas ${snap.bells.filter(Boolean).length}/${level.bells.length}`, 1880, CEIL_H + 92, { size: 30, align: "right" });
+  }
 }

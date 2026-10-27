@@ -22,7 +22,7 @@ ROOM_PLAN: List[RoomSpec] = [
     RoomSpec(room_no=3, puzzle_id="shape_count", anchor=3, title="Contad las formas"),
     RoomSpec(room_no=4, puzzle_id="backrooms_trivia", anchor=4, title="Trivia de las Backrooms"),
     RoomSpec(room_no=6, puzzle_id="bomb_defusal", anchor=6, title="Desactivad la bomba"),
-    RoomSpec(room_no=7, puzzle_id="sahur_dice", anchor=7, title="Sahur dice"),
+    RoomSpec(room_no=7, puzzle_id="sahur_platformer", anchor=7, title="La salida de Sahur"),
 ]
 
 # Anchors some room actually uses (the house config and the QR key flag the others as unused).

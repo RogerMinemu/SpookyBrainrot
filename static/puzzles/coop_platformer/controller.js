@@ -1,11 +1,12 @@
-// Room 1 "Nivel 0" - phone controller. Contract: mount(root, ctx), update(view, state), unmount().
+// Co-op platformer - phone controller (Room 1 "Nivel 0", and Room 7 through sahur_platformer/controller.js).
+// Contract: mount(root, ctx), update(view, state), unmount().
 // The phone only sends the held-button mask (shared pad); the TV runs the game and answers with fx.
 import { h, fill } from "/static/js/shared/dom.js";
 import { panel, title } from "/static/js/ui/kit.js";
 import { mountPad } from "/static/js/shared/input.js";
 import { createIdentity } from "/static/js/play/identity.js";
 import { play, vibrate } from "/static/js/shared/audio.js";
-import { LEVELS } from "./levels.js";
+import { levelsOf } from "./levels.js";
 
 let st = null;
 
@@ -14,15 +15,17 @@ export function mount(root, ctx) {
   const hint = h("p", { class: "muted" }, "");
   const padHost = h("div", { class: "pad-host" });
   const who = createIdentity(padHost);
-  fill(root, title("Nivel 0", { cls: "phone-title" }), who.el, panel([heading, hint], { cls: "phone-panel" }), padHost);
+  const head = title("Nivel 0", { cls: "phone-title" });
+  fill(root, head, who.el, panel([heading, hint], { cls: "phone-panel" }), padHost);
   const pad = mountPad(padHost, ctx);
-  st = { pad, heading, hint, who, ctx };
+  st = { pad, heading, hint, who, ctx, name: head.querySelector(".title-text") };
 }
 
 export function update(view, state) {
   if (!st) return;
   st.who.update(state, st.ctx.playerId());
-  const def = LEVELS[view.level];
+  if (view.title) st.name.textContent = view.title;
+  const def = levelsOf(view.set)[view.level];
   st.heading.textContent = `Nivel ${view.level + 1} de ${view.levels}${def ? `: ${def.title}` : ""}`;
   st.hint.textContent = def ? def.hint : "";
 }

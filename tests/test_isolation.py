@@ -69,7 +69,7 @@ def test_tv_view_has_no_player_only_keys_and_code_is_tv_only(client):
     assert "holding" not in tv["view"]
 
 
-def test_sahur_sequence_never_reaches_player_views(client):
+def test_room7_platformer_seed_is_tv_only(client):
     from app.core.game import PHASE_PUZZLE
 
     rt, toks = make_running_game(client, ("Ana", "Bea", "Cai"))
@@ -82,15 +82,12 @@ def test_sahur_sequence_never_reaches_player_views(client):
         await rt.apply(Advance())
 
     client.portal.call(to_sahur)
-    assert rt.game.phase == PHASE_PUZZLE and rt.game.puzzle_id == "sahur_dice"
-    s = rt.game.puzzle_state
-    ids = [p.id for p in rt.game.players]
+    assert rt.game.phase == PHASE_PUZZLE and rt.game.puzzle_id == "sahur_platformer"
     payloads = all_payloads(rt)
     tv_view = json.loads(payloads["tv"])["view"]
-    assert [step["drum"] for step in tv_view["seq"]] == [step["drum"] for step in s.seq]
-    for pid in ids:
+    assert tv_view["set"] == "sahur" and tv_view["seed"] == rt.game.puzzle_state.seed
+    for pid in (p.id for p in rt.game.players):
         own = json.loads(payloads[pid])["view"]
-        assert own["drums"] == [d for d, owners in s.owners.items() if pid in owners]
-        assert "seq" not in own and "hits" not in own and "trap" not in payloads[pid]
+        assert own["kind"] == "sahur_platformer" and own["set"] == "sahur" and "seed" not in own
     for token in toks.values():
         assert all(token not in text for text in payloads.values())

@@ -5,9 +5,10 @@ regenerated. Persistence lives in `app.db.repos.QrRepo`.
 """
 from __future__ import annotations
 
+import itertools
 import secrets
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 ANCHOR_COUNT = 7
 DECOY_COUNT = 8
@@ -17,6 +18,10 @@ TOKEN_ALPHABET = "ACDEFGHJKMNPQRSTUVWXYZ23456789"
 
 KIND_ANCHOR = "anchor"
 KIND_DECOY = "decoy"
+
+# Typed fallback when a phone camera cannot read a printed QR: 4 letters under each QR on the sheet.
+CODE_LEN = 4
+CODE_LETTERS = "".join(c for c in TOKEN_ALPHABET if c.isalpha())  # no digits to switch keyboards for, no O/I/L/B
 
 
 @dataclass(frozen=True)
@@ -49,6 +54,36 @@ def generate_entries(choice: Callable[[str], str] = secrets.choice) -> List[QrEn
 def qr_url(public_url: str, token: str) -> str:
     """R7.2: every QR encodes {PUBLIC_URL}/k/<token>."""
     return f"{public_url.rstrip('/')}/k/{token}"
+
+
+def short_codes(entries: Sequence["QrEntry"]) -> Dict[str, str]:
+    """token -> its 4-letter code. Derived from the tokens, which never change, so a printed code never changes either:
+    in token order, each QR takes the first run of 4 letters of its token that no earlier QR took."""
+    out: Dict[str, str] = {}
+    taken = set()
+    for e in sorted(entries, key=lambda x: x.token):
+        letters = [c for c in e.token if c in CODE_LETTERS]
+        runs = ("".join(letters[i:i + CODE_LEN]) for i in range(len(letters) - CODE_LEN + 1))
+        code = next((r for r in runs if r not in taken), None)
+        if code is None:  # practically never (22^4 codes, 15 QRs): the first free code in alphabetical order
+            code = next("".join(t) for t in itertools.product(CODE_LETTERS, repeat=CODE_LEN) if "".join(t) not in taken)
+        taken.add(code)
+        out[e.token] = code
+    return out
+
+
+def normalize_code(text: str) -> str:
+    """What the player typed, as a code: upper case, letters only ("abc d" -> "ABCD")."""
+    return "".join(c for c in str(text).upper() if c.isalpha())
+
+
+def entry_for_code(entries: Sequence["QrEntry"], text: str) -> Optional["QrEntry"]:
+    code = normalize_code(text)
+    if len(code) != CODE_LEN:
+        return None
+    by_code = {c: t for t, c in short_codes(entries).items()}
+    token = by_code.get(code)
+    return next((e for e in entries if e.token == token), None) if token else None
 
 
 def label_for(position: int) -> str:

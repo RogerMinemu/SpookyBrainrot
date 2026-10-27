@@ -33,7 +33,11 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 - Cada QR lleva `{PUBLIC_URL}/k/<token>`. Tras cada sala llega la fase **«Pistas (busca el QR)»**: la tele y el móvil muestran la pista, y el móvil trae un **botón de cámara** para escanear el QR sin salir del juego (mensaje `scan` por WebSocket, mismo resultado que `/k/<token>`, contestado solo a ese móvil).
   - Con HTTPS o en `localhost`, el botón abre un **visor en vivo** dentro de la página.
   - En la red de casa por HTTP normal, el navegador no deja que una web use la cámara: el mismo botón abre la **app de cámara** para hacer una foto y la página lee el QR de la foto.
-  - Decodifica el `BarcodeDetector` nativo si existe; si no (iPhone), jsQR (vendorizado).
+  - Decodifica el `BarcodeDetector` nativo si existe (solo con HTTPS) y, si no lee nada, jsQR (vendorizado). Una foto
+    pasa varias veces por jsQR: entera y su centro, a distintos tamaños.
+  - **Código de 4 letras**: debajo de cada QR de la hoja impresa (`/admin/qr-sheet`) hay un código (por ejemplo `KMTQ`)
+    que se puede escribir en el móvil si la cámara no lo lee. Sale del token, así que no cambia nunca y vale igual que
+    escanear. La clave de QR (`/admin/qr-key`) también lo enseña.
   - La cámara normal del móvil sigue funcionando: abre `/k/<token>` como antes.
 - **¿Qué partida abre?**
   1. La del mando, si ese navegador ya está en `/play` (cookie).
@@ -53,7 +57,7 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 | 3 | Centro comercial de las 3 AM | Lirilì Larilà | Contad las formas | Observación / conteo | 10 |
 | 4 | Sitio-19 | Ballerina Cappuccina | Trivia de las Backrooms | Trivia por consenso | 12 |
 | 6 | Hangar abandonado | Bombardiro Crocodilo | Desactivad la bomba | Información repartida (Keep Talking) | 12 |
-| 7 | Final | Tung Tung Tung Sahur | Sahur dice | Ritmo / Simon con trampas | 8 |
+| 7 | Final | Tung Tung Tung Sahur | La salida de Sahur | Plataformas cooperativas (4 niveles más) | 12 |
 
 > **Estado:** todas las salas del plan son jugables: 0, 1, 2, 3, 4, 6 y 7. La **sala 5 se ha quitado** (la numeración no cambia: de la 4 se pasa a la 6). Ballerina Cappuccina, que guardaba la sala 5, pasa a presentar la trivia de la sala 4.
 
@@ -111,16 +115,20 @@ Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody 
 - **Solo un móvil tiene la bomba**: el del **artificiero**. Ni la tele ni los demás la ven: la tele solo enseña el reloj, los errores y qué módulos quedan.
 - **El manual se reparte** entre los demás móviles: 14 páginas (reglas de cables según cuántos haya, botón, cada columna de símbolos y cada lista de contraseñas) repartidas en el número de jugadores. Cuantos más sois, menos sabe cada uno y más hay que hablar. Si el artificiero está solo, tiene también el manual entero.
 - **4 módulos**: cables (3 a 6, de colores; las reglas dependen del número de serie), botón (pulsar y soltar, o mantener hasta que salga una tira de color y soltar cuando el reloj muestre cierta cifra), símbolos de brainrots (pulsarlos en el orden de su columna) y contraseña (girar letras hasta formar la única palabra posible de las listas).
-- Cuenta atrás de **5 min**; cada error resta **30 s** y un poco de Brainrot%. Con **3 errores** o el reloj a cero: **¡BUM!**, Brainrot% y una bomba nueva para el siguiente jugador.
+- Cuenta atrás de **8 min**; cada error resta **30 s** y un poco de Brainrot%. Con **3 errores** o el reloj a cero: **¡BUM!**, Brainrot% y una bomba nueva para el siguiente jugador.
 - Si el artificiero se desconecta, la bomba pasa al siguiente jugador conectado tal y como está.
 
-### 7 · Final — Sahur dice · Tung Tung Tung Sahur
+### 7 · Final — La salida de Sahur · Tung Tung Tung Sahur
 
 *Tung. Tung. Tung.* Algo golpea al otro lado de la pantalla.
 
-- **Sahur dice**: la tele toca una secuencia de tambores y el grupo la repite en orden. Los tambores (entre 4 y 6) se reparten entre los móviles: cada móvil solo toca los suyos y **no ve la secuencia**, así que hay que hablar. Si hay menos jugadores que tambores, uno lleva varios.
-- **Rondas con trampa**: en las rondas 2 y 3 algunas órdenes llegan **sin** el «Sahur dice»: esas hay que ignorarlas, no tocarlas.
-- 3 rondas (secuencias de 4, 5 y 6 pasos). Un fallo (tambor equivocado, de otro jugador o fuera de orden) cuesta Brainrot% y repite la ronda con una secuencia nueva.
+- **La salida de Sahur**: las plataformas cooperativas de la sala 1 (el juego que más gustó), con **4 niveles nuevos** que mezclan sus piezas y añaden dos: **varias campanas** (hay que tocarlas todas) y **pinchos** (tocarlos devuelve al inicio y cuesta Brainrot%, como caerse).
+  - **Nivel 1, Tung, tung, tung**: tres campanas, una encima de un bloque. Torre humana tres veces.
+  - **Nivel 2, Suelo de pinchos**: saltar los pinchos y pisar el botón pesado entre varios para abrir la verja.
+  - **Nivel 3, El foso**: la llave está en una repisa sobre la salida; con ella, todos a bordo de la plataforma.
+  - **Nivel 4, La salida**: botón, llave en una repisa flotante y pinchos delante de la puerta.
+- Todos se pueden pasar con 2 jugadores (lo comprueban bots en `tests_js/platformer_sahur.test.mjs`, con 2 y con 12). Desde el borde, un salto parado siempre libra una tira de pinchos.
+- El juego anterior de esta sala, *Sahur dice*, sigue en el código pero ya no está en el plan de salas.
 - Al superarlo: pista de la última ancla, **la salida**. Escanearla lanza la cinemática del final que os toque.
 
 ## Historia: los brainrots cuentan el juego
@@ -137,8 +145,9 @@ No es una ristra de minijuegos: entre sala y sala, la tele pone una **cinemátic
 - **Sustos**: cada QR trampa despierta a su brainrot con su frase.
 - Las voces son pitidos sintetizados por letra, como en los juegos de rol clásicos, distintos para cada personaje. La boca de los rigs (Patapim, Tralalero, Sahur) se mueve con las vocales; los cameos dan saltitos al hablar.
 - Los **móviles** muestran «Mirad la tele» con quién habla y su frase, y ocultan «Entrar» / «Siguiente sala» hasta que acaba (si la tele deja de avisar 6 s, vuelven).
+- **Lector al azar**: cada frase la lee en voz alta un jugador conectado elegido al azar (nunca el mismo dos veces seguidas si hay más). Su móvil dice «Te toca leer» con un botón «Siguiente»; la tele deja la frase en pantalla hasta que lo pulsa, para que al grupo le dé tiempo a leerla. Los demás móviles enseñan quién lee. Los carteles de título siguen solos, y una tele sin nadie conectado también.
 - El **anfitrión** controla la tele: Espacio, Intro, → o un clic pasan de frase; Esc o «Saltar» terminan la escena. Cada escena se ve una vez por partida (una tele recargada no la repite).
-- Unos 8 minutos de narración en total. Guion: `static/js/story/script.js`.
+- Unos 8 minutos de narración en total (más lo que tarden los lectores). Guion: `static/js/story/script.js`.
 - **Reparto como recurso gráfico**: `/static/dev/brainrots.html` pinta a los ocho y descarga cada pose en PNG transparente.
 
 ## Tiempo real y guardado

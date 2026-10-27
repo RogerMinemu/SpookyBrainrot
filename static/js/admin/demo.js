@@ -12,6 +12,7 @@ const TICK_MS = 25;
 const LEVEL_LIMIT_MS = 90000;    // a platformer level that takes longer is skipped with the debug jump ("atajo")
 const PUZZLE_LIMIT_MS = 150000;  // same idea for the other puzzles
 const BOMB_LIMIT_MS = 8000;      // the bots cannot read the torn manual: the bomb is skipped with "complete" right away
+const SAHUR_LEVEL_LIMIT_MS = 6000; // Room 7's platformer levels have no demo crew: shown for a few seconds, then skipped
 const STORE = "sb_demo";
 const KEYS = { ArrowLeft: 1, ArrowRight: 2, ArrowUp: 4, " ": 4, Enter: 8 };
 
@@ -424,6 +425,7 @@ function onEnter(st, view) {
     case "backrooms_trivia": say("Sala 4: trivia. Los bots no se saben las respuestas: uno propone y los demás le siguen."); break;
     case "bomb_defusal": say(`Sala 6: ${view.defuser} tiene la bomba y los demás el manual. Los bots no saben leerlo: atajo en unos segundos.`); break;
     case "sahur_dice": say(`Sahur dice, ronda ${view.round} de ${view.rounds}: los bots esperan a que acabe la secuencia.`); break;
+    case "sahur_platformer": say(`Sala 7, nivel ${view.level + 1} de ${view.levels}. Los bots no se saben estos niveles: atajo en unos segundos.`); break;
     case "search": say("Pistas (busca el QR): los bots mirarán por la casa (unos 3 s)."); break;
     case "unlocked": say("La puerta se abre.", "good"); break;
     case "ending": say(`Final de la partida (Brainrot ${Math.round(g.brainrot || 0)}%).`, "good"); break;
@@ -487,6 +489,18 @@ function pressAdvance(now, label) {
 // The TV's cutscene (window.__sbtv.story): the bots watch it before they press anything. ?story=skip skips them.
 const skipStories = new URLSearchParams(location.search).get("story") === "skip";
 const storyPlaying = () => { const s = tvApi() && tvApi().story; return !!(s && s.active()); };
+const READ_ALOUD_MS = 2600; // the bot picked to read a line "reads" it this long, then presses Siguiente on its phone
+
+function readAloud(now) {
+  const r = tvApi().story.reader && tvApi().story.reader();
+  if (!r) return;
+  if (state.readSig !== r.sig) { state.readSig = r.sig; state.readAt = now; return; }
+  if (now - state.readAt < READ_ALOUD_MS || state.readDone === r.sig) return;
+  const seat = seatByPid(r.pid);
+  if (!seat || seat.manual) return; // a seat the host took over reads for real
+  const sb = seatApi(seat);
+  if (sb && sb.reading && sb.reading() && sb.storyNext()) state.readDone = r.sig;
+}
 
 function autopilot(st, now) {
   const g = st.game;
@@ -496,7 +510,8 @@ function autopilot(st, now) {
   if (storyPlaying()) {
     if (skipStories) tvApi().story.skip();
     else {
-      if (state.storyKey !== key) { state.storyKey = key; say("La tele cuenta la historia: los bots miran. En la tele, Espacio sigue y Esc salta."); }
+      if (state.storyKey !== key) { state.storyKey = key; say("La tele cuenta la historia: cada frase la lee un bot y pulsa «Siguiente». En la tele, Espacio sigue y Esc salta."); }
+      readAloud(now);
       state.enteredAt = now; // the dwell starts when the story ends
       return;
     }
@@ -574,6 +589,13 @@ function autopilot(st, now) {
     }
     case "bomb_defusal":
       if (dwell > BOMB_LIMIT_MS && !state.stuck) { state.stuck = true; shortcut("Sala 6", "complete"); }
+      break;
+    case "sahur_platformer": // Room 7's levels have no demo crew: each one is skipped with the debug jump
+      if (dwell > SAHUR_LEVEL_LIMIT_MS && !state.stuck) {
+        state.stuck = true;
+        if (view.level >= view.levels - 1) shortcut(`Sala 7, nivel ${view.level + 1}`, "complete");
+        else shortcut(`Sala 7, nivel ${view.level + 1}`, "jump", { room: g.room_no, phase: "puzzle", level: view.level + 1 });
+      }
       break;
     case "sahur_dice": {
       if (!state.brain) state.brain = createSahurBot();

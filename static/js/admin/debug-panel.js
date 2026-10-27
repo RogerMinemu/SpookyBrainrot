@@ -19,7 +19,6 @@ const SLIDER_QUIET_MS = 900; // ignore incoming state while the host is dragging
 const LEVEL_LABELS = {
   3: (n) => `Ronda ${n + 1}`,
   4: (n) => `Con ${n} aciertos`,
-  7: (n) => `Ronda ${n + 1}`,
 };
 const viewKey = (v) => (v && typeof v === "object" ? `${v.kind}:${v.epoch}` : "");
 
@@ -66,7 +65,7 @@ export function peekText(view) {
     const steps = view.seq.map((s) => `${s.drum + 1}${s.trap ? "!" : ""}`).join(" ");
     return `Secuencia (ronda ${view.round}/${view.rounds}): ${steps} · ! = trampa`;
   }
-  if (view.kind === "coop_platformer") return `Nivel ${view.level + 1}/${view.levels}`;
+  if (view.kind === "coop_platformer" || view.kind === "sahur_platformer") return `Nivel ${view.level + 1}/${view.levels}`;
   return "";
 }
 
@@ -179,7 +178,7 @@ export function createDebugPanel({ gameId, token = null, spoilers = true }) {
   // Current 0-based sub-level out of the TV view (platformer level, Sahur round), or null.
   function levelOf(view) {
     if (!view || typeof view !== "object") return null;
-    if (view.kind === "coop_platformer" && Number.isInteger(view.level)) return view.level;
+    if ((view.kind === "coop_platformer" || view.kind === "sahur_platformer") && Number.isInteger(view.level)) return view.level;
     if ((view.kind === "sahur_dice" || view.kind === "shape_count") && Number.isInteger(view.round)) return view.round - 1;
     if (view.kind === "backrooms_trivia" && Number.isInteger(view.right)) return Math.min(view.right, view.goal - 1);
     return null;

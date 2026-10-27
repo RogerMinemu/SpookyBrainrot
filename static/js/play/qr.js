@@ -2,6 +2,12 @@
 // Only the /k/<token> path matters, so a QR printed with an older PUBLIC_URL still scans in-app.
 const TOKEN_RE = /\/k\/([A-Za-z0-9_-]{8,64})(?=[/?#]|$)/;
 
+/** The 4-letter code printed under each QR (typed when the camera cannot read it): upper case, letters only. */
+export const CODE_LEN = 4;
+export function normalizeCode(text) {
+  return String(text || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, CODE_LEN);
+}
+
 /** The token of a house QR ("<any host>/k/<token>"), or null when the QR is not one of ours. */
 export function tokenFrom(text) {
   const m = TOKEN_RE.exec(String(text || "").trim());

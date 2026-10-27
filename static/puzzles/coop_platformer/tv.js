@@ -1,4 +1,5 @@
-// Room 1 "Nivel 0" - TV view. Contract: mount(root, ctx), update(view, state), onInput({pid, mask}), unmount().
+// Co-op platformer - TV view (Room 1 "Nivel 0", and Room 7 through sahur_platformer/tv.js). The level set comes in
+// view.set. Contract: mount(root, ctx), update(view, state), onInput({pid, mask}), unmount().
 // The TV is the physics authority: it runs the sim and only reports outcomes (clear / penalty) to the server.
 import { createStage } from "/static/js/sim/draw.js";
 import { createHost } from "/static/js/sim/host.js";
@@ -19,7 +20,7 @@ export function mount(root, ctx) {
   const stage = createStage(root);
   let frames = 0;
   const host = createHost({
-    makeSim: createSim,
+    makeSim: (opts) => createSim({ ...opts, set: st && st.set }),
     report: ctx.sendSim,
     fx: ctx.sendFx,
     draw: (sim) => {
@@ -28,11 +29,12 @@ export function mount(root, ctx) {
     },
   });
   host.start();
-  st = { stage, host, key: "" };
+  st = { stage, host, key: "", set: undefined };
 }
 
 export function update(view, state) {
   if (!st) return;
+  st.set = view.set; // fixed per puzzle; read by makeSim when the view rebuilds the sim
   const roster = rosterOf(state);
   const key = roster.map((p) => `${p.id}:${p.name}:${p.color}`).join("|");
   if (key !== st.key) { st.key = key; st.host.setRoster(roster); }

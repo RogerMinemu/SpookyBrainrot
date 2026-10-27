@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from app.config import ROOT_DIR, Settings
 from app.content import ANCHORS_IN_USE
 from app.core.game import same_name
-from app.core.qr import ordered_with_labels, qr_url
+from app.core.qr import ordered_with_labels, qr_url, short_codes
 from app.web import pages
 from app.web.qr_svg import svg_scalable
 
@@ -81,8 +81,10 @@ async def admin_house() -> FileResponse:
 @router.get("/admin/qr-sheet")
 async def admin_qr_sheet(request: Request) -> HTMLResponse:
     state = request.app.state
-    labelled = ordered_with_labels(state.qr_repo.entries())
-    cards = [(label, svg_scalable(qr_url(state.settings.public_url, e.token))) for label, e in labelled]
+    entries = state.qr_repo.entries()
+    codes = short_codes(entries)
+    cards = [(label, svg_scalable(qr_url(state.settings.public_url, e.token)), codes[e.token])
+             for label, e in ordered_with_labels(entries)]
     house = state.house_repo.all()
     missing = sum(1 for i in ANCHORS_IN_USE if not (house.get(i, {}).get("riddle") or "").strip())
     return HTMLResponse(pages.qr_sheet(cards, missing), headers=NO_CACHE)
@@ -91,5 +93,6 @@ async def admin_qr_sheet(request: Request) -> HTMLResponse:
 @router.get("/admin/qr-key")
 async def admin_qr_key(request: Request) -> HTMLResponse:
     state = request.app.state
-    rows = ordered_with_labels(state.qr_repo.entries())
-    return HTMLResponse(pages.qr_key(rows, state.house_repo.all()), headers=NO_CACHE)
+    entries = state.qr_repo.entries()
+    return HTMLResponse(pages.qr_key(ordered_with_labels(entries), state.house_repo.all(), short_codes(entries)),
+                        headers=NO_CACHE)

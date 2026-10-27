@@ -6,7 +6,7 @@ import { FIXED_DT, ms2steps, mulberry32 } from "../../js/sim/loop.js";
 import { BIT, has, clean } from "../../js/sim/bits.js";
 
 export const LANE_LEN = 100;
-export const SWIM = 12;               // units per second: ~8.3 s of pure swimming per lane
+export const SWIM = 3;                // units per second: ~33 s of pure swimming per lane (the room lasts minutes, not seconds)
 export const WARNING_MS = 1000;
 export const GRACE_MS = 300;          // after "red" a swimmer still gets this long to stop (18 steps)
 export const GREEN_MS = [1500, 4000];

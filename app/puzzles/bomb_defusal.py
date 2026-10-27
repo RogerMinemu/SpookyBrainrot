@@ -23,7 +23,7 @@ from app.core import brainrot
 from app.core.effects import AddBrainrot, Complete, Effect, Emit, Touch
 from app.core.puzzle import ActionRejected, PuzzleCtx
 
-BOMB_MS = 300_000
+BOMB_MS = 480_000
 STRIKE_MS = 30_000
 MAX_STRIKES = 3
 BOOM_MS = 5000

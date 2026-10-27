@@ -79,7 +79,7 @@ class FakePuzzle:
 
 def make(min_players=1, players=("a", "b"), connect=True):
     clock = FakeClock()
-    ids = ("hold_together", "coop_platformer", "red_light", "shape_count", "backrooms_trivia", "bomb_defusal", "sahur_dice")
+    ids = ("hold_together", "coop_platformer", "red_light", "shape_count", "backrooms_trivia", "bomb_defusal", "sahur_platformer")
     puzzles = {pid: FakePuzzle(pid) for pid in ids}
     eng = Engine(puzzles, clock, seeded_rng(), min_players=min_players)
     g = Game(id="g", code="ABCD", name="G")
@@ -222,7 +222,7 @@ def test_full_pass_through_all_rooms_and_frozen_ending():
 
     assert eng.apply(g, Advance()).changed and (g.room_no, g.phase) == (7, PHASE_INTRO)
     to_puzzle(eng, g)
-    assert g.puzzle_id == "sahur_dice"
+    assert g.puzzle_id == "sahur_platformer"
     eng.apply(g, PuzzleAction("a", {"do": "rot", "amount": 42}))
     eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 7 solved -> search
     assert g.phase == PHASE_SEARCH and g.puzzle_state is None

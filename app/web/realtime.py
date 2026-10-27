@@ -12,9 +12,9 @@ from typing import Callable, Dict, List, Optional, Tuple
 MASK_BITS = 0x0F  # L=1 R=2 J=4 A=8
 
 MAX_FRAME_BYTES = 8192  # any frame above this is dropped before parsing
-FRAME_LIMITS = {"input": 128, "fx": 512, "sim": 512}  # per-type caps, checked on the raw frame
+FRAME_LIMITS = {"input": 128, "fx": 512, "sim": 512, "story": 256}  # per-type caps, checked on the raw frame
 # type -> (burst, refill per second)
-BUCKET_SPECS = {"input": (30, 30.0), "fx": (30, 30.0), "sim": (8, 4.0)}
+BUCKET_SPECS = {"input": (30, 30.0), "fx": (30, 30.0), "sim": (8, 4.0), "story": (4, 2.0)}
 
 FX_KIND = re.compile(r"^[a-z_]{1,16}$")
 

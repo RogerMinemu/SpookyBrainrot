@@ -3,13 +3,18 @@
 // - a 1920x1080 cast canvas: characters through ctx.sprite (painted atlas, or the flat silhouette in the same place);
 // - a DOM caption that types the line (shown + rest spans, so the text never reflows), with the speaker's name;
 // - title cards, the Foundation's terminal look, Sahur calling from a phone, the brainrot line-up, alarm and shake.
-// The TV is the clock. It tells the phones which beat it is on (fx "story" {key, scene, beat, done}); they print the
-// same line from the same script. Host controls: Space / Enter / -> / a click = next (finish the line first),
-// Esc or "Saltar" = skip the scene. A finished (or skipped) key is remembered for this game in sessionStorage.
+// The TV is the clock. It tells the phones which beat it is on (fx "story" {key, scene, beat, done, reader}); they
+// print the same line from the same script. Every line picks a random connected player to read it aloud: once typed,
+// the line stays up until that player presses "Siguiente" on the phone (WS "story" relayed here, readerNext()), so the
+// group has time to read. Title cards, and a TV with nobody connected, still run on the clock.
+// Host controls: Space / Enter / -> / a click = next (finish the line first), Esc or "Saltar" = skip the scene.
+// A finished (or skipped) key is remembered for this game in sessionStorage.
 import { h } from "/static/js/shared/dom.js";
 import { tone, play } from "/static/js/shared/audio.js";
 import { VOICES, SPEAKERS } from "/static/js/story/script.js";
-import { storyKeyFor, playlistFor, varsFor, compile, frameAt, nextStop, mouthAt, blips } from "/static/js/story/runner.js";
+import {
+  storyKeyFor, playlistFor, varsFor, compile, frameAt, nextStop, mouthAt, blips, pickReader, READER_MIN_MS,
+} from "/static/js/story/runner.js";
 import { ROSTER_IDS, byId } from "/static/js/art/roster.js"; // pure cast data; drawing goes through ctx.sprite only
 
 const W = 1920, H = 1080, GROUND = 830; // feet just above the caption card
@@ -55,7 +60,7 @@ function roundRect(g, x, y, w, hh, r) {
  * @param {string} o.gameId
  * @param {(id: string) => object} o.sprite     ctx.sprite
  * @param {(to: string, kind: string, data: object) => void} o.sendFx
- * @returns {{ sync(state), active(): boolean, next(), skip(), key(): string|null }}
+ * @returns {{ sync(state), active(): boolean, next(), skip(), key(): string|null, readerNext(m), reader() }}
  */
 export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
   const stage = h("div", { class: "story-stage", "aria-hidden": "true" });
@@ -65,13 +70,14 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
   const name = h("div", { class: "story-name" }, "");
   const shown = h("span", { class: "story-shown" }, "");
   const rest = h("span", { class: "story-rest", "aria-hidden": "true" }, "");
-  const caption = h("div", { class: "story-caption hidden" }, name, h("p", { class: "story-text" }, shown, rest));
+  const reader = h("div", { class: "story-reader hidden" }, "");
+  const caption = h("div", { class: "story-caption hidden" }, name, h("p", { class: "story-text" }, shown, rest), reader);
   const skipBtn = h("button", { type: "button", class: "btn story-skip" }, "Saltar »");
   const hint = h("div", { class: "story-hint" }, "Espacio: seguir · Esc: saltar");
   const root = h("div", { id: "story", class: "story hidden", "aria-live": "polite" }, stage, alarm, card, caption, skipBtn, hint);
   document.body.append(root);
 
-  let cur = null; // { key, c, base, index, lastShown, lastBlip, sceneStart: Map, mount, beat timers }
+  let cur = null; // { key, c, base, index, lastShown, lastBlip, sceneStart: Map, mount, beat timers, players, reader... }
 
   const nowMs = () => performance.now();
   const clock = () => (cur ? nowMs() - cur.base : 0);
@@ -79,13 +85,47 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
   function fx(done) {
     if (!cur || !sendFx) return;
     const b = cur.c.beats[cur.index];
-    sendFx("all", "story", done || !b ? { key: cur.key, done: true } : { key: cur.key, scene: b.scene, beat: b.i, done: false });
+    const r = cur.reader;
+    sendFx("all", "story", done || !b ? { key: cur.key, done: true }
+      : { key: cur.key, scene: b.scene, beat: b.i, done: false, reader: r ? r.id : null, reader_name: r ? r.name : "" });
+  }
+
+  function showReader() {
+    const r = cur && cur.reader;
+    reader.classList.toggle("hidden", !r);
+    reader.classList.remove("waiting");
+    reader.textContent = r ? `🎤 ${r.name} lo lee en voz alta y pulsa «Siguiente» en su móvil` : "";
+  }
+
+  /** A new reader for the current line: random among the connected players, not the one who read the last line. */
+  function chooseReader() {
+    const b = cur.c.beats[cur.index];
+    cur.reader = b && !b.card ? pickReader(cur.players, cur.prevReader, Math.random) : null;
+    if (cur.reader) cur.prevReader = cur.reader.id;
+    showReader();
+  }
+
+  /** A typed line with a reader stays on screen (the clock stops at its end) until it is released by a press. */
+  function held(ms) {
+    const b = cur.c.beats[cur.index];
+    if (!b || !cur.reader || cur.released === cur.index || ms < b.end - 1) return ms;
+    cur.base = nowMs() - (b.end - 1);
+    return b.end - 1;
+  }
+
+  /** Jump the clock to `target` ms; passing the end of the current line releases it. */
+  function jumpTo(target) {
+    const b = cur.c.beats[cur.index];
+    if (b && target >= b.end - 1) cur.released = cur.index;
+    cur.base = nowMs() - target;
+    if (target >= cur.c.total) finish();
   }
 
   function setBeat(f) {
     const b = f.beat;
     cur.index = f.index;
     cur.lastShown = 0;
+    cur.beatAt = nowMs();
     root.dataset.who = b.who || "";
     root.classList.toggle("is-riddle", !!b.riddle); // not "riddle": tv.css styles .riddle (max-width) globally
     root.classList.toggle("alarm-on", b.show === "alarm");
@@ -109,6 +149,7 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
       cur.shakeTimer = setTimeout(() => root.classList.remove("shake"), SHAKE_MS);
     }
     if (b.sfx) play(b.sfx);
+    chooseReader();
     fx(false);
   }
 
@@ -165,11 +206,12 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
 
   function draw(g, t) {
     if (!cur) return;
-    const ms = clock();
+    const ms = held(clock());
     const f = frameAt(cur.c, ms);
     if (f.ended) { finish(); return; }
     if (f.index !== cur.index) setBeat(f);
     caption_(f);
+    if (cur.reader) reader.classList.toggle("waiting", f.revealed);
     voice(f, t);
     const b = f.beat;
     if (b.show === "lineup") drawLineup(g, t);
@@ -210,13 +252,25 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     stop();
   }
 
+  /** The roster as the newest state has it; a reader who dropped out hands the line to somebody else. */
+  function setPlayers(state) {
+    cur.players = (state && state.game && state.game.players) || [];
+    const r = cur.reader;
+    if (r && !cur.players.some((p) => p.id === r.id && p.connected)) {
+      chooseReader();
+      fx(false);
+    }
+  }
+
   function start(key, state) {
     const ids = playlistFor(key, state);
     if (!ids.length) return;
     const c = compile(ids, varsFor(state));
     const sceneStart = new Map();
     for (const b of c.beats) if (!sceneStart.has(b.scene)) sceneStart.set(b.scene, b.start);
-    cur = { key, c, base: nowMs(), index: -1, lastShown: 0, lastBlip: 0, sceneStart, mount: null, heartbeat: 0, shakeTimer: 0 };
+    cur = { key, c, base: nowMs(), index: -1, lastShown: 0, lastBlip: 0, sceneStart, mount: null, heartbeat: 0, shakeTimer: 0,
+      players: [], reader: null, prevReader: null, released: -1, beatAt: 0 };
+    setPlayers(state);
     onActive(true);
     root.classList.remove("hidden");
     document.documentElement.classList.add("story-on");
@@ -227,10 +281,16 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
   }
 
   function next() {
-    if (!cur) return;
-    const target = nextStop(cur.c, clock());
-    cur.base = nowMs() - target;
-    if (target >= cur.c.total) finish();
+    if (cur) jumpTo(nextStop(cur.c, clock()));
+  }
+
+  /** The reader's phone pressed "Siguiente" for the line it shows: straight to the next line (stale presses are dropped). */
+  function readerNext(m) {
+    if (!cur || !m || !cur.reader || m.pid !== cur.reader.id || m.key !== cur.key) return;
+    const b = cur.c.beats[cur.index];
+    if (!b || m.scene !== b.scene || m.beat !== b.i || nowMs() - cur.beatAt < READER_MIN_MS) return;
+    const after = cur.c.beats[cur.index + 1];
+    jumpTo(after ? after.start : cur.c.total);
   }
 
   root.addEventListener("click", (e) => { if (e.target !== skipBtn) next(); });
@@ -247,7 +307,7 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     /** Plays the story of the state's key once per game; a new key stops the old one. */
     sync(state) {
       const key = storyKeyFor(state);
-      if (cur && cur.key === key) return;
+      if (cur && cur.key === key) { setPlayers(state); return; }
       stop();
       if (key && !remembered(gameId, key)) start(key, state);
     },
@@ -255,5 +315,8 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     key: () => (cur ? cur.key : null),
     next,
     skip: finish,
+    readerNext,
+    /** Who has to press "Siguiente" now ({pid, sig}: sig changes with every line), or null. */
+    reader: () => (cur && cur.reader ? { pid: cur.reader.id, sig: `${cur.key}:${cur.index}` } : null),
   };
 }

@@ -78,19 +78,23 @@ body{background:#fff;color:#000}
  page-break-after:always;break-after:page;box-sizing:border-box}
 .card svg{width:15cm;height:15cm}
 .card .label{font:700 3rem system-ui,sans-serif;margin-top:1rem}
+.card .code{font:600 1.6rem system-ui,sans-serif;margin-top:.6rem;color:#333}
+.card .code b{font:700 2.6rem ui-monospace,Consolas,monospace;letter-spacing:.35em;color:#000;margin-left:.3em}
 @media print{.notice{display:none}}
 @media screen{.card{border-bottom:2px dashed #999;margin:0 auto}}
 """
 
 
-def qr_sheet(cards: Sequence[Tuple[str, str]], missing_riddles: int) -> str:
-    """cards: (label, svg). Identical cards: nothing reveals anchor vs decoy."""
+def qr_sheet(cards: Sequence[Tuple[str, str, str]], missing_riddles: int) -> str:
+    """cards: (label, svg, code). Identical cards: nothing reveals anchor vs decoy. The code is typed in the phone's
+    "Pistas" screen when its camera cannot read the QR."""
     notice = ""
     if missing_riddles:
         notice = (f'<p class="notice">Faltan {missing_riddles} pistas por escribir en '
                   '<a href="/admin/house">/admin/house</a> (esta nota no se imprime).</p>')
-    body = "".join(f'<section class="card">{svg}<div class="label">{escape(label)}</div></section>'
-                   for label, svg in cards)
+    body = "".join(f'<section class="card">{svg}<div class="label">{escape(label)}</div>'
+                   f'<div class="code">¿No lo lee? Código: <b>{escape(code)}</b></div></section>'
+                   for label, svg, code in cards)
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hoja de QR</title>'
         f'{_PAPER}<style>{_SHEET_STYLE}</style></head><body class="sheet">{notice}{body}</body></html>'
@@ -106,7 +110,7 @@ td,th{padding:.5rem;text-align:left;vertical-align:top}
 """
 
 
-def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict]) -> str:
+def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict], codes: Optional[Dict[str, str]] = None) -> str:
     out = []
     for label, e in rows:
         if e.kind == "anchor" and e.idx not in ANCHORS_IN_USE:
@@ -126,12 +130,13 @@ def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict]) -> str:
             role = f"Señuelo {e.idx}: {cameo}"
             riddle_html = '<span class="muted">-</span>'
             place_html = '<span class="muted">-</span>'
-        out.append(f"<tr><td><strong>{escape(label)}</strong></td><td>{escape(role)}</td>"
+        code = escape((codes or {}).get(e.token, ""))
+        out.append(f"<tr><td><strong>{escape(label)}</strong></td><td><code>{code}</code></td><td>{escape(role)}</td>"
                    f"<td>{place_html}</td><td>{riddle_html}</td></tr>")
     body = (
         '<div class="spoiler">SPOILER - solo para el anfitrión. No se lo enseñéis a los jugadores.</div>'
         '<p><a href="/admin/house">Casa</a> &middot; <a href="/admin/debug">Modo debug</a></p>'
-        "<h1>Clave de QR</h1><table><tr><th>Etiqueta</th><th>Rol</th><th>Escondite</th><th>Pista</th></tr>"
+        "<h1>Clave de QR</h1><table><tr><th>Etiqueta</th><th>Código</th><th>Rol</th><th>Escondite</th><th>Pista</th></tr>"
         + "".join(out) + "</table>"
     )
     return page("Clave de QR", body, status_style=_KEY_STYLE)
