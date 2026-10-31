@@ -12,7 +12,7 @@ const TICK_MS = 25;
 const LEVEL_LIMIT_MS = 90000;    // a platformer level that takes longer is skipped with the debug jump ("atajo")
 const PUZZLE_LIMIT_MS = 150000;  // same idea for the other puzzles
 const BOMB_LIMIT_MS = 8000;      // the bots cannot read the torn manual: the bomb is skipped with "complete" right away
-const SAHUR_LEVEL_LIMIT_MS = 6000; // Room 7's platformer levels have no demo crew: shown for a few seconds, then skipped
+const SAHUR_LEVEL_LIMIT_MS = 6000; // Room 6's platformer levels have no demo crew: shown for a few seconds, then skipped
 const STORE = "sb_demo";
 const KEYS = { ArrowLeft: 1, ArrowRight: 2, ArrowUp: 4, " ": 4, Enter: 8 };
 
@@ -423,9 +423,9 @@ function onEnter(st, view) {
     case "red_light": say("Sala 2: los bots nadan en verde, paran al ver el aviso y los que llegan distraen a Tralalero."); break;
     case "shape_count": say(`Sala 3, ronda ${view.round} de ${view.rounds}: cada bot cuenta su forma en la tele y la marca con + y −.`); break;
     case "backrooms_trivia": say("Sala 4: trivia. Los bots no se saben las respuestas: uno propone y los demás le siguen."); break;
-    case "bomb_defusal": say(`Sala 6: ${view.defuser} tiene la bomba y los demás el manual. Los bots no saben leerlo: atajo en unos segundos.`); break;
+    case "bomb_defusal": say(`Sala 5: ${view.defuser} tiene la bomba y los demás el manual. Los bots no saben leerlo: atajo en unos segundos.`); break;
     case "sahur_dice": say(`Sahur dice, ronda ${view.round} de ${view.rounds}: los bots esperan a que acabe la secuencia.`); break;
-    case "sahur_platformer": say(`Sala 7, nivel ${view.level + 1} de ${view.levels}. Los bots no se saben estos niveles: atajo en unos segundos.`); break;
+    case "sahur_platformer": say(`Sala 6, nivel ${view.level + 1} de ${view.levels}. Los bots no se saben estos niveles: atajo en unos segundos.`); break;
     case "search": say("Pistas (busca el QR): los bots mirarán por la casa (unos 3 s)."); break;
     case "unlocked": say("La puerta se abre.", "good"); break;
     case "ending": say(`Final de la partida (Brainrot ${Math.round(g.brainrot || 0)}%).`, "good"); break;
@@ -588,13 +588,13 @@ function autopilot(st, now) {
       break;
     }
     case "bomb_defusal":
-      if (dwell > BOMB_LIMIT_MS && !state.stuck) { state.stuck = true; shortcut("Sala 6", "complete"); }
+      if (dwell > BOMB_LIMIT_MS && !state.stuck) { state.stuck = true; shortcut("Sala 5", "complete"); }
       break;
-    case "sahur_platformer": // Room 7's levels have no demo crew: each one is skipped with the debug jump
+    case "sahur_platformer": // Room 6's levels have no demo crew: each one is skipped with the debug jump
       if (dwell > SAHUR_LEVEL_LIMIT_MS && !state.stuck) {
         state.stuck = true;
-        if (view.level >= view.levels - 1) shortcut(`Sala 7, nivel ${view.level + 1}`, "complete");
-        else shortcut(`Sala 7, nivel ${view.level + 1}`, "jump", { room: g.room_no, phase: "puzzle", level: view.level + 1 });
+        if (view.level >= view.levels - 1) shortcut(`Sala 6, nivel ${view.level + 1}`, "complete");
+        else shortcut(`Sala 6, nivel ${view.level + 1}`, "jump", { room: g.room_no, phase: "puzzle", level: view.level + 1 });
       }
       break;
     case "sahur_dice": {
@@ -605,7 +605,7 @@ function autopilot(st, now) {
         const sb = seat && !seat.manual && seatApi(seat);
         if (sb && sb.hit && sb.hit(tap.drum)) say(`${tap.name} toca el tambor ${tap.drum + 1}.`);
       }
-      if (dwell > PUZZLE_LIMIT_MS && !state.stuck) { state.stuck = true; shortcut("Sala 7", "complete"); }
+      if (dwell > PUZZLE_LIMIT_MS && !state.stuck) { state.stuck = true; shortcut("Sala 6", "complete"); }
       break;
     }
     default: break;

@@ -1,4 +1,4 @@
-"""Room 7 plugin: show/input flip, traps, ownership, redeal, private views (R-SD-1..6, R-RE-3)."""
+"""Room 6 plugin: show/input flip, traps, ownership, redeal, private views (R-SD-1..6, R-RE-3)."""
 import json
 
 import pytest

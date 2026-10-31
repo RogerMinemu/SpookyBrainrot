@@ -110,7 +110,7 @@ if (SEAT) {
     ready: false,   // welcome received
     pad: null,      // set by mountPad
     hold: null,     // Room 0: hold(down), set by its controller
-    hit: null,      // Room 7: hit(drum), set by its controller
+    hit: null,      // Room 6: hit(drum), set by its controller
     adjust: null,   // Room 3: adjust(+1 | -1), set by its controller
     vote: null,     // Room 4: vote(option), set by its controller
     setMask(mask) { if (sb.pad) sb.pad.force(mask); if (sb.hold) sb.hold(mask !== 0); },

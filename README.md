@@ -1,12 +1,12 @@
 # SpookyBrainrot
 
 Escape room casero para jugar en casa: una tele muestra la partida, cada jugador usa su móvil
-como mando y 15 códigos QR impresos (7 anclas y 8 señuelos) están escondidos por la casa.
+como mando y un código QR por sala (la llave que abre su puerta) está escondido por la casa.
 Salas jugables: Sala 0 (agarraos fuerte), Sala 1 (plataformas cooperativas "Nivel 0", 4 niveles),
 Sala 2 (un, dos, tres… ¡Tralalero!), Sala 3 (contad las formas), Sala 4 (trivia de las Backrooms por consenso),
-Sala 6 (desactivad la bomba, con el manual repartido entre los móviles) y Sala 7 (la salida de Sahur: 5 niveles largos
+Sala 5 (desactivad la bomba, con el manual repartido entre los móviles) y Sala 6 (la salida de Sahur: 5 niveles largos
 de plataformas cooperativas con scroll, tambores, ascensores y Sahur persiguiéndoos), más medidor de
-Brainrot, QR y pantalla final. La sala 5 se quitó: el ancla 5 queda impresa pero sin uso (ver `GAME_DESIGN.md`).
+Brainrot, QR y pantalla final. Las salas van numeradas sin huecos (ver `GAME_DESIGN.md`).
 
 ## Requisitos
 
@@ -69,22 +69,23 @@ node --test tests_js/loop.test.mjs tests_js/platformer.test.mjs tests_js/red_lig
 
 `pytest` ya los lanza con un envoltorio (`tests/test_js_sim.py`) que se salta si no hay `node` en el PATH.
 
-## Partidas guardadas (formato v2)
+## Partidas guardadas (formato v3)
 
-El guardado pasó a la versión 2 (ahora incluye el número de sala). Las partidas antiguas se migran solas, pero
-**una partida v2 no se puede cargar con el código antiguo**. Si vuelves atrás, borra las partidas desde la portada;
+El guardado va por la versión 3 (incluye el número de sala; la v3 renumeró las salas sin huecos: la bomba pasó de 6 a 5
+y Sahur de 7 a 6). Las partidas antiguas se migran solas, pero **una partida v3 no se puede cargar con el código
+antiguo**. Si vuelves atrás, borra las partidas desde la portada;
 no toques `data/` a mano.
 
 ## Preparar la casa y los QR
 
 1. Abre `/admin/house` y escribe una pista por ancla (y, si quieres, el escondite). Es global:
    vale para todas las partidas. Las anclas sin pista usan un texto de relleno.
-2. Abre `/admin/qr-sheet` e imprime la hoja: 15 tarjetas A4 etiquetadas `#01`..`#15`. Todas
-   son iguales: **no se distingue ancla de señuelo** a simple vista. Para reimprimir solo las llaves
-   de las salas (las anclas que usa alguna sala, con las mismas etiquetas), abre `/admin/qr-sheet?solo=llaves`.
-3. Abre `/admin/qr-key` (SPOILER, solo para el anfitrión): dice qué es cada etiqueta
-   (ancla N / señuelo con su cameo), su escondite y su pista. Avisa de las pistas que faltan.
-4. Esconde las tarjetas. El ancla 7 es la salida. El ancla 5 no la usa ninguna sala: no hace falta esconderla.
+2. Abre `/admin/qr-sheet` e imprime la hoja: una tarjeta A4 por sala, en orden de juego, etiquetada con su sala
+   («Sala 1 · Nivel 0 · Brr Brr Patapim» … «Sala 6 · La salida · Tung Tung Tung Sahur») y su código de 4 letras.
+   La llave de la sala N es el ancla N. Los señuelos y el ancla 7 (sin sala) no se imprimen.
+3. Abre `/admin/qr-key` (SPOILER, solo para el anfitrión): dice qué es cada QR (llave de qué sala, o los que no se
+   imprimen), su escondite y su pista. Avisa de las pistas que faltan.
+4. Esconde las tarjetas. La de la Sala 6 es la salida.
 
 Los tokens de los QR se generan **una sola vez** en el primer arranque y se guardan en la base de
 datos. Nunca se regeneran, y no existe ningún endpoint para hacerlo.
@@ -123,7 +124,7 @@ Para probar el juego (y la interfaz acuarela) sin jugar todas las salas:
   juegas), y dos botones para la tele: «Saltar escena» (termina la cinemática) y «Refrescar tele» (vuelve a montar la
   pantalla con el estado actual, por si se ha quedado colgada). Funciona aunque haya `ADMIN_KEY`: el móvil se
   identifica con su token de jugador, que solo abre la API de debug de su propia partida.
-- **Controles**: saltar a cualquier sala (lobby, Salas 0, 1, 2, 3, 4, 6 y 7, final) y fase (introducción, puzzle, búsqueda del
+- **Controles**: saltar a cualquier sala (lobby, Salas 0 a 6, final) y fase (introducción, puzzle, búsqueda del
   ancla, sala desbloqueada) con "Saltar" (el puzzle se reinicia con su `start`); "Completar puzzle"; deslizador de
   Brainrot con atajos 0/20/40/60/80/100 (se aplica al momento); eventos de prueba (jumpscare con el brainrot que
   elijas, salpicón, ronda fallida, ancla encontrada); "Reiniciar al lobby" (borra el progreso y conserva a los

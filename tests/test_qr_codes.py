@@ -1,7 +1,7 @@
 """Typed fallback for the printed QRs: 4 letters under each QR, derived from its token (tokens never change)."""
 import string
 
-from app.content import CAMEOS
+from app.content import ANCHORS_IN_USE, CAMEOS
 from app.core.qr import CODE_LEN, QrEntry, entry_for_code, generate_entries, normalize_code, short_codes
 from tests.test_k_route import running_game, tokens
 from tests.test_realtime_ws import drain, env, of, phone
@@ -48,9 +48,12 @@ def test_the_phone_can_type_the_code_instead_of_scanning(client):
             assert of(drain(a), "scan")[0]["payload"] == {"result": "unknown"}
 
 
-def test_the_sheet_and_the_key_print_every_code(client):
-    codes = short_codes(client.app.state.qr_repo.entries())
+def test_the_sheet_prints_the_room_keys_codes_and_the_key_every_code(client):
+    entries = client.app.state.qr_repo.entries()
+    codes = short_codes(entries)
     sheet = client.get("/admin/qr-sheet").text
     key = client.get("/admin/qr-key").text
-    for code in codes.values():
-        assert f"<b>{code}</b>" in sheet and f"<code>{code}</code>" in key
+    for e in entries:
+        code = codes[e.token]
+        assert f"<code>{code}</code>" in key
+        assert (f"<b>{code}</b>" in sheet) == (e.kind == "anchor" and e.idx in ANCHORS_IN_USE)  # only the room keys

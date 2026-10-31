@@ -8,7 +8,7 @@ from __future__ import annotations
 import itertools
 import secrets
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 ANCHOR_COUNT = 7
 DECOY_COUNT = 8
@@ -86,14 +86,11 @@ def entry_for_code(entries: Sequence["QrEntry"], text: str) -> Optional["QrEntry
     return next((e for e in entries if e.token == token), None) if token else None
 
 
-def label_for(position: int) -> str:
-    return f"#{position:02d}"
-
-
-def ordered_with_labels(entries: Sequence[QrEntry]) -> List[Tuple[str, QrEntry]]:
-    """Token order (NOT grouped by kind) so the printed sheet leaks nothing."""
-    ordered = sorted(entries, key=lambda e: e.token)
-    return [(label_for(i + 1), e) for i, e in enumerate(ordered)]
+def room_keys(entries: Sequence[QrEntry], rooms: Sequence[Any]) -> List[Tuple[Any, QrEntry]]:
+    """(room, its anchor) for every room with a key, in the rooms' order: the printed sheet, one QR per real room.
+    Decoys and anchors no room uses are left out."""
+    anchors = {e.idx: e for e in entries if e.kind == KIND_ANCHOR}
+    return [(r, anchors[r.anchor]) for r in rooms if r.anchor in anchors]
 
 
 # --- which game does a scan belong to? (R7.4) -----------------------------------

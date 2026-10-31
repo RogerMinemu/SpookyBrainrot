@@ -28,8 +28,8 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 
 ## QR fijos (se imprimen UNA vez)
 
-- **7 anclas** (una por nivel, la última es la salida) + **8 trampas**. Tokens aleatorios generados una sola vez y guardados en el servidor.
-- Desde que se quitó la sala 5, el **ancla 5 no la usa ninguna sala**: sigue impresa, pero no hace falta esconderla ni escribirle pista (`/admin/house` y la clave de QR lo indican). Si alguien la escanea, solo «duerme».
+- **7 anclas** + **8 trampas**. Tokens aleatorios generados una sola vez y guardados en el servidor. La **sala N se abre con el ancla N** (1 a 6) y la de la sala 6 es la salida.
+- La hoja de QR (`/admin/qr-sheet`) solo imprime **una llave por sala real**, en orden de juego y con su nombre («Sala 1 · Nivel 0 · Brr Brr Patapim»). Las trampas y el **ancla 7**, que no usa ninguna sala, no se imprimen (`/admin/house` y la clave de QR lo indican). Si alguien escanea el ancla 7, solo «duerme».
 - Cada QR lleva `{PUBLIC_URL}/k/<token>`. Tras cada sala llega la fase **«Pistas (busca el QR)»**: la tele y el móvil muestran la pista, y el móvil trae un **botón de cámara** para escanear el QR sin salir del juego (mensaje `scan` por WebSocket, mismo resultado que `/k/<token>`, contestado solo a ese móvil).
   - Con HTTPS o en `localhost`, el botón abre un **visor en vivo** dentro de la página.
   - En la red de casa por HTTP normal, el navegador no deja que una web use la cámara: el mismo botón abre la **app de cámara** para hacer una foto y la página lee el QR de la foto.
@@ -56,10 +56,10 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 | 2 | Las Piscinas | Tralalero Tralala | Un, dos, tres… ¡Tralalero! | Reflejos en tiempo real | 10 |
 | 3 | Centro comercial de las 3 AM | Lirilì Larilà | Contad las formas | Observación / conteo | 10 |
 | 4 | Sitio-19 | Ballerina Cappuccina | Trivia de las Backrooms | Trivia por consenso | 12 |
-| 6 | Hangar abandonado | Bombardiro Crocodilo | Desactivad la bomba | Información repartida (Keep Talking) | 12 |
-| 7 | Final | Tung Tung Tung Sahur | La salida de Sahur | Plataformas cooperativas con scroll (5 niveles largos) | 18 |
+| 5 | Hangar abandonado | Bombardiro Crocodilo | Desactivad la bomba | Información repartida (Keep Talking) | 12 |
+| 6 | Final | Tung Tung Tung Sahur | La salida de Sahur | Plataformas cooperativas con scroll (5 niveles largos) | 18 |
 
-> **Estado:** todas las salas del plan son jugables: 0, 1, 2, 3, 4, 6 y 7. La **sala 5 se ha quitado** (la numeración no cambia: de la 4 se pasa a la 6). Ballerina Cappuccina, que guardaba la sala 5, pasa a presentar la trivia de la sala 4.
+> **Estado:** todas las salas del plan son jugables: de la 0 a la 6. La antigua sala 5 se quitó y las salas se **renumeraron sin huecos** (la bomba pasó de la 6 a la 5 y Sahur de la 7 a la 6). Ballerina Cappuccina, que guardaba la sala quitada, presenta la trivia de la sala 4.
 
 ### 0 · Prólogo — Noclip
 
@@ -108,7 +108,7 @@ Terminal de la Fundación, expedientes con barras de [REDACTADO]. Ballerina Capp
 - Al responder, la tele revela la buena con un dato curioso. Acierto: suma. Fallo: Brainrot% y siguiente pregunta.
 - Hay que llegar a **6 aciertos**. Las preguntas no se repiten hasta agotar el banco.
 
-### 6 · Hangar abandonado · Bombardiro Crocodilo
+### 5 · Hangar abandonado · Bombardiro Crocodilo
 
 Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody Explodes* con el manual hecho pedazos.
 
@@ -118,7 +118,7 @@ Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody 
 - Cuenta atrás de **8 min**; cada error resta **30 s** y un poco de Brainrot%. Con **3 errores** o el reloj a cero: **¡BUM!**, Brainrot% y una bomba nueva para el siguiente jugador.
 - Si el artificiero se desconecta, la bomba pasa al siguiente jugador conectado tal y como está.
 
-### 7 · Final — La salida de Sahur · Tung Tung Tung Sahur
+### 6 · Final — La salida de Sahur · Tung Tung Tung Sahur
 
 *Tung. Tung. Tung.* Algo golpea al otro lado de la pantalla.
 
@@ -168,7 +168,7 @@ No es una ristra de minijuegos: entre sala y sala, la tele pone una **cinemátic
 - **Carril de entrada**: cada móvil envía una máscara de botones (izquierda 1, derecha 2, saltar 4, acción 8) por WebSocket, sin pasar por el bloqueo de la partida. El servidor solo la retransmite a la tele; la tele simula a 60 Hz y solo informa de resultados (nivel superado, penalización, llegada). Cada resultado lleva `epoch` y nivel: un informe viejo se ignora.
 - **Tele desconectada**: los móviles lo avisan en español y dejan de enviar; al volver, se reenvían las máscaras.
 - **Constantes de penalización**: 2 de Brainrot% por fallo de simulación (enfriamiento 2,5 s, tope 12 por sala); 3 por fallo en el Sahur, por contar mal (sala 3) o por fallar una pregunta (sala 4); en la bomba, 1 por error y 5 por explosión. Todas las salas tienen un tope de 12 por partida de sala.
-- **Guardado v2**: las partidas guardan el número de sala. Las partidas v1 se migran a la sala 2 en su introducción, pero una partida v2 **no se puede cargar con el código antiguo**. Para limpiar partidas, bórralas desde la portada; nunca edites `data/` a mano.
+- **Guardado v3**: las partidas guardan el número de sala. Las v1 se migran a la sala 2 en su introducción y las v2 se renumeran (sala 6 → 5, sala 7 → 6), pero una partida v3 **no se puede cargar con el código antiguo**. Para limpiar partidas, bórralas desde la portada; nunca edites `data/` a mano.
 
 ## Cameos (QR trampa)
 

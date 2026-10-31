@@ -54,12 +54,12 @@ def test_qr_url_trims_trailing_slash():
     assert qr.qr_url("http://x.test/", "ABC") == "http://x.test/k/ABC"
 
 
-def test_labels_in_token_order_not_grouped():
+def test_room_keys_pair_each_room_with_its_anchor_in_room_order():
+    from app.content import KEY_ROOMS
+
     entries = qr.generate_entries()
-    labelled = qr.ordered_with_labels(entries)
-    assert [l for l, _ in labelled] == [f"#{i:02d}" for i in range(1, 16)]
-    toks = [e.token for _, e in labelled]
-    assert toks == sorted(toks)
+    keys = qr.room_keys(entries, KEY_ROOMS)
+    assert [(room.room_no, e.kind, e.idx) for room, e in keys] == [(n, "anchor", n) for n in range(1, 7)]
 
 
 def test_app_creates_registry_once(app, client, tmp_path):

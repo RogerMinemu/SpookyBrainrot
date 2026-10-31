@@ -69,7 +69,7 @@ def test_tv_view_has_no_player_only_keys_and_code_is_tv_only(client):
     assert "holding" not in tv["view"]
 
 
-def test_room7_platformer_seed_is_tv_only(client):
+def test_room6_platformer_seed_is_tv_only(client):
     from app.core.game import PHASE_PUZZLE
 
     rt, toks = make_running_game(client, ("Ana", "Bea", "Cai"))
@@ -77,7 +77,7 @@ def test_room7_platformer_seed_is_tv_only(client):
     async def to_sahur():
         rt.game.puzzle_id = None
         rt.game.puzzle_state = None
-        rt.game.room_idx = len(ROOM_PLAN) - 1  # room 7
+        rt.game.room_idx = len(ROOM_PLAN) - 1  # room 6
         rt.game.phase = "intro"
         await rt.apply(Advance())
 

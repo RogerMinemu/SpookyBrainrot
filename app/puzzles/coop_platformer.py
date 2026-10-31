@@ -1,4 +1,4 @@
-"""Cooperative platformer levels simulated on the TV: Room 1 "Nivel 0" (single screens) and Room 7 "La salida de Sahur"
+"""Cooperative platformer levels simulated on the TV: Room 1 "Nivel 0" (single screens) and Room 6 "La salida de Sahur"
 (long levels that scroll).
 
 The two rooms are the same puzzle with a different level set (static/puzzles/coop_platformer/levels.js): the view
@@ -16,7 +16,7 @@ from app.core.puzzle import ActionRejected, PuzzleCtx
 from app.puzzles.sim_common import SimGuard, reason_of
 
 LEVELS = 4  # Room 1
-SAHUR_LEVELS = 5  # Room 7: the long scrolling levels
+SAHUR_LEVELS = 5  # Room 6: the long scrolling levels
 
 
 class CoopPlatformer:
@@ -82,5 +82,5 @@ class CoopPlatformer:
 
 
 def sahur_platformer() -> CoopPlatformer:
-    """Room 7: Sahur's five scrolling levels (drums, small buttons, lifts, lanterns and his chase, with Room 1's pieces)."""
+    """Room 6: Sahur's five scrolling levels (drums, small buttons, lifts, lanterns and his chase, with Room 1's pieces)."""
     return CoopPlatformer(id="sahur_platformer", title="La salida de Sahur", level_set="sahur", levels=SAHUR_LEVELS)

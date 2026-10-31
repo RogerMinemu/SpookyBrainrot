@@ -208,7 +208,7 @@ def test_full_pass_through_all_rooms_and_frozen_ending():
     eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 0 -> unlocked
     assert (g.room_no, g.phase) == (0, PHASE_UNLOCKED)
 
-    rooms = [(1, "coop_platformer"), (2, "red_light"), (3, "shape_count"), (4, "backrooms_trivia"), (6, "bomb_defusal")]
+    rooms = [(1, "coop_platformer"), (2, "red_light"), (3, "shape_count"), (4, "backrooms_trivia"), (5, "bomb_defusal")]
     for room_no, puzzle_id in rooms:
         out = eng.apply(g, Advance())  # -> next room intro
         assert out.changed and (g.room_no, g.phase) == (room_no, PHASE_INTRO) and g.status == STATUS_RUNNING
@@ -220,16 +220,16 @@ def test_full_pass_through_all_rooms_and_frozen_ending():
         assert eng.apply(g, Scan("anchor", room_no)).scan_result == SCAN_UNLOCKED
         assert g.phase == PHASE_UNLOCKED
 
-    assert eng.apply(g, Advance()).changed and (g.room_no, g.phase) == (7, PHASE_INTRO)
+    assert eng.apply(g, Advance()).changed and (g.room_no, g.phase) == (6, PHASE_INTRO)
     to_puzzle(eng, g)
     assert g.puzzle_id == "sahur_platformer"
     eng.apply(g, PuzzleAction("a", {"do": "rot", "amount": 42}))
-    eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 7 solved -> search
+    eng.apply(g, PuzzleAction("a", {"do": "complete"}))  # room 6 solved -> search
     assert g.phase == PHASE_SEARCH and g.puzzle_state is None
 
     assert eng.apply(g, Scan("anchor", 1)).scan_result == SCAN_ALREADY
     assert g.phase == PHASE_SEARCH
-    out = eng.apply(g, Scan("anchor", 7))
+    out = eng.apply(g, Scan("anchor", 6))
     assert out.changed and out.scan_result == SCAN_FINISHED
     assert g.status == STATUS_FINISHED
     assert g.ending["band"] == brainrot.BAND_PASSENGER and g.ending["brainrot"] == 42
@@ -237,7 +237,7 @@ def test_full_pass_through_all_rooms_and_frozen_ending():
     # frozen: nothing moves anymore
     assert eng.apply(g, Advance()).error[0] == "wrong_phase"
     assert eng.apply(g, PuzzleAction("a", {"do": "rot"})).error[0] == "no_puzzle"
-    assert eng.apply(g, Scan("anchor", 7)).scan_result == SCAN_ALREADY
+    assert eng.apply(g, Scan("anchor", 6)).scan_result == SCAN_ALREADY
     assert g.brainrot == 42 and g.status == STATUS_FINISHED
 
 

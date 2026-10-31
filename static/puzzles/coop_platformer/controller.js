@@ -1,4 +1,4 @@
-// Co-op platformer - phone controller (Room 1 "Nivel 0", and Room 7 through sahur_platformer/controller.js).
+// Co-op platformer - phone controller (Room 1 "Nivel 0", and Room 6 through sahur_platformer/controller.js).
 // Contract: mount(root, ctx), update(view, state), unmount().
 // The phone only sends the held-button mask (shared pad); the TV runs the game and answers with fx.
 import { h, fill } from "/static/js/shared/dom.js";

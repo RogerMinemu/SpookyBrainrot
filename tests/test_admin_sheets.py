@@ -1,45 +1,44 @@
 import re
 
-from app.content import CAMEOS
+from app.content import CAMEOS, KEY_ROOMS
 
 
-def test_sheet_has_15_cards_labelled_in_token_order(client):
+def test_sheet_prints_one_key_per_real_room_in_play_order(client):
     r = client.get("/admin/qr-sheet")
     assert r.status_code == 200
-    assert r.text.count("<svg") == 15
-    assert re.findall(r'class="label">(#\d\d)<', r.text) == [f"#{i:02d}" for i in range(1, 16)]
+    assert r.text.count("<svg") == len(KEY_ROOMS) == 6  # rooms 1..6: no decoys, no unused anchor
+    assert re.findall(r'class="label">([^<]+)<', r.text) == [f"Sala {i}" for i in range(1, 7)]
+    names = re.findall(r'class="name">([^<]+)<', r.text)
+    assert names[0] == "Nivel 0 · Brr Brr Patapim" and names[-1] == "La salida · Tung Tung Tung Sahur"
     assert "viewBox" in r.text
 
 
-def test_sheet_does_not_distinguish_anchors_from_decoys(client):
-    html = client.get("/admin/qr-sheet").text
-    low = html.lower().replace("/admin/house", "")
-    for word in ("ancla", "senuelo", "decoy", "anchor"):
-        assert word not in low
-    for c in CAMEOS:
-        assert c not in html
-    for e in client.app.state.qr_repo.entries():
-        assert e.token not in html  # only encoded inside the QR modules
-
-
-def test_keys_only_sheet_prints_just_the_room_anchors_with_their_full_sheet_labels(client):
-    from app.content import ANCHORS_IN_USE
-    from app.core.qr import KIND_ANCHOR, ordered_with_labels
+def test_sheet_codes_open_their_own_room(client):
+    from app.core.qr import entry_for_code
 
     entries = client.app.state.qr_repo.entries()
-    expected = [label for label, e in ordered_with_labels(entries)
-                if e.kind == KIND_ANCHOR and e.idx in ANCHORS_IN_USE]
-    html = client.get("/admin/qr-sheet?solo=llaves").text
-    assert html.count("<svg") == len(ANCHORS_IN_USE) == 6  # anchor 5 has no room
-    assert re.findall(r'class="label">(#\d\d)<', html) == expected
-    assert 'href="/admin/qr-sheet"' in html
-    assert 'href="/admin/qr-sheet?solo=llaves"' in client.get("/admin/qr-sheet").text
+    codes = re.findall(r"Código: <b>([A-Z]{4})</b>", client.get("/admin/qr-sheet").text)
+    found = [entry_for_code(entries, c) for c in codes]
+    assert [(e.kind, e.idx) for e in found] == [("anchor", room.anchor) for room in KEY_ROOMS]
+
+
+def test_sheet_leaks_no_tokens_nor_decoys(client):
+    html = client.get("/admin/qr-sheet").text
+    low = html.lower().replace("/admin/house", "")
+    for word in ("ancla", "senuelo", "señuelo", "decoy", "anchor"):
+        assert word not in low
+    guardians = " ".join(room.key_name for room in KEY_ROOMS)
+    for c in CAMEOS:
+        assert c in guardians or c not in html  # a guardian's name is on its room's key; the other cameos never are
+    for e in client.app.state.qr_repo.entries():
+        assert e.token not in html  # only encoded inside the QR modules
+    assert "solo=llaves" not in html  # the old full sheet / keys-only toggle is gone
 
 
 def test_sheet_flags_missing_riddles_in_non_printed_notice(client):
-    # anchor 5 has no room since room 5 was dropped: its missing riddle is not nagged about
+    # anchor 7 has no room: its missing riddle is not nagged about
     assert "Faltan 6 pistas" in client.get("/admin/qr-sheet").text
-    for i in (1, 2, 3, 4, 6, 7):
+    for i in range(1, 7):
         client.put(f"/api/house/{i}", json={"riddle": f"pista {i}"})
     assert "Faltan" not in client.get("/admin/qr-sheet").text
 
@@ -54,6 +53,7 @@ def test_key_lists_15_rows_with_spoiler_banner(client):
     key = client.get("/admin/qr-key").text
     assert key.count("<tr>") == 16  # header + 15
     assert key.count("Ancla ") == 7 and key.count("Señuelo ") == 8
+    assert key.count("(no se imprime)") == 8 and "Ancla 7 (sin uso: no se imprime)" in key
     assert "SPOILER" in key
 
 
@@ -61,10 +61,10 @@ def test_key_maps_labels_to_roles_and_riddles(client):
     client.put("/api/house/2", json={"riddle": "Tras el espejo", "place": "Bano"})
     key = client.get("/admin/qr-key").text
     assert "Tras el espejo" in key and "Bano" in key
-    assert key.count("FALTA") == 5  # anchors 1, 3, 4, 6 and 7 (2 is written, 5 is unused)
-    assert "Ancla 7 (salida)" in key and "Ancla 5 (sin uso" in key
+    assert key.count("FALTA") == 5  # anchors 1, 3, 4, 5 and 6 (2 is written, 7 is unused)
+    assert "Ancla 1: Nivel 0 · Brr Brr Patapim" in key and "Ancla 6: La salida · Tung Tung Tung Sahur (salida)" in key
     for c in CAMEOS:
         assert c in key
-    sheet_labels = re.findall(r'class="label">(#\d\d)<', client.get("/admin/qr-sheet").text)
-    key_labels = re.findall(r"<td><strong>(#\d\d)</strong>", key)
+    sheet_labels = re.findall(r'class="label">([^<]+)<', client.get("/admin/qr-sheet").text)
+    key_labels = re.findall(r"<td><strong>(Sala \d)</strong>", key)
     assert sheet_labels == key_labels

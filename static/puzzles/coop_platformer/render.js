@@ -1,6 +1,6 @@
 // Co-op platformer scene renderer (Rooms 1 and 7): tiles, gadgets and blobs on the shared 1920x1080 stage.
-// Render-only, reads sim snapshots. The colours are the room's theme tokens, so Room 7 gets Sahur's palette.
-// Room 1 is the Backrooms on one screen; Room 7 is Sahur's village at night, scrolling with the group (snap.cam).
+// Render-only, reads sim snapshots. The colours are the room's theme tokens, so Room 6 gets Sahur's palette.
+// Room 1 is the Backrooms on one screen; Room 6 is Sahur's village at night, scrolling with the group (snap.cam).
 import { TILE, STAGE_W, STAGE_H, drawBlob, label, roundRect } from "/static/js/sim/draw.js";
 import { VIEW_W } from "./levels.js";
 

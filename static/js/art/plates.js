@@ -114,7 +114,7 @@ function bgPoolrooms(E, pal, { w, h, m }) {
   E.paint(E.rect(-30, h * .62, w + 60, 24 * m, 3 * m), { wash: lighter(tile, .55), washOp: 250, ink: PAL.ink, sw: .9 });
 }
 
-// Room 7 "Sahur dice": a dark street before dawn, a glowing window and a row of drums.
+// Room 6 "Sahur dice": a dark street before dawn, a glowing window and a row of drums.
 function bgSahur(E, pal, { w, h, m }) {
   const dark = darker(pal.a, .35);
   E.paint(E.rect(-20, -20, w + 40, h + 40, 6 * m), { wash: pal.a, washOp: 255, ink: null });
@@ -218,7 +218,7 @@ function bgSite19(E, pal, { w, h, m }) {
   for (let i = 0; i < 4; i++) E.paint(E.rect(w * (.08 + i * .24), h * .02, w * .12, 14 * m, 2 * m), { wash: lighter(glow, .5), washOp: 230, ink: PAL.ink, sw: .7 });
 }
 
-// Room 6 "Desactivad la bomba": an abandoned hangar. Ribbed roof, crates, hanging lamps and the big door open to the night.
+// Room 5 "Desactivad la bomba": an abandoned hangar. Ribbed roof, crates, hanging lamps and the big door open to the night.
 function bgHangar(E, pal, { w, h, m }) {
   const dark = darker(pal.a, .4);
   E.paint(E.rect(-20, -20, w + 40, h + 40, 6 * m), { wash: pal.a, washOp: 255, ink: null });

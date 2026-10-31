@@ -34,8 +34,8 @@ def test_last_anchor_finishes_then_is_already_done(client):
     anchors, _ = tokens(client)
     with phone(client, tok) as a:
         drain(a)
-        assert scan(a, anchors[7])[0]["result"] == "finished" and rt.game.status == "finished"
-        assert scan(a, anchors[7])[0]["result"] == "already_done"
+        assert scan(a, anchors[6])[0]["result"] == "finished" and rt.game.status == "finished"
+        assert scan(a, anchors[6])[0]["result"] == "already_done"
 
 
 def test_anchor_sleeps_outside_its_search_phase(client):
@@ -43,7 +43,7 @@ def test_anchor_sleeps_outside_its_search_phase(client):
     anchors, _ = tokens(client)
     with phone(client, tok) as a:
         drain(a)
-        assert scan(a, anchors[7])[0]["result"] == "sleeping"
+        assert scan(a, anchors[6])[0]["result"] == "sleeping"
         assert scan(a, anchors[3])[0]["result"] == "already_done"  # an earlier room's anchor
         assert rt.game.phase == PHASE_PUZZLE and rt.game.brainrot == 0
 
@@ -75,9 +75,9 @@ def test_only_players_scan_and_the_answer_is_private(client):
     anchors, _ = tokens(client)
     with tv_socket(client, rt.game.id) as tv, phone(client, tok) as a:
         drain(tv), drain(a)
-        tv.send_text(env("scan", {"token": anchors[7]}))
+        tv.send_text(env("scan", {"token": anchors[6]}))
         err = recv(tv)
         assert err["t"] == "error" and err["payload"]["code"] == "not_player"
         assert rt.game.status == "running"
-        scan(a, anchors[7])
+        scan(a, anchors[6])
         assert not of(drain(tv), "scan")  # the TV sees the state and the events, never the scan answer

@@ -1,4 +1,4 @@
-// Room 7: Sahur's scrolling platformer levels (same engine as Room 1, plus the camera, the leash, drums, small
+// Room 6: Sahur's scrolling platformer levels (same engine as Room 1, plus the camera, the leash, drums, small
 // buttons, lifts, lanterns and Sahur's chase).
 import test from "node:test";
 import assert from "node:assert/strict";

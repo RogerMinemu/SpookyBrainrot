@@ -1,4 +1,4 @@
-"""Room 6 plugin: the rules (one case per manual line), the torn manual, strikes, boom, roles, private bomb."""
+"""Room 5 plugin: the rules (one case per manual line), the torn manual, strikes, boom, roles, private bomb."""
 import itertools
 import json
 import random

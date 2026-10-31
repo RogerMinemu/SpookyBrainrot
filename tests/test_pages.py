@@ -281,7 +281,7 @@ def test_sahur_front_end_keeps_the_sequence_on_the_tv():
 
 def test_sahur_theme_is_mapped_and_tokens_exist():
     theme = (STATIC / "js" / "ui" / "theme.js").read_text(encoding="utf-8")
-    assert '7: "sahur"' in theme and '"sahur"]' in theme
+    assert '6: "sahur"' in theme and '"sahur"]' in theme
     css = (STATIC / "css" / "theme.css").read_text(encoding="utf-8")
     for tok in ("#2A1414", "#5C1F1A", "#E8C07A", "#D9643A", "#E6CFC2"):
         assert tok in css
@@ -297,7 +297,7 @@ def test_new_room_copy_has_orthography():
     assert "¡Habéis fallado!" in sahur and "¡Vuestro turno!" in sahur
 
 
-# ---- rooms 3, 4 and 6 (room 5 dropped): front-ends, themes ----
+# ---- rooms 3, 4 and 5: front-ends, themes ----
 def test_new_room_front_ends_are_wired():
     for kind in ("shape_count", "backrooms_trivia", "bomb_defusal"):
         for name in ("tv.js", "controller.js"):
@@ -315,9 +315,9 @@ def test_new_room_front_ends_are_wired():
 
 def test_new_room_themes_are_mapped_and_painted():
     theme = (STATIC / "js" / "ui" / "theme.js").read_text(encoding="utf-8")
-    for room_no, room in ((3, "mall"), (4, "site19"), (6, "hangar")):
+    for room_no, room in ((3, "mall"), (4, "site19"), (5, "hangar")):
         assert f'{room_no}: "{room}"' in theme
-    assert "5:" not in theme  # room 5 was dropped
+    assert "7:" not in theme  # the rooms are numbered with no gap: 0..6
     css = (STATIC / "css" / "theme.css").read_text(encoding="utf-8")
     plates = (STATIC / "js" / "art" / "plates.js").read_text(encoding="utf-8")
     for room, fn in (("mall", "bgMall"), ("site19", "bgSite19"), ("hangar", "bgHangar")):

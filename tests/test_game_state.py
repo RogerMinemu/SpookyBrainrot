@@ -57,7 +57,7 @@ def test_roundtrip_room1_level3_brainrot20_new_instance(tmp_path):
 def test_serialize_has_expected_keys():
     g = Game(id="a", code="ABCD", name="n")
     s = g.serialize_state({})
-    assert s["v"] == 2 and s["room_no"] == 0
+    assert s["v"] == 3 and s["room_no"] == 0
     assert set(s) == {"v", "room_idx", "room_no", "phase", "brainrot", "brainrot_log", "decoys_hit",
                       "clock_ms", "seq", "puzzle", "ending"}
     assert s["puzzle"] is None

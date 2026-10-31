@@ -223,8 +223,8 @@ export const SCENES = {
     ],
   },
 
-  // ---------------------------------------------------------------- room 6: Bombardiro, the hangar
-  intro_6: {
+  // ---------------------------------------------------------------- room 5: Bombardiro, the hangar
+  intro_5: {
     title: "Hangar", cast: ["bombardiro"],
     beats: [
       card("Hangar abandonado", { sfx: "warn" }),
@@ -235,7 +235,7 @@ export const SCENES = {
       say("bombardiro", "Ocho minutos. Tres errores y ¡BUM! Pero tranquilos: tengo más bombas. Muchas más.", { emote: "scary", shake: true }),
     ],
   },
-  riddle_6: {
+  riddle_5: {
     cast: ["bombardiro"],
     beats: [
       say("bombardiro", "¿Desactivada? Pfff... Vale, un trato es un trato. Desde el aire se ve todo, y he visto vuestra ancla:"),
@@ -243,14 +243,14 @@ export const SCENES = {
       say("bombardiro", "Escanead ese QR con el móvil antes de que se me ocurra otra idea."),
     ],
   },
-  riddle_6_none: {
+  riddle_5_none: {
     cast: ["bombardiro"],
     beats: [
       say("bombardiro", "Desde aquí arriba no veo la pista: nadie la ha escrito."),
       say("bombardiro", "Buscad el QR por la casa y escaneadlo con el móvil. Yo vigilo desde el aire. Por si acaso."),
     ],
   },
-  exit_6: {
+  exit_5: {
     cast: ["bombardiro"],
     beats: [
       say("fundacion", "Atención: perdemos la señal. Algo golpea al otro lado de la pantalla.", { sfx: "warn", shake: true }),
@@ -259,8 +259,8 @@ export const SCENES = {
     ],
   },
 
-  // ---------------------------------------------------------------- room 7: Sahur, the way out
-  intro_7: {
+  // ---------------------------------------------------------------- room 6: Sahur, the way out
+  intro_6: {
     title: "Sala final", cast: ["sahur"],
     beats: [
       card("Sala final · La salida de Sahur", { sfx: "warn" }),
@@ -271,7 +271,7 @@ export const SCENES = {
       say("sahur", "Y quien pise un pincho vuelve al principio. Mi bate tiene muchísima paciencia. Tung.", { emote: "scary", shake: true }),
     ],
   },
-  riddle_7: {
+  riddle_6: {
     cast: ["sahur"],
     beats: [
       say("sahur", "Vale, vale. Saltáis mejor de lo que pensaba. Esta es la última ancla: la salida."),
@@ -279,7 +279,7 @@ export const SCENES = {
       say("sahur", "Escanead ese QR con el móvil antes de las cuatro y media. Yo voy contando. Tung... tung...", { emote: "happy" }),
     ],
   },
-  riddle_7_none: {
+  riddle_6_none: {
     cast: ["sahur"],
     beats: [
       say("sahur", "La pista de la salida no está escrita. Qué descuido. Tung.", { emote: "surprised" }),
@@ -324,7 +324,7 @@ export const SCENES = {
 };
 
 /** Rooms with a guardian (and so an intro, a riddle and a hand-off scene). */
-export const GUARDED_ROOMS = [1, 2, 3, 4, 6, 7];
+export const GUARDED_ROOMS = [1, 2, 3, 4, 5, 6];
 
 /** Story key -> scene ids. search:<n> picks riddle_<n> or riddle_<n>_none in runner.playlistFor. */
 export const PLAYLISTS = {
@@ -336,7 +336,7 @@ export const PLAYLISTS = {
 };
 for (const n of GUARDED_ROOMS) {
   PLAYLISTS[`intro:${n}`] = [`intro_${n}`];
-  if (n !== 7) PLAYLISTS[`unlocked:${n}`] = [`exit_${n}`]; // room 7's QR is the way out: the ending follows
+  if (n !== 6) PLAYLISTS[`unlocked:${n}`] = [`exit_${n}`]; // room 6's QR is the way out: the ending follows
 }
 
 /** Jumpscare one-liners (a decoy QR wakes its brainrot up on the TV). */

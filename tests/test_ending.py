@@ -9,11 +9,11 @@ from app.core.game import PHASE_SEARCH, STATUS_RUNNING
 def finish(client, value):
     g = client.post("/api/games", json={"name": "G"}).json()
     rt = client.app.state.manager.get(g["id"])
-    rt.game.status, rt.game.room_idx, rt.game.phase = STATUS_RUNNING, len(ROOM_PLAN) - 1, PHASE_SEARCH  # room 7: the last
+    rt.game.status, rt.game.room_idx, rt.game.phase = STATUS_RUNNING, len(ROOM_PLAN) - 1, PHASE_SEARCH  # room 6: the last
     rt.game.brainrot = value
 
     async def go():
-        return await rt.apply(Scan("anchor", 7))
+        return await rt.apply(Scan("anchor", 6))
 
     return rt, client.portal.call(go)
 

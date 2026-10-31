@@ -1,8 +1,8 @@
-"""v1 -> v2 save migration: room_no is persisted and legacy room_idx is remapped (R-GM-1/2/3)."""
+"""Save migrations: v1 -> room_no from the legacy room_idx (R-GM-1/2/3); v2 -> v3 closes the gap left by room 5."""
 import json
 
 from app.content import ROOM_PLAN
-from app.core.game import LEGACY_V1_ROOM_NOS, STATE_VERSION, Game, Player, resolve_room_idx
+from app.core.game import LEGACY_V1_ROOM_NOS, LEGACY_V2_ROOM_NOS, STATE_VERSION, Game, Player, resolve_room_idx
 from app.puzzles import build_registry
 
 
@@ -39,8 +39,9 @@ def _load(state, status="running", puzzles=None):
 
 
 def test_state_version_and_legacy_constant():
-    assert STATE_VERSION == 2
+    assert STATE_VERSION == 3
     assert LEGACY_V1_ROOM_NOS == (0, 2)
+    assert LEGACY_V2_ROOM_NOS[6] == 5 and LEGACY_V2_ROOM_NOS[7] == 6 and 5 not in LEGACY_V2_ROOM_NOS
 
 
 def test_v1_idx1_cursed_wordle_lands_in_room2_intro():
@@ -88,24 +89,30 @@ def test_search_phase_without_puzzle_is_kept():
     assert g.room_no == 2 and g.phase == "search"
 
 
-def test_v2_roundtrip_uses_room_no():
+def test_v3_roundtrip_uses_room_no():
     last = len(ROOM_PLAN) - 1
     g = Game(id="g", code="ABCD", name="n", room_idx=last, phase="intro")
     blob = json.loads(json.dumps(g.serialize_state({})))
-    assert blob["v"] == 2 and blob["room_no"] == 7
+    assert blob["v"] == 3 and blob["room_no"] == 6
     g2 = _load(blob)
-    assert g2.room_idx == last and g2.room_no == 7
+    assert g2.room_idx == last and g2.room_no == 6
 
 
 def test_v2_save_from_the_old_plan_keeps_its_room():
-    # a save made while the plan was 0, 1, 2, 7 (room 7 at idx 3) still lands on room 7: room_no wins over the idx
+    # a save made while the plan was 0, 1, 2, 7 (room 7 at idx 3) still lands on Sahur's room, now room 6
     g = _load({"v": 2, "room_no": 7, "room_idx": 3, "phase": "intro"})
-    assert g.room_no == 7 and g.room_idx == len(ROOM_PLAN) - 1
-    assert resolve_room_idx({"v": 2, "room_no": 5, "room_idx": 4}) == 4  # room 5 is gone: clamp the idx (room 4)
+    assert g.room_no == 6 and g.room_idx == len(ROOM_PLAN) - 1
+    assert resolve_room_idx({"v": 2, "room_no": 5, "room_idx": 4}) == 4  # v2 room 5 was gone: clamp the idx (room 4)
 
 
-def test_v2_room_no_wins_over_stale_idx():
+def test_v2_bomb_room_6_becomes_room_5_and_keeps_its_puzzle():
+    g = _load({"v": 2, "room_no": 6, "room_idx": 5, "phase": "search"})
+    assert g.room_no == 5 and ROOM_PLAN[g.room_idx].puzzle_id == "bomb_defusal" and g.phase == "search"
+
+
+def test_room_no_wins_over_stale_idx():
     assert resolve_room_idx({"v": 2, "room_no": 2, "room_idx": 0}) == 2
+    assert resolve_room_idx({"v": 3, "room_no": 6, "room_idx": 0}) == len(ROOM_PLAN) - 1
     assert resolve_room_idx({"v": 2, "room_no": 99, "room_idx": 1}) == 1  # unknown room_no: clamp idx
     assert resolve_room_idx({"v": 2, "room_no": 99, "room_idx": 50}) == len(ROOM_PLAN) - 1
 

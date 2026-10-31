@@ -205,7 +205,7 @@ export function createTriviaCrew(random = Math.random) {
 }
 
 /**
- * Room 7: reads the TV view (sequence with its trap flags) and, in the input phase, makes the owner of the next
+ * Room 6: reads the TV view (sequence with its trap flags) and, in the input phase, makes the owner of the next
  * real prompt tap its drum after a human-like pause. Trap prompts are skipped: nobody taps them.
  * `think(view, now)` -> null | { name, drum }.
  */

@@ -1,4 +1,4 @@
-// Room 7 "Sahur dice" - phone controller. Contract: mount(root, ctx), update(view, state), unmount().
+// Room 6 "Sahur dice" - phone controller. Contract: mount(root, ctx), update(view, state), unmount().
 // A phone only ever knows its own drums (view.drums = ids) and the phase: the sequence is on the TV alone.
 import { h, fill } from "/static/js/shared/dom.js";
 import { panel, title } from "/static/js/ui/kit.js";

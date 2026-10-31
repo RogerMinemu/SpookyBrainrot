@@ -1,4 +1,4 @@
-// Room 6 "Desactivad la bomba" - phone controller. Contract: mount(root, ctx), update(view, state), unmount().
+// Room 5 "Desactivad la bomba" - phone controller. Contract: mount(root, ctx), update(view, state), unmount().
 // role "defuser": this phone alone has the bomb (and the whole manual only when nobody else is connected).
 // role "expert": a share of the manual pages, never the bomb.
 // The bomb is built once per bomb and then updated in place: rebuilding it on every clock second would drop the finger

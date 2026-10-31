@@ -15,9 +15,9 @@ export function musicFor(state) {
   if (kind === "ending") return { track: "ending", volume: 0.22, band: v.band, loop: false };
   if (kind === "lobby" || kind === "idle") return { track: "lobby", volume: 0.16 };
   // looking for the QR round the house: on tiptoe (Sahur's own song in the last room)
-  if (kind === "search") return room === 7 ? { track: "room7_sahur", volume: 0.12 } : { track: "search", volume: 0.12 * TRACK_GAIN.search };
-  if (kind === "unlocked") return { track: room === 7 ? "room7_sahur" : "lobby", volume: 0.12 };
-  const tracks = { 0: "tension", 1: "room1_backrooms", 2: "room2_pools", 3: "room3_mall", 4: "room4_quiz", 6: "tension", 7: "room7_sahur" };
+  if (kind === "search") return room === 6 ? { track: "room7_sahur", volume: 0.12 } : { track: "search", volume: 0.12 * TRACK_GAIN.search };
+  if (kind === "unlocked") return { track: room === 6 ? "room7_sahur" : "lobby", volume: 0.12 };
+  const tracks = { 0: "tension", 1: "room1_backrooms", 2: "room2_pools", 3: "room3_mall", 4: "room4_quiz", 5: "tension", 6: "room7_sahur" };
   const puzzles = { hold_together: "tension", coop_platformer: "room1_backrooms", red_light: "room2_pools", shape_count: "room3_mall", backrooms_trivia: "room4_quiz", bomb_defusal: "tension", sahur_dice: "room7_sahur", sahur_platformer: "room7_sahur" };
   const track = puzzles[kind] || tracks[room] || "lobby";
   const quiet = kind === "sahur_dice" && ["show", "input"].includes(v.phase);

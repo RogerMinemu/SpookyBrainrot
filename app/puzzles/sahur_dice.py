@@ -1,4 +1,4 @@
-"""Room 7, "Sahur dice": a Simon where only some prompts are real.
+"""Room 6, "Sahur dice": a Simon where only some prompts are real.
 
 Rules:
 - ROUNDS rounds with growing sequences (SEQ_LEN). The TV flashes the drums one by one; from round 2 some

@@ -6,8 +6,12 @@ def test_get_house_defaults_unconfigured(client):
     data = client.get("/api/house").json()
     assert [a["idx"] for a in data["anchors"]] == list(range(1, 8))
     assert not any(a["configured"] for a in data["anchors"])
-    # room 5 was dropped: its printed anchor has no job (the house page says it needs no hiding)
-    assert [a["idx"] for a in data["anchors"] if not a["in_use"]] == [5]
+    # anchor 7 has no room since the rooms were renumbered 0..6 (the house page says it is not printed)
+    assert [a["idx"] for a in data["anchors"] if not a["in_use"]] == [7]
+    by_idx = {a["idx"]: a for a in data["anchors"]}
+    assert by_idx[1]["room"] == "Sala 1 · Nivel 0 · Brr Brr Patapim" and not by_idx[1]["exit"]
+    assert by_idx[6]["exit"] and by_idx[6]["room"].startswith("Sala 6 · ")
+    assert by_idx[7]["room"] == "" and not by_idx[7]["exit"]
 
 
 def test_put_then_get(client):

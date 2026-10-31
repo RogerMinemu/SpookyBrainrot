@@ -4,7 +4,7 @@ from __future__ import annotations
 from html import escape
 from typing import Dict, Optional, Sequence, Tuple
 
-from app.content import ANCHORS_IN_USE, CAMEOS, RIDDLE_PLACEHOLDER
+from app.content import CAMEOS, EXIT_ANCHOR, KEY_ROOMS, RIDDLE_PLACEHOLDER, key_label
 from app.core.engine import (
     SCAN_ALREADY,
     SCAN_FINISHED,
@@ -13,7 +13,7 @@ from app.core.engine import (
     SCAN_SLEEPING,
     SCAN_UNLOCKED,
 )
-from app.core.qr import GameRef, QrEntry
+from app.core.qr import GameRef, QrEntry, room_keys
 
 _PAPER = ('<link rel="icon" href="data:,"><link rel="stylesheet" href="/static/css/paper.css">')
 
@@ -74,34 +74,32 @@ _SHEET_STYLE = """
 @page{size:A4;margin:0}
 body{background:#fff;color:#000}
 .notice{background:#fff3cd;color:#664d03;padding:.8rem 1rem;margin:0;font-family:system-ui,sans-serif}
-.tools{padding:.8rem 1rem;margin:0;font-family:system-ui,sans-serif;border-bottom:1px solid #999}
 .card{width:210mm;height:297mm;display:flex;flex-direction:column;align-items:center;justify-content:center;
  page-break-after:always;break-after:page;box-sizing:border-box}
 .card svg{width:15cm;height:15cm}
 .card .label{font:700 3rem system-ui,sans-serif;margin-top:1rem}
+.card .name{font:600 1.8rem system-ui,sans-serif;margin-top:.3rem}
 .card .code{font:600 1.6rem system-ui,sans-serif;margin-top:.6rem;color:#333}
 .card .code b{font:700 2.6rem ui-monospace,Consolas,monospace;letter-spacing:.35em;color:#000;margin-left:.3em}
-@media print{.notice,.tools{display:none}}
+@media print{.notice{display:none}}
 @media screen{.card{border-bottom:2px dashed #999;margin:0 auto}}
 """
 
 
-def qr_sheet(cards: Sequence[Tuple[str, str, str]], missing_riddles: int, keys_only: bool = False) -> str:
-    """cards: (label, svg, code). Identical cards: nothing reveals anchor vs decoy. The code is typed in the phone's
-    "Pistas" screen when its camera cannot read the QR. keys_only: the cards are just the room keys (reprints)."""
-    toggle = ('Solo las llaves de las salas &middot; <a href="/admin/qr-sheet">Ver todos los QR</a>' if keys_only
-              else '<a href="/admin/qr-sheet?solo=llaves">Imprimir solo las llaves de las salas</a>')
-    tools = f'<p class="tools">{toggle} <span class="muted">(esta barra no se imprime)</span></p>'
+def qr_sheet(cards: Sequence[Tuple[str, str, str, str]], missing_riddles: int) -> str:
+    """cards: (label, name, svg, code), one per real room in play order ("Sala 1", "Nivel 0 · Brr Brr Patapim").
+    The code is typed in the phone's "Pistas" screen when its camera cannot read the QR."""
     notice = ""
     if missing_riddles:
         notice = (f'<p class="notice">Faltan {missing_riddles} pistas por escribir en '
                   '<a href="/admin/house">/admin/house</a> (esta nota no se imprime).</p>')
     body = "".join(f'<section class="card">{svg}<div class="label">{escape(label)}</div>'
+                   f'<div class="name">{escape(name)}</div>'
                    f'<div class="code">¿No lo lee? Código: <b>{escape(code)}</b></div></section>'
-                   for label, svg, code in cards)
+                   for label, name, svg, code in cards)
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hoja de QR</title>'
-        f'{_PAPER}<style>{_SHEET_STYLE}</style></head><body class="sheet">{tools}{notice}{body}</body></html>'
+        f'{_PAPER}<style>{_SHEET_STYLE}</style></head><body class="sheet">{notice}{body}</body></html>'
     )
 
 
@@ -114,26 +112,28 @@ td,th{padding:.5rem;text-align:left;vertical-align:top}
 """
 
 
-def qr_key(rows: Sequence[Tuple[str, QrEntry]], house: Dict[int, dict], codes: Optional[Dict[str, str]] = None) -> str:
+def qr_key(entries: Sequence[QrEntry], house: Dict[int, dict], codes: Optional[Dict[str, str]] = None) -> str:
+    """Every QR: first the printed room keys (as labelled on the sheet), then the ones the sheet leaves out."""
+    dash = '<span class="muted">-</span>'
+    keys = room_keys(entries, KEY_ROOMS)
+    printed = {e.token for _, e in keys}
+    rest = sorted((e for e in entries if e.token not in printed), key=lambda e: (e.kind != "anchor", e.idx))
     out = []
-    for label, e in rows:
-        if e.kind == "anchor" and e.idx not in ANCHORS_IN_USE:
-            role = f"Ancla {e.idx} (sin uso: no hace falta esconderla)"
-            riddle_html = '<span class="muted">-</span>'
-            place_html = '<span class="muted">-</span>'
-        elif e.kind == "anchor":
+    for room, e in [*keys, *((None, e) for e in rest)]:
+        if room is not None:
             cfg = house.get(e.idx) or {}
             riddle = (cfg.get("riddle") or "").strip()
             place = (cfg.get("spot_id") or "").strip()
-            role = f"Ancla {e.idx}" + (" (salida)" if e.idx == 7 else "")
+            label = key_label(room)
+            role = f"Ancla {e.idx}: {room.key_name}" + (" (salida)" if e.idx == EXIT_ANCHOR else "")
             riddle_html = escape(riddle) if riddle else (
                 f'<span class="missing">FALTA</span> <span class="muted">({escape(RIDDLE_PLACEHOLDER)})</span>')
-            place_html = escape(place) if place else '<span class="muted">-</span>'
+            place_html = escape(place) if place else dash
+        elif e.kind == "anchor":
+            label, role, riddle_html, place_html = "-", f"Ancla {e.idx} (sin uso: no se imprime)", dash, dash
         else:
             cameo = CAMEOS[e.idx - 1] if 1 <= e.idx <= len(CAMEOS) else "?"
-            role = f"Señuelo {e.idx}: {cameo}"
-            riddle_html = '<span class="muted">-</span>'
-            place_html = '<span class="muted">-</span>'
+            label, role, riddle_html, place_html = "-", f"Señuelo {e.idx}: {cameo} (no se imprime)", dash, dash
         code = escape((codes or {}).get(e.token, ""))
         out.append(f"<tr><td><strong>{escape(label)}</strong></td><td><code>{code}</code></td><td>{escape(role)}</td>"
                    f"<td>{place_html}</td><td>{riddle_html}</td></tr>")

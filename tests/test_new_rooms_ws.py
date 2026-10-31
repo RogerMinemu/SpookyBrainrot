@@ -68,7 +68,7 @@ def test_room4_answer_goes_in_only_with_unanimity_and_stays_hidden_until_the_rev
         assert s["view"]["reveal"]["ok"] and s["view"]["reveal"]["fact"] == fact and s["view"]["right"] == 1
 
 
-def test_room6_only_the_artificiero_gets_the_bomb_and_the_tv_never_does(client, clock):
+def test_room5_only_the_artificiero_gets_the_bomb_and_the_tv_never_does(client, clock):
     gid, (ta, tb) = setup(client)
     rt = client.app.state.manager.get(gid)
     with client.websocket_connect("/ws") as tv, client.websocket_connect("/ws") as wa, \
@@ -76,7 +76,7 @@ def test_room6_only_the_artificiero_gets_the_bomb_and_the_tv_never_does(client, 
         hello(wa, {"role": "player", "player_token": ta})
         hello(wb, {"role": "player", "player_token": tb})
         hello(tv, {"role": "tv", "game_id": gid})
-        jump(client, gid, 6, "puzzle")
+        jump(client, gid, 5, "puzzle")
         tv_view = state_until(tv, kind_is("bomb_defusal"))["view"]
         va = state_until(wa, kind_is("bomb_defusal"))["view"]
         vb = state_until(wb, kind_is("bomb_defusal"))["view"]

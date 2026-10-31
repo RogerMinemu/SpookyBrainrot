@@ -1,4 +1,4 @@
-// Room 6 "Desactivad la bomba" - TV view. Contract: mount(root, ctx), update(view, state), unmount().
+// Room 5 "Desactivad la bomba" - TV view. Contract: mount(root, ctx), update(view, state), unmount().
 // Only the clock, the strikes and the module lights: the bomb itself lives on the artificiero's phone alone and the
 // manual is torn across the other phones. Bombardiro Crocodilo circles from the corner.
 import { h, fill } from "/static/js/shared/dom.js";

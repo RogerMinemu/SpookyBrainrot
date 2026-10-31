@@ -130,7 +130,7 @@ const CAMEO_EMOTES = ["idle", "scary"];
 /** Ordered like app.content.CAMEOS; `name` is that exact string. */
 export const ROSTER = [
   {
-    id: "sahur", name: "Tung Tung Tung Sahur", kind: "rig", room: 7, voice: "sahur", seed: 0.83,
+    id: "sahur", name: "Tung Tung Tung Sahur", kind: "rig", room: 6, voice: "sahur", seed: 0.83,
     box: { w: 420, h: 920 }, foot: Math.round(150 * CHIBI_BODY), // the legs shrink with the body
     palette: { wood: "#C08A55", woodDark: "#9A6A3E", grain: "#5A3A22", rings: "#E0B27A", bat: "#D9B07A", tape: "#2B2233", ring: "#B8323A" },
     parts: SAHUR_PARTS, emotes: TALK_EMOTES,

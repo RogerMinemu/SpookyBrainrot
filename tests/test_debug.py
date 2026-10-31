@@ -50,7 +50,7 @@ def make_engine():
 def test_jump_to_each_room_and_phase():
     e, g = make_engine(), make_game()
     rooms = [(0, "intro"), (0, "puzzle"), (0, "unlocked"), (1, "puzzle"), (1, "unlocked"), (2, "intro"),
-             (2, "puzzle"), (2, "search"), (7, "intro"), (7, "puzzle"), (7, "search")]
+             (2, "puzzle"), (2, "search"), (6, "intro"), (6, "puzzle"), (6, "search")]
     for room, phase in rooms:
         out = e.apply(g, DebugJump(room, phase))
         assert out.ok and out.changed, (room, phase)
@@ -110,7 +110,7 @@ def test_jump_lobby_and_ending():
         (None, None, "unknown_room"),
         (0, "bogus", "unknown_phase"),
         (0, "search", "unknown_phase"),  # Room 0 has no anchor
-        (7, "unlocked", "unknown_phase"),  # the last room ends via the ending
+        (6, "unlocked", "unknown_phase"),  # the last room ends via the ending
         ("lobby", "puzzle", "unknown_phase"),
         ("ending", "intro", "unknown_phase"),
     ],
@@ -140,7 +140,7 @@ def test_jump_to_sub_level():
     e, g = make_engine(), make_game()
     assert e.apply(g, DebugJump(1, "puzzle", level=2)).ok
     assert g.puzzle_state.level == 2 and g.puzzle_state.epoch == 2  # jumping restarts the TV sim
-    assert e.apply(g, DebugJump(7, "puzzle", level=1)).ok  # Room 7: Sahur's platformer levels
+    assert e.apply(g, DebugJump(6, "puzzle", level=1)).ok  # Room 6: Sahur's platformer levels
     assert g.puzzle_id == "sahur_platformer" and g.puzzle_state.level == 1 and g.puzzle_state.epoch == 2
     assert e.apply(g, DebugJump(1, "puzzle", level=0)).ok and g.puzzle_state.level == 0
 
@@ -148,7 +148,7 @@ def test_jump_to_sub_level():
 @pytest.mark.parametrize(
     "room,phase,level",
     [(1, "puzzle", 4), (1, "puzzle", -1), (1, "puzzle", "2"), (1, "puzzle", True), (1, "puzzle", 1.5),
-     (7, "puzzle", 5), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
+     (6, "puzzle", 5), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
      ("lobby", None, 0), ("ending", None, 0)],
 )
 def test_jump_bad_level_is_rejected_without_mutation(room, phase, level):
@@ -230,7 +230,7 @@ def test_reset_keeps_players_and_clears_progress():
 
 def test_debug_rooms_listing():
     rooms = make_engine().debug_rooms()
-    assert [r["key"] for r in rooms] == ["lobby", 0, 1, 2, 3, 4, 6, 7, "ending"]  # room 5 was dropped
+    assert [r["key"] for r in rooms] == ["lobby", 0, 1, 2, 3, 4, 5, 6, "ending"]
     assert rooms[1]["phases"] == ["intro", "puzzle", "unlocked"]
     assert rooms[2]["phases"] == ["intro", "puzzle", "search", "unlocked"]
     assert rooms[7]["phases"] == ["intro", "puzzle", "search"]  # the last room ends via the ending
@@ -255,7 +255,7 @@ def test_info_lists_rooms_cameos_presets(client):
     r = client.get(url(gid))
     assert r.status_code == 200
     d = r.json()
-    assert [x["key"] for x in d["rooms"]] == ["lobby", 0, 1, 2, 3, 4, 6, 7, "ending"]
+    assert [x["key"] for x in d["rooms"]] == ["lobby", 0, 1, 2, 3, 4, 5, 6, "ending"]
     assert d["tv_view"] is None and d["peek"] == ""
     assert d["cameos"] == CAMEOS and d["presets"] == [0, 20, 40, 60, 80, 100]
     assert d["game"]["room"] == "lobby" and d["game"]["players"] == 2
@@ -386,7 +386,7 @@ def test_private_views_do_not_leak_after_a_jump(client):
             await rt.set_presence(p.id, True)
 
     client.portal.call(connect)
-    assert client.post(url(gid, "/jump"), json={"room": 6, "phase": "puzzle"}).status_code == 200
+    assert client.post(url(gid, "/jump"), json={"room": 5, "phase": "puzzle"}).status_code == 200
     s = rt.game.puzzle_state
     assert "bomb" not in rt.state_payload("tv")["view"]  # the TV never sees the bomb
     for p in rt.game.players:

@@ -65,11 +65,11 @@ test("endings reuse one recording, play it whole once and do not restart after c
   assert.equal(sources[2].stops, 0, "the passenger ending is not cut short");
 });
 
-test("the rooms without a Suno song get their own track; the search goes on tiptoe; room 7 keeps Sahur's", () => {
+test("the rooms without a Suno song get their own track; the search goes on tiptoe; room 6 keeps Sahur's", () => {
   assert.equal(musicFor({ game: { room_no: 3 }, view: { kind: "intro", room_no: 3 } }).track, "room3_mall");
   assert.equal(musicFor({ game: { room_no: 4 }, view: { kind: "intro", room_no: 4 } }).track, "room4_quiz");
   assert.equal(musicFor({ game: { room_no: 2 }, view: { kind: "search", anchor: 2 } }).track, "search");
-  assert.equal(musicFor({ game: { room_no: 7 }, view: { kind: "search", anchor: 7 } }).track, "room7_sahur", "the search view has no room_no");
+  assert.equal(musicFor({ game: { room_no: 6 }, view: { kind: "search", anchor: 6 } }).track, "room7_sahur", "the search view has no room_no");
   const mall = musicFor(state("shape_count"));
   assert.ok(mall.rate < 1 && mall.lowpass < 5000, "the mall's elevator music is slowed down and muffled");
 });

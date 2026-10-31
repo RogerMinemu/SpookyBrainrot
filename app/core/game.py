@@ -11,9 +11,11 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 from app.content import ROOM_PLAN, RoomSpec
 from app.core.puzzle import PlayerInfo, Puzzle
 
-STATE_VERSION = 2
+STATE_VERSION = 3
 # v1 saves stored only room_idx over the old two-room plan: idx 0 = room 0, idx 1 = room 2 (Wordle).
 LEGACY_V1_ROOM_NOS = (0, 2)
+# v2 saves numbered the rooms 0..4, 6, 7 (room 5 had been dropped); v3 closes the gap. A v2 room 5 has no room.
+LEGACY_V2_ROOM_NOS = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 6: 5, 7: 6}
 MAX_NAME_LEN = 24
 
 STATUS_LOBBY = "lobby"
@@ -29,16 +31,20 @@ PHASE_UNLOCKED = "unlocked"
 def resolve_room_idx(state: Mapping[str, Any], plan: Optional[Sequence[RoomSpec]] = None) -> int:
     """Index into the room plan for a stored state blob (any version). Never raises, always in range.
 
-    v2 saves carry `room_no` and are looked up by it; v1 saves only have the old plan's index, which maps
-    through LEGACY_V1_ROOM_NOS. Anything unknown clamps into the plan.
+    v3 saves carry `room_no` and are looked up by it; v2 ones too, renumbered through LEGACY_V2_ROOM_NOS; v1 saves
+    only have the old plan's index, which maps through LEGACY_V1_ROOM_NOS. Anything unknown clamps into the plan.
     """
     plan = ROOM_PLAN if plan is None else plan
     last = len(plan) - 1
     raw = state.get("room_idx", 0)
     idx = raw if isinstance(raw, int) and not isinstance(raw, bool) else 0
     version = state.get("v", 1)
-    if isinstance(version, int) and not isinstance(version, bool) and version >= 2:
+    version = version if isinstance(version, int) and not isinstance(version, bool) else 1
+    if version >= 3:
         room_no = state.get("room_no")
+    elif version == 2:
+        old = state.get("room_no")
+        room_no = LEGACY_V2_ROOM_NOS.get(old) if isinstance(old, int) and not isinstance(old, bool) else None
     else:
         room_no = LEGACY_V1_ROOM_NOS[max(0, min(idx, len(LEGACY_V1_ROOM_NOS) - 1))]
     if room_no is not None:

@@ -8,7 +8,7 @@ from app.puzzles import build_registry
 from tests.fakes import FakeClock, seeded_rng
 
 
-LAST = len(ROOM_PLAN) - 1  # room 7, the exit
+LAST = len(ROOM_PLAN) - 1  # room 6, the exit
 
 
 def engine():
@@ -19,33 +19,33 @@ def game(room_idx, phase, status=STATUS_RUNNING):
     return Game(id="g", code="ABCD", name="G", status=status, room_idx=room_idx, phase=phase)
 
 
-def test_room7_search_anchor7_finishes():
+def test_room6_search_anchor6_finishes():
     g = game(LAST, PHASE_SEARCH)
     g.brainrot = 10
-    out = engine().apply(g, Scan("anchor", 7))
+    out = engine().apply(g, Scan("anchor", 6))
     assert out.scan_result == SCAN_FINISHED and out.changed
     assert g.status == STATUS_FINISHED and g.phase == PHASE_UNLOCKED
     assert g.ending["band"] == brainrot.band(10)
-    assert ("anchor_unlocked", {"level": 7}, "all") in out.events
+    assert ("anchor_unlocked", {"level": 6}, "all") in out.events
 
 
-def test_room7_puzzle_anchor7_sleeping_no_change():
+def test_room6_puzzle_anchor6_sleeping_no_change():
     g = game(LAST, PHASE_PUZZLE)
-    out = engine().apply(g, Scan("anchor", 7))
+    out = engine().apply(g, Scan("anchor", 6))
     assert out.scan_result == SCAN_SLEEPING and not out.changed
     assert g.brainrot == 0 and g.status == STATUS_RUNNING
 
 
 def test_wrong_level_sleeping():
     g = game(LAST, PHASE_SEARCH)
-    assert engine().apply(g, Scan("anchor", 5)).scan_result == SCAN_SLEEPING  # anchor 5: no room uses it
+    assert engine().apply(g, Scan("anchor", 7)).scan_result == SCAN_SLEEPING  # anchor 7: no room uses it
 
 
 def test_anchor_again_after_finish_is_idempotent():
     g = game(LAST, PHASE_SEARCH)
     e = engine()
-    e.apply(g, Scan("anchor", 7))
-    out = e.apply(g, Scan("anchor", 7))
+    e.apply(g, Scan("anchor", 6))
+    out = e.apply(g, Scan("anchor", 6))
     assert out.scan_result == SCAN_ALREADY and not out.changed
 
 
@@ -85,5 +85,5 @@ def test_decoy_in_lobby_does_nothing():
 
 def test_room0_unlocked_anchor_flow_not_affected():
     g = game(0, PHASE_SEARCH)  # Room 0 has no anchor: nothing to find
-    assert engine().apply(g, Scan("anchor", 7)).scan_result == SCAN_SLEEPING
+    assert engine().apply(g, Scan("anchor", 6)).scan_result == SCAN_SLEEPING
     assert SCAN_UNLOCKED  # exported constant still available

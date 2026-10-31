@@ -1,7 +1,7 @@
-// Co-op platformer physics (Room 1 "Nivel 0" and Room 7). Pure deterministic ES module: no DOM, no globals, fixed
+// Co-op platformer physics (Room 1 "Nivel 0" and Room 6). Pure deterministic ES module: no DOM, no globals, fixed
 // 1/60 step. Units are tiles (y grows downwards). Players are solid vertically only: they stack and the supporter
 // carries its riders, but nobody pushes or blocks anybody sideways (SOLID_SIDES flips that on).
-// A level wider than the screen (Room 7) scrolls: the camera follows the group and a leash keeps everybody on it, a
+// A level wider than the screen (Room 6) scrolls: the camera follows the group and a leash keeps everybody on it, a
 // fall drops you back on a teammate (or at the last lantern), and Sahur may chase the group to the door.
 import { FIXED_DT, ms2steps } from "../../js/sim/loop.js";
 import { BIT, has, axis, clean } from "../../js/sim/bits.js";

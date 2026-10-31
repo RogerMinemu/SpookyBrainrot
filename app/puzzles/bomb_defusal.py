@@ -1,4 +1,4 @@
-"""Room 6, "Desactivad la bomba": Keep Talking and Nobody Explodes with the manual torn into pieces.
+"""Room 5, "Desactivad la bomba": Keep Talking and Nobody Explodes with the manual torn into pieces.
 
 Rules:
 - ONE connected phone, the artificiero, holds the bomb: only its view carries the bomb and only it can act on

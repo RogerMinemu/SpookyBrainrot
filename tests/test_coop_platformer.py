@@ -87,14 +87,14 @@ def test_presence_changes_are_a_noop_on_the_server():
     assert p.on_presence(ctx, s) == [] and p.tick(ctx, s) == []
 
 
-def test_room7_is_the_same_platformer_with_sahurs_level_set():
+def test_room6_is_the_same_platformer_with_sahurs_level_set():
     from app.content import ROOM_PLAN
     from app.puzzles import build_registry
     from app.puzzles.coop_platformer import sahur_platformer
 
     reg = build_registry()
-    room7 = next(r for r in ROOM_PLAN if r.room_no == 7)
-    assert room7.puzzle_id == "sahur_platformer" and room7.puzzle_id in reg
+    room6 = next(r for r in ROOM_PLAN if r.room_no == 6)
+    assert room6.puzzle_id == "sahur_platformer" and room6.puzzle_id in reg
     p = sahur_platformer()
     ctx = PuzzleCtx(FakeClock(), seeded_rng(), [PlayerInfo("p0", "P0", True)])
     s = p.start(ctx, ["p0"])

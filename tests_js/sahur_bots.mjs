@@ -1,4 +1,4 @@
-// Scripted bots for Room 7's scrolling platformer levels (tests_js/platformer_sahur.test.mjs). A bot is made for one
+// Scripted bots for Room 6's scrolling platformer levels (tests_js/platformer_sahur.test.mjs). A bot is made for one
 // level from its geometry, `BOTS[level](sim.level)`, and then reads the snapshot like a player reads the screen,
 // answering one mask per player. They prove every level can be cleared by 2 players and by 12, without a fall.
 import { BIT } from "../static/js/sim/bits.js";

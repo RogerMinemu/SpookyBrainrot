@@ -1,4 +1,4 @@
-// Co-op platformer - TV view (Room 1 "Nivel 0", and Room 7 through sahur_platformer/tv.js). The level set comes in
+// Co-op platformer - TV view (Room 1 "Nivel 0", and Room 6 through sahur_platformer/tv.js). The level set comes in
 // view.set. Contract: mount(root, ctx), update(view, state), onInput({pid, mask}), unmount().
 // The TV is the physics authority: it runs the sim and only reports outcomes (clear / penalty) to the server.
 import { createStage } from "/static/js/sim/draw.js";

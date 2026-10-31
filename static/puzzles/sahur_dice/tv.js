@@ -1,4 +1,4 @@
-// Room 7 "Sahur dice" - TV view. Contract: mount(root, ctx), update(view, state), unmount().
+// Room 6 "Sahur dice" - TV view. Contract: mount(root, ctx), update(view, state), unmount().
 // The TV is the only screen that knows the sequence. It plays the show locally (timing comes with the view)
 // and, when it mounts in the middle of a show, asks the server to restart it (handle_tv replay + epoch).
 import { h, fill } from "/static/js/shared/dom.js";

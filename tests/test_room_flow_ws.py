@@ -33,7 +33,7 @@ def scan(client, token, anchor):
     assert r.status_code == 200 and "Ancla encontrada" in r.text
 
 
-def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
+def test_room1_to_room2_to_rooms_3_4_5_to_room6_to_ending(client, clock):
     gid, (ta, tb) = setup(client)
     rt = client.app.state.manager.get(gid)
     anchors, _ = tokens(client)
@@ -92,8 +92,8 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
             scan(client, tb, anchors[2])
             state_until(tv2, lambda p: p["game"]["phase"] == "unlocked")
 
-            # --- rooms 3, 4 and 6 (room 5 was dropped): intro -> puzzle -> host complete -> their own anchor -------
-            for room_no, kind in ((3, "shape_count"), (4, "backrooms_trivia"), (6, "bomb_defusal")):
+            # --- rooms 3, 4 and 5: intro -> puzzle -> host complete -> their own anchor -------
+            for room_no, kind in ((3, "shape_count"), (4, "backrooms_trivia"), (5, "bomb_defusal")):
                 tv2.send_text(env("advance"))
                 s = state_until(tv2, lambda p, r=room_no: p["game"]["room_no"] == r)
                 assert s["game"]["phase"] == "intro"
@@ -101,17 +101,17 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
                 state_until(tv2, lambda p, k=kind: p["view"].get("kind") == k)
                 complete(client, gid)
                 state_until(tv2, lambda p: p["game"]["phase"] == "search")
-                assert client.get(f"/k/{anchors[5]}").status_code == 200 and rt.game.phase == "search"  # anchor 5 sleeps
+                assert client.get(f"/k/{anchors[7]}").status_code == 200 and rt.game.phase == "search"  # anchor 7 sleeps
                 scan(client, ta, anchors[room_no])
                 state_until(tv2, lambda p: p["game"]["phase"] == "unlocked")
 
             tv2.send_text(env("advance"))
-            s = state_until(tv2, lambda p: p["game"]["room_no"] == 7)
+            s = state_until(tv2, lambda p: p["game"]["room_no"] == 6)
             assert s["game"]["phase"] == "intro"
             tv2.send_text(env("advance"))
             s = state_until(tv2, lambda p: p["view"].get("kind") == "sahur_platformer")
 
-            # --- room 7: Sahur's five platformer levels, the same TV reports as room 1 ----------------
+            # --- room 6: Sahur's five platformer levels, the same TV reports as room 1 ----------------
             for level in range(5):
                 view = s["view"]
                 assert view["level"] == level and view["levels"] == 5 and view["set"] == "sahur"
@@ -119,14 +119,14 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
                 if level < 4:
                     s = state_until(tv2, lambda p, lv=level: p["view"].get("level") == lv + 1)
             s = state_until(tv2, lambda p: p["game"]["phase"] == "search")
-            assert s["game"]["room_no"] == 7
+            assert s["game"]["room_no"] == 6
 
-            scan(client, ta, anchors[7])
+            scan(client, ta, anchors[6])
             s = state_until(tv2, lambda p: p["game"]["status"] == "finished")
             assert s["game"]["status"] == "finished"
 
 
-def test_room7_spikes_cost_brainrot_and_stale_reports_change_nothing(client, clock):
+def test_room6_spikes_cost_brainrot_and_stale_reports_change_nothing(client, clock):
     gid, (ta, tb) = setup(client)
     rt = client.app.state.manager.get(gid)
     with client.websocket_connect("/ws") as tv, client.websocket_connect("/ws") as wa:
@@ -134,7 +134,7 @@ def test_room7_spikes_cost_brainrot_and_stale_reports_change_nothing(client, clo
         hello(tv, {"role": "tv", "game_id": gid})
         tv.send_text(env("advance"))
         state_until(tv, lambda p: p["game"]["status"] == "running")
-        jump(client, gid, 7, "puzzle")
+        jump(client, gid, 6, "puzzle")
         view = state_until(tv, lambda p: p["view"].get("kind") == "sahur_platformer")["view"]
         before = rt.game.brainrot
         sim(tv, view, "penalty", pid=pid, why="spikes")

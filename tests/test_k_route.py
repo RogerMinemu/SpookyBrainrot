@@ -19,7 +19,7 @@ def running_game(client, phase=PHASE_SEARCH, name="G"):
     tok = client.post("/api/join", json={"code": g["code"], "name": "Ana"}).json()["token"]
     rt = client.app.state.manager.get(g["id"])
     rt.game.status = STATUS_RUNNING
-    rt.game.room_idx = len(ROOM_PLAN) - 1  # room 7: the last one
+    rt.game.room_idx = len(ROOM_PLAN) - 1  # room 6: the last one
     rt.game.phase = phase
     rt.persist()
     return rt, tok
@@ -35,14 +35,14 @@ def test_unknown_token_404_no_state_change(client):
 
 def test_no_game_page(client):
     anchors, _ = tokens(client)
-    r = client.get(f"/k/{anchors[7]}")
+    r = client.get(f"/k/{anchors[6]}")
     assert r.status_code == 200 and "No hay ninguna partida" in r.text
 
 
 def test_anchor_sleeping_when_puzzle_active(client):
     rt, _ = running_game(client, PHASE_PUZZLE)
     anchors, _ = tokens(client)
-    r = client.get(f"/k/{anchors[7]}")
+    r = client.get(f"/k/{anchors[6]}")
     assert "aún duerme" in r.text
     assert rt.game.brainrot == 0 and rt.game.status == STATUS_RUNNING
 
@@ -51,10 +51,10 @@ def test_anchor_unlocks_and_ends_game_then_idempotent(client):
     rt, tok = running_game(client)
     anchors, _ = tokens(client)
     client.cookies.set("sb_pt", tok)
-    r = client.get(f"/k/{anchors[7]}")
+    r = client.get(f"/k/{anchors[6]}")
     assert "Ancla encontrada" in r.text and rt.game.status == "finished"
-    assert "ya está estable" in client.get(f"/k/{anchors[7]}").text
-    assert client.get(f"/k/{anchors[7]}").status_code == 200  # still harmless
+    assert "ya está estable" in client.get(f"/k/{anchors[6]}").text
+    assert client.get(f"/k/{anchors[6]}").status_code == 200  # still harmless
 
 
 def test_decoy_penalty_once_then_laugh(client):
@@ -70,7 +70,7 @@ def test_two_games_no_cookie_lists_then_cookie_or_g_resolves(client):
     rt_a, tok_a = running_game(client, name="A")
     rt_b, tok_b = running_game(client, name="B")
     anchors, _ = tokens(client)
-    url = f"/k/{anchors[7]}"
+    url = f"/k/{anchors[6]}"
     client.cookies.clear()
     r = client.get(url)
     assert f"?g={rt_a.game.id}" in r.text and f"?g={rt_b.game.id}" in r.text
@@ -116,5 +116,5 @@ def test_anchor_pushes_anchor_unlocked(client):
     with client.websocket_connect("/ws") as tv:
         hello(tv, {"role": "tv", "game_id": rt.game.id})
         state_until(tv, lambda p: True)
-        client.get(f"/k/{anchors[7]}")
+        client.get(f"/k/{anchors[6]}")
         assert next_of(tv, "event")["payload"]["name"] == "anchor_unlocked"

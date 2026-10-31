@@ -14,7 +14,7 @@ from app.puzzles.shape_count import ShapeCount
 
 
 def build_registry() -> Dict[str, Puzzle]:
-    # SahurDice is no longer in the room plan (Room 7 is sahur_platformer) but stays registered and playable
+    # SahurDice is no longer in the room plan (Room 6 is sahur_platformer) but stays registered and playable
     puzzles = (HoldTogether(), CoopPlatformer(), RedLight(), ShapeCount(), BackroomsTrivia(), BombDefusal(), SahurDice(),
                sahur_platformer())
     return {p.id: p for p in puzzles}

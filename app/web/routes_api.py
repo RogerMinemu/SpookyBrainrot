@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from app.content import ANCHORS_IN_USE, RIDDLE_PLACEHOLDER
+from app.content import ANCHORS_IN_USE, EXIT_ANCHOR, KEY_ROOMS, RIDDLE_PLACEHOLDER, key_label
 from app.core.qr import ANCHOR_COUNT
 from app.core.game import normalize_name, resolve_room
 from app.db.repos import GameRow
@@ -113,17 +113,21 @@ class HouseBody(BaseModel):
 
 
 def _house_view(cfg: Dict[int, dict]) -> Dict[str, Any]:
+    rooms = {r.anchor: r for r in KEY_ROOMS}
     anchors = []
     for idx in range(1, ANCHOR_COUNT + 1):
         row = cfg.get(idx) or {}
         riddle = (row.get("riddle") or "").strip()
+        room = rooms.get(idx)
         anchors.append(
             {
                 "idx": idx,
                 "riddle": riddle,
                 "place": (row.get("spot_id") or "").strip(),
                 "configured": bool(riddle),
-                "in_use": idx in ANCHORS_IN_USE,  # a dropped room leaves its printed anchor without a job
+                "in_use": idx in ANCHORS_IN_USE,  # no room uses this anchor: its QR is not printed
+                "room": f"{key_label(room)} · {room.key_name}" if room else "",  # as printed on its QR
+                "exit": idx == EXIT_ANCHOR,
                 "placeholder": RIDDLE_PLACEHOLDER,
             }
         )

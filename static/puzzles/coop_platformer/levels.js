@@ -1,5 +1,5 @@
 // Co-op platformer levels as ASCII maps (18 tiles high, y grows downwards), in two sets:
-// "nivel0" (Room 1, Patapim: one 32-wide screen each) and "sahur" (Room 7: long levels that scroll).
+// "nivel0" (Room 1, Patapim: one 32-wide screen each) and "sahur" (Room 6: long levels that scroll).
 // # solid, . air, S spawn, D door (2x2), B bell (every bell must ring), K key, F lantern (checkpoint),
 // b heavy button -> G gate (opens for good once enough weight held it), o small button -> g gate (open only while
 // somebody stands on one of its buttons), P ferry (crosses to the next floor of its row), E lift with e above it
@@ -64,7 +64,7 @@ const NIVEL0 = [
   },
 ];
 
-// ---- Room 7: long levels glued from sections ------------------------------------------------------------------
+// ---- Room 6: long levels glued from sections ------------------------------------------------------------------
 // A section is `w` columns of air under a ceiling (row 0) and over a two-row floor (rows 16-17), painted with
 // rectangles [ch, c0, r0, c1 = c0, r1 = r0] (inclusive, section columns). glue() puts the sections side by side and
 // closes both ends with a wall. The floor top is y = 16: alone you jump 2 tiles up, from a shoulder 3, off a drum 4.

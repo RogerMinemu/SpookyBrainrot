@@ -202,7 +202,7 @@ html[data-takeover] #art { filter: grayscale(.85) contrast(1.25) brightness(.55)
 @keyframes lock-fill { to { width: 100%; } }
 .trivia-fact { margin: 0; max-width: 60ch; min-height: 1.4em; font-size: 1.4rem; font-style: italic; }
 
-/* room 6: bomb_defusal (the TV never shows the bomb: clock, strikes and module lights only) */
+/* room 5: bomb_defusal (the TV never shows the bomb: clock, strikes and module lights only) */
 .bomb-panel { gap: 1.4rem; }
 .bomb-head { display: flex; align-items: center; justify-content: center; gap: 3rem; }
 .bomb-clock { padding: .2rem 2.4rem; font-family: "Courier New", ui-monospace, monospace; font-weight: 700; font-size: 9rem; line-height: 1; letter-spacing: .06em;

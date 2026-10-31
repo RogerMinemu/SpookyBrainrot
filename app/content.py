@@ -11,22 +11,38 @@ class RoomSpec:
     puzzle_id: str
     anchor: Optional[int]  # anchor level that unlocks the room (None = no anchor)
     title: str
+    key_name: str = ""  # printed on the room's QR under "Sala N": the place and its guardian
 
 
-# Room 0 has no anchor; scanning the last room's anchor ends the game. Room 5 was dropped: anchor 5 stays
-# printed (the QR codes are printed once) but no room ever wakes it up.
+# Room 0 has no anchor; room N opens with anchor N and scanning the last room's anchor ends the game. The rooms are
+# numbered with no gap since room 5 was dropped (the bomb went 6 -> 5, Sahur 7 -> 6): anchor 7 keeps its token (the
+# tokens are generated once) but no room ever wakes it up.
 ROOM_PLAN: List[RoomSpec] = [
     RoomSpec(room_no=0, puzzle_id="hold_together", anchor=None, title="Agarraos fuerte"),
-    RoomSpec(room_no=1, puzzle_id="coop_platformer", anchor=1, title="Nivel 0"),
-    RoomSpec(room_no=2, puzzle_id="red_light", anchor=2, title="Un, dos, tres... ¡Tralalero!"),
-    RoomSpec(room_no=3, puzzle_id="shape_count", anchor=3, title="Contad las formas"),
-    RoomSpec(room_no=4, puzzle_id="backrooms_trivia", anchor=4, title="Trivia de las Backrooms"),
-    RoomSpec(room_no=6, puzzle_id="bomb_defusal", anchor=6, title="Desactivad la bomba"),
-    RoomSpec(room_no=7, puzzle_id="sahur_platformer", anchor=7, title="La salida de Sahur"),
+    RoomSpec(room_no=1, puzzle_id="coop_platformer", anchor=1, title="Nivel 0", key_name="Nivel 0 · Brr Brr Patapim"),
+    RoomSpec(room_no=2, puzzle_id="red_light", anchor=2, title="Un, dos, tres... ¡Tralalero!",
+             key_name="Las Piscinas · Tralalero Tralala"),
+    RoomSpec(room_no=3, puzzle_id="shape_count", anchor=3, title="Contad las formas",
+             key_name="Centro comercial · Lirilì Larilà"),
+    RoomSpec(room_no=4, puzzle_id="backrooms_trivia", anchor=4, title="Trivia de las Backrooms",
+             key_name="Sitio-19 · Ballerina Cappuccina"),
+    RoomSpec(room_no=5, puzzle_id="bomb_defusal", anchor=5, title="Desactivad la bomba",
+             key_name="Hangar · Bombardiro Crocodilo"),
+    RoomSpec(room_no=6, puzzle_id="sahur_platformer", anchor=6, title="La salida de Sahur",
+             key_name="La salida · Tung Tung Tung Sahur"),
 ]
 
 # Anchors some room actually uses (the house config and the QR key flag the others as unused).
 ANCHORS_IN_USE: FrozenSet[int] = frozenset(r.anchor for r in ROOM_PLAN if r.anchor is not None)
+# The last room's anchor is the way out: scanning it ends the game.
+EXIT_ANCHOR: Optional[int] = ROOM_PLAN[-1].anchor
+# The rooms whose QR gets printed, in play order: one key per real room.
+KEY_ROOMS: List[RoomSpec] = [r for r in ROOM_PLAN if r.anchor is not None]
+
+
+def key_label(room: RoomSpec) -> str:
+    """What the printed QR of a room says in big letters."""
+    return f"Sala {room.room_no}"
 
 # Shown while the host has not written the riddle for an anchor yet (batch D).
 RIDDLE_PLACEHOLDER = "La pista aún no ha sido escrita... buscad el QR por vuestra cuenta."

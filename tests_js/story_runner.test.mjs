@@ -29,9 +29,9 @@ test("every guarded room has an intro, a riddle (and its no-riddle twin) and a h
     assert.deepEqual(playlistFor(`intro:${n}`), [`intro_${n}`]);
     assert.deepEqual(playlistFor(`search:${n}`, st("running", "search", n)), [`riddle_${n}`]);
     assert.ok(SCENES[`riddle_${n}_none`], n);
-    if (n !== 7) assert.deepEqual(playlistFor(`unlocked:${n}`), [`exit_${n}`]);
+    if (n !== 6) assert.deepEqual(playlistFor(`unlocked:${n}`), [`exit_${n}`]);
   }
-  assert.deepEqual(playlistFor("unlocked:7"), []);
+  assert.deepEqual(playlistFor("unlocked:6"), []);
   for (const band of ["escape", "escape_with_passenger", "brainrots"]) assert.equal(playlistFor(`ending:${band}`).length, 1);
   for (const ids of Object.values(PLAYLISTS)) for (const id of ids) assert.ok(SCENES[id], id);
 });
@@ -97,7 +97,7 @@ test("the typewriter reveals letter by letter, pauses on punctuation and holds t
 });
 
 test("frameAt walks the beats and ends; nextStop finishes the line first, then jumps to the next beat", () => {
-  const c = compile(["exit_6"], {});
+  const c = compile(["exit_5"], {});
   const [b0, b1] = c.beats;
   const mid = b0.start + 200;
   assert.equal(frameAt(c, mid).index, 0);

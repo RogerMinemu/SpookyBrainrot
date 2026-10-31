@@ -9,8 +9,8 @@ Plan de producción: **seis canciones generadas en Suno**, todas instrumentales.
 | 1 | [Espere, por favor](tracks/01-espere-por-favor.md) | Lobby, trivia de las Backrooms y búsqueda de anclas. |
 | 2 | [Nivel 0](tracks/02-nivel-0.md) | Sala 1: plataformas cooperativas. Reutilizar en Sala 3: contar las formas. |
 | 3 | [Las piscinas](tracks/03-las-piscinas.md) | Sala 2: Un, dos, tres... ¡Tralalero! Una sola generación para toda la sala. |
-| 4 | [Fallo de contención](tracks/04-fallo-de-contencion.md) | Sala 6: bomba. Reutilizar en Sala 0: Agarraos fuerte y presentación de la Fundación. |
-| 5 | [Sahur dice](tracks/05-sahur-dice.md) | Sala 7: juego de memoria y búsqueda del ancla final. |
+| 4 | [Fallo de contención](tracks/04-fallo-de-contencion.md) | Sala 5: bomba. Reutilizar en Sala 0: Agarraos fuerte y presentación de la Fundación. |
+| 5 | [Sahur dice](tracks/05-sahur-dice.md) | Sala 6: juego de memoria y búsqueda del ancla final. |
 | 6 | [Fuera de las Backrooms](tracks/06-fuera-de-las-backrooms.md) | Una única canción para los tres finales: escape, pasajero y conversión en brainrots. |
 
 Cada ficha incluye un prompt de estilo en inglés, exclusiones, estructura opcional y criterios para elegir la toma.
@@ -34,14 +34,12 @@ Cada ficha incluye un prompt de estilo en inglés, exclusiones, estructura opcio
 | Sala 2: Tralalero | 03 · Las piscinas; silenciar en rojo |
 | Sala 3: contar formas | «Local Forecast - Elevator» (Kevin MacLeod), ralentizado y filtrado como un hilo musical moribundo |
 | Sala 4: trivia | «Thinking Music» (Kevin MacLeod), música de concurso |
-| Sala 6: bomba | 04 · Fallo de contención |
-| Sala 7: la salida de Sahur | 05 · Sahur dice |
+| Sala 5: bomba | 04 · Fallo de contención |
+| Sala 6: la salida de Sahur | 05 · Sahur dice |
 | Búsqueda de anclas | «Sneaky Snitch» (Kevin MacLeod), de puntillas por la casa; en la búsqueda final, 05 |
 | Final: escape | 06 · Fuera de las Backrooms |
 | Final: pasajero | 06 · Misma toma, entera |
 | Final: brainrots | 06 · Misma toma, entera, ralentizada y filtrada |
-
-La Sala 5 está eliminada del juego. No necesita música.
 
 ## Preparación del audio
 

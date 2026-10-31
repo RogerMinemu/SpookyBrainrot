@@ -10,8 +10,8 @@ ROOM_PENALTY_CAP = 12  # max total sim penalty per puzzle instance
 SAHUR_FAIL_PENALTY = 3
 SHAPE_FAIL_PENALTY = 3  # room 3: somebody miscounted
 TRIVIA_FAIL_PENALTY = 3  # room 4: a wrong group answer
-BOMB_STRIKE_PENALTY = 1  # room 6: a wrong cut / press / password
-BOMB_BOOM_PENALTY = 5  # room 6: the bomb went off
+BOMB_STRIKE_PENALTY = 1  # room 5: a wrong cut / press / password
+BOMB_BOOM_PENALTY = 5  # room 5: the bomb went off
 
 BRAINROT_MIN = 0.0
 BRAINROT_MAX = 100.0
