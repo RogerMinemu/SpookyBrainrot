@@ -130,7 +130,7 @@ Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody 
   - **Nivel 2, El mercado de noche**: botón pesado y verja con pinchos detrás, una verja de botones pequeños (uno a cada lado) y un puesto entre pinchos.
   - **Nivel 3, Los tejados**: el ascensor hasta el primer tejado, saltos entre tejados sobre el vacío, una plataforma que cruza la calle y la llave en un alero (torre humana).
   - **Nivel 4, Los tambores**: una cadena de tres tambores sobre pinchos, dos campanas que solo suenan rebotando y un botón pesado antes del muro final.
-  - **Nivel 5, ¡Que viene Sahur!**: botón pesado, ascensor y la llave en un alero; **al cogerla, Sahur se despierta** y avanza desde la izquierda (2,5 casillas/s; corriendo vais a 7). Al que alcanza lo atrapa (Brainrot%) y reaparece delante; el que lleva la llave no la pierde. Si la llave vuelve a su sitio, Sahur se duerme otra vez.
+  - **Nivel 5, ¡Que viene Sahur!**: botón pesado, ascensor y la llave en un alero; **al cogerla, Sahur se despierta** y avanza desde la izquierda (2,5 casillas/s; corriendo vais a 7). Si Sahur atrapa a alguien, o alguien cae al vacío o pisa pinchos, **todo el grupo vuelve al principio del nivel** (Brainrot% para el que cayó): la llave a su alero, Sahur dormido y todo como al empezar.
 - Todos se pueden pasar con 2 jugadores y con 12, sin caerse y sin que nadie salga de pantalla (lo comprueban bots en `tests_js/platformer_sahur.test.mjs`). Solo no se puede: la torre humana pide dos.
 - El juego anterior de esta sala, *Sahur dice*, sigue en el código pero ya no está en el plan de salas.
 - Al superarlo: pista de la última ancla, **la salida**. Escanearla lanza la cinemática del final que os toque.

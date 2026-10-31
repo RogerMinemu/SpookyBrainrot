@@ -62,10 +62,9 @@ export function createSim({ level = 0, set, roster = [], solidSides = SOLID_SIDE
   const key = map.key ? { state: "home", holder: null, x: keyHome.x, y: keyHome.y } : null;
   // ferries and lifts: each waits for everybody standing on its departure side (left of the middle of a ferry's trip,
   // left of a lift's right edge) and comes back for the ones left behind. The first one keeps Room 1's id "plat".
+  const platHome = (d) => ({ x: d.kind === "lift" ? d.x : d.x0, y: d.kind === "lift" ? d.y0 : d.y, state: "wait", aboard: 0, empty: 0, dx: 0, dy: 0 });
   const plats = map.platforms.map((d, i) => ({
-    id: i === 0 ? "plat" : `plat${i}`, kind: d.kind, def: d,
-    x: d.kind === "lift" ? d.x : d.x0, y: d.kind === "lift" ? d.y0 : d.y, w: d.w, h: 1,
-    state: "wait", aboard: 0, empty: 0, dx: 0, dy: 0,
+    id: i === 0 ? "plat" : `plat${i}`, kind: d.kind, def: d, ...platHome(d), w: d.w, h: 1,
     departX: d.kind === "lift" ? d.x + d.w : (d.x0 + d.x1 + d.w) / 2,
   }));
   const platById = new Map(plats.map((p) => [p.id, p]));
@@ -233,12 +232,28 @@ export function createSim({ level = 0, set, roster = [], solidSides = SOLID_SIDE
     }
     return null;
   }
+  /** Back to the level's first frame: everybody (even who was through the door) at the start, every gadget reset. */
+  function restartLevel() {
+    Object.assign(world, { doorOpen: !(map.bells.length || map.key), bellRung: false, cleared: false });
+    rung.fill(false);
+    lit.fill(false);
+    gates.forEach((g) => { g.open = false; });
+    buttons.forEach((bt) => Object.assign(bt, { weight: 0, need: 0, hold: 0 }));
+    if (key) Object.assign(key, { state: "home", holder: null, x: keyHome.x, y: keyHome.y });
+    plats.forEach((p) => Object.assign(p, platHome(p.def)));
+    if (chase) Object.assign(chase, { on: false, x: 0 });
+    bodies.forEach((b, i) => { b.entered = false; b.root = null; place(b, i, bodies.length); });
+    emit({ type: "fx", to: "all", kind: "fail" });
+  }
   function respawn(b, why = "fall") {
-    const spot = rescueSpot(b);
-    if (spot) putAt(b, spot);
-    else place(b, bodies.indexOf(b), bodies.length);
-    if (!spot && chase && chase.on) chase.on = false; // nowhere ahead of Sahur: he gives up and the run starts over
-    if (!(chase && chase.on)) returnKey(b.id); // running from Sahur, the carrier keeps the key
+    if (def.restart) restartLevel(); // one fall, spike or catch sends the whole group back to the start
+    else {
+      const spot = rescueSpot(b);
+      if (spot) putAt(b, spot);
+      else place(b, bodies.indexOf(b), bodies.length);
+      if (!spot && chase && chase.on) chase.on = false; // nowhere ahead of Sahur: he gives up and the run starts over
+      if (!(chase && chase.on)) returnKey(b.id); // running from Sahur, the carrier keeps the key
+    }
     emit({ type: "penalty", why, id: b.id });
   }
   /** Spikes, like drums, count under your middle: an edge over them while you land on the drum beside them is safe. */

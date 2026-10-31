@@ -2,7 +2,7 @@
 // buttons, lifts, lanterns and Sahur's chase).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSim, BODY_W, BODY_H, LEASH, CHASE_MARGIN } from "../static/puzzles/coop_platformer/sim.js";
+import { createSim, BODY_W, BODY_H, LEASH } from "../static/puzzles/coop_platformer/sim.js";
 import { LEVEL_SETS, LEVELS, VIEW_W, H, levelsOf, parseLevel } from "../static/puzzles/coop_platformer/levels.js";
 import { roster, run, botDriver, seconds } from "./helpers.mjs";
 import { R, BOTS, goTo, pulse, run as walk } from "./sahur_bots.mjs";
@@ -186,21 +186,31 @@ test("alone, nobody reaches the key on the eave of level 3", () => {
   }
 });
 
-test("taking the key wakes Sahur: a straggler is caught and reappears ahead, the carrier keeps the key", () => {
-  const sim = sahur(4, 2);
+test("taking the key wakes Sahur: one caught and the whole group starts the level over, everything reset", () => {
+  const sim = sahur(4, 3);
+  const fresh = sahur(4, 3).snapshot();
   assert.equal(sim.snapshot().chase.on, false, "asleep until the key moves");
   const before = run(sim, botDriver(BOTS[4](sim.level)), { maxSteps: seconds(60), done: (s) => s.key.state === "held" });
   assert.ok(before.events.some((e) => e.kind === "alarm"));
   assert.equal(sim.snapshot().chase.on, true);
+  assert.ok(sim.snapshot().gates.some(Boolean) && sim.snapshot().lanterns.some(Boolean), "the run got somewhere");
   const holder = sim.snapshot().key.holder;
   const { hit, snap } = untilPenalty(sim, (s) => {
     for (const p of s.players) sim.setInput(p.id, p.id === holder ? walk(p, 100, [[63.3, 64.1], [69.3, 70.1], [89.3, 90.1]]) : 0);
   }, seconds(30));
   assert.equal(hit.why, "sahur");
   assert.notEqual(hit.id, holder, "the one standing still is caught");
-  const p = snap.players.find((q) => q.id === hit.id);
-  assert.ok(p.x >= snap.chase.x + CHASE_MARGIN - 1e-9, `reappeared at ${p.x}, Sahur at ${snap.chase.x}`);
-  assert.deepEqual([snap.key.state, snap.key.holder], ["held", holder]);
+  const { spawn } = sim.level;
+  for (const p of snap.players) {
+    assert.ok(!p.entered && p.x >= spawn.x0 - 1e-9 && p.x <= spawn.x1, `${p.id} back at the start, at ${p.x}`);
+  }
+  assert.deepEqual([snap.key.state, snap.key.holder, snap.chase.on, snap.doorOpen], ["home", null, false, false]);
+  assert.deepEqual([snap.gates, snap.lanterns, snap.cam], [fresh.gates, fresh.lanterns, fresh.cam]);
+  assert.deepEqual(snap.plats.map((p) => [p.x, p.y, p.state]), fresh.plats.map((p) => [p.x, p.y, p.state]));
+});
+
+test("only Sahur's chase restarts the whole group; the other levels keep the drop-on-a-teammate respawn", () => {
+  assert.deepEqual(SAHUR.map((d) => !!d.restart), [false, false, false, false, true]);
 });
 
 test("a newcomer on a scrolling level joins the group instead of the start", () => {

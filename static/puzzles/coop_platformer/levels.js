@@ -140,8 +140,9 @@ const SAHUR = [
   {
     id: "huida",
     title: "¡Que viene Sahur!",
-    hint: "Al coger la llave, Sahur despierta. ¡Corred a la puerta antes de que os alcance!",
+    hint: "Al coger la llave, Sahur despierta. ¡Corred a la puerta! Si cae uno, volvéis todos al principio.",
     chase: 2.5, // tiles per second Sahur walks once the key is taken (running is 7)
+    restart: true, // any fall, spike or catch restarts the level for everybody
     rows: glue(
       START,
       sec(20, ["b", 3, 16, 5, 16], ["G", 12, 1, 12, 15], ["^", 15, 15, 16, 15]),
