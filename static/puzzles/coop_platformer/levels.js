@@ -1,6 +1,6 @@
 // Co-op platformer levels as ASCII maps (18 tiles high, y grows downwards), in two sets:
 // "nivel0" (Room 1, Patapim: one 32-wide screen each) and "sahur" (Room 6: long levels that scroll).
-// # solid, . air, S spawn, D door (2x2), B bell (every bell must ring), K key, F lantern (checkpoint),
+// # solid, . air, S spawn, D door (2x2), B bell (every bell must ring), K key, F lantern (lights up as the group passes),
 // b heavy button -> G gate (opens for good once enough weight held it), o small button -> g gate (open only while
 // somebody stands on one of its buttons), P ferry (crosses to the next floor of its row), E lift with e above it
 // (its top stop), T drum (a floor tile that bounces you ~5 tiles up), ^ spikes (only the bottom quarter of the cell
@@ -85,7 +85,8 @@ const START = sec(12, ["S", 1, 15, 6, 15]);
 const EXIT = sec(12, ["D", 7, 14, 8, 15]);
 
 // Sahur's village at night, five screens of it. Every level is solvable by two players and by twelve
-// (tests_js/platformer_sahur.test.mjs runs scripted bots through all of them).
+// (tests_js/platformer_sahur.test.mjs runs scripted bots through all of them). Like Piko Park, one fall, spike or
+// catch sends the whole group back to the start of the level (restart).
 const SAHUR = [
   {
     id: "tung",
@@ -142,7 +143,6 @@ const SAHUR = [
     title: "¡Que viene Sahur!",
     hint: "Al coger la llave, Sahur despierta. ¡Corred a la puerta! Si cae uno, volvéis todos al principio.",
     chase: 2.5, // tiles per second Sahur walks once the key is taken (running is 7)
-    restart: true, // any fall, spike or catch restarts the level for everybody
     rows: glue(
       START,
       sec(20, ["b", 3, 16, 5, 16], ["G", 12, 1, 12, 15], ["^", 15, 15, 16, 15]),
@@ -152,7 +152,7 @@ const SAHUR = [
       EXIT,
     ),
   },
-];
+].map((def) => ({ ...def, restart: true }));
 
 export const LEVEL_SETS = { nivel0: NIVEL0, sahur: SAHUR };
 export const DEFAULT_SET = "nivel0";

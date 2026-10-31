@@ -213,9 +213,8 @@ export function createSim({ level = 0, set, roster = [], solidSides = SOLID_SIDE
     return s && !s.entered ? s : null;
   }
   /**
-   * Where a fallen (or caught, or new) player reappears on a scrolling level: on the head of the rearmost teammate
-   * standing on a tile (a safe spot inside the view, and the retry is the obstacle that dropped you), ahead of Sahur;
-   * else at the last lit lantern ahead of him. null = the start.
+   * Where a newcomer joins a scrolling level: on the head of the rearmost teammate standing on a tile (a safe spot
+   * inside the view), ahead of Sahur; else at the last lit lantern ahead of him. null = the start.
    */
   function rescueSpot(b) {
     if (!map.scroll) return null;
@@ -246,14 +245,8 @@ export function createSim({ level = 0, set, roster = [], solidSides = SOLID_SIDE
     emit({ type: "fx", to: "all", kind: "fail" });
   }
   function respawn(b, why = "fall") {
-    if (def.restart) restartLevel(); // one fall, spike or catch sends the whole group back to the start
-    else {
-      const spot = rescueSpot(b);
-      if (spot) putAt(b, spot);
-      else place(b, bodies.indexOf(b), bodies.length);
-      if (!spot && chase && chase.on) chase.on = false; // nowhere ahead of Sahur: he gives up and the run starts over
-      if (!(chase && chase.on)) returnKey(b.id); // running from Sahur, the carrier keeps the key
-    }
+    if (def.restart) restartLevel(); // Sahur's levels: one fall, spike or catch sends the whole group back to the start
+    else { place(b, bodies.indexOf(b), bodies.length); returnKey(b.id); } // Room 1: just you, back at the start
     emit({ type: "penalty", why, id: b.id });
   }
   /** Spikes, like drums, count under your middle: an edge over them while you land on the drum beside them is safe. */

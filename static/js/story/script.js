@@ -268,7 +268,7 @@ export const SCENES = {
       say("sahur", "Os avisé tres veces: tung, tung, tung. La gente educada contesta.", { emote: "angry" }),
       say("sahur", "Pero bueno, ya que estáis despiertos... la salida está detrás de mis cuatro puertas."),
       say("sahur", "Volvéis a ser bichitos, como en el Nivel 0. Campanas, pinchos, botones y llaves: o pasáis todos, o no pasa nadie."),
-      say("sahur", "Y quien pise un pincho vuelve al principio. Mi bate tiene muchísima paciencia. Tung.", { emote: "scary", shake: true }),
+      say("sahur", "Y si uno pisa un pincho o se cae, volvéis todos al principio. Mi bate tiene muchísima paciencia. Tung.", { emote: "scary", shake: true }),
     ],
   },
   riddle_6: {

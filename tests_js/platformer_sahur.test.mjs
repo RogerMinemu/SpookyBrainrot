@@ -139,28 +139,27 @@ test("the lift waits for the last straggler, then takes everybody up", () => {
   assert.ok(sim.snapshot().players.every((p) => p.support === "plat" && Math.abs(p.y + BODY_H - lift.y1) < 1e-6));
 });
 
-test("a fall drops you on the head of the rearmost teammate standing on the ground", () => {
+test("a fall into the pit sends the whole group back to the start, the ones already past it too", () => {
   const sim = sahur(0, 3);
-  const { hit } = untilPenalty(sim, () => { sim.setInput("p0", R); sim.setInput("p1", 0); sim.setInput("p2", 0); }, seconds(4));
-  assert.deepEqual([hit.id, hit.why], ["p0", "fall"]); // straight into the pit
-  run(sim, () => sim.setInput("p0", 0), { maxSteps: seconds(1), done: () => false });
-  const [p0, p1] = sim.snapshot().players;
-  assert.equal(p0.support, "p1", "p1 (x 2.9) is behind p2 (x 3.8)");
-  assert.ok(Math.abs(p0.x - p1.x) < 1e-9);
+  const start = sim.snapshot().players.map((p) => p.x);
+  const { hit, snap } = untilPenalty(sim, (s) => {
+    sim.setInput("p0", s.t > 90 ? R : 0); // p0 waits, then runs straight into the pit (columns 14-15)
+    sim.setInput("p1", goTo(s.players[1], 10));
+    sim.setInput("p2", goTo(s.players[2], 11));
+  }, seconds(6));
+  assert.deepEqual([hit.id, hit.why], ["p0", "fall"]);
+  snap.players.forEach((p, i) => assert.ok(Math.abs(p.x - start[i]) < 0.2, `${p.id} back at ${p.x}, started at ${start[i]}`));
+  assert.equal(snap.cam, 1, "the view is back at the start: nobody off-screen");
 });
 
-test("alone, a fall sends you back to the last lantern you lit, or to the start", () => {
-  const sim = sahur(3, 1); // the drum chain: hover onto its spikes
-  let { hit, snap } = untilPenalty(sim, (s) => sim.setInput("p0", goTo(s.players[0], 19.4)), seconds(4));
+test("past a lantern, spikes still restart everybody and the lanterns go out", () => {
+  const sim = sahur(3, 2); // the drum chain
+  run(sim, botDriver(BOTS[3](sim.level)), { maxSteps: seconds(60), done: (s) => s.lanterns[0] });
+  const { hit, snap } = untilPenalty(sim, (s) => sim.setInput("p0", goTo(s.players[0], 24)), seconds(6)); // back to the spikes
   assert.equal(hit.why, "spikes");
-  assert.ok(Math.abs(snap.players[0].x - 2) < 1e-9, "no lantern lit yet: the start");
-  const lit = sahur(3, 2);
-  run(lit, botDriver(BOTS[3](lit.level)), { maxSteps: seconds(60), done: (s) => s.lanterns[0] });
-  lit.setRoster(roster(1)); // p1 leaves: p0 is alone past the lantern
-  ({ hit, snap } = untilPenalty(lit, (s) => lit.setInput("p0", goTo(s.players[0], 24)), seconds(6))); // back to the spikes
-  const lantern = lit.level.lanterns[0];
-  assert.equal(hit.why, "spikes");
-  assert.ok(Math.abs(snap.players[0].x - (lantern.x + (1 - BODY_W) / 2)) < 1e-9, `at ${snap.players[0].x}`);
+  assert.deepEqual(snap.lanterns, sim.level.lanterns.map(() => false));
+  const { spawn } = sim.level;
+  assert.ok(snap.players.every((p) => p.x >= spawn.x0 - 1e-9 && p.x <= spawn.x1), "both back at the start");
 });
 
 test("spikes count under your middle: an edge over them is safe, the middle is not", () => {
@@ -209,8 +208,8 @@ test("taking the key wakes Sahur: one caught and the whole group starts the leve
   assert.deepEqual(snap.plats.map((p) => [p.x, p.y, p.state]), fresh.plats.map((p) => [p.x, p.y, p.state]));
 });
 
-test("only Sahur's chase restarts the whole group; the other levels keep the drop-on-a-teammate respawn", () => {
-  assert.deepEqual(SAHUR.map((d) => !!d.restart), [false, false, false, false, true]);
+test("every Sahur level restarts the whole group on a death; Room 1 sends back only the one who fell", () => {
+  assert.ok(SAHUR.every((d) => d.restart) && LEVELS.every((d) => !d.restart));
 });
 
 test("a newcomer on a scrolling level joins the group instead of the start", () => {
