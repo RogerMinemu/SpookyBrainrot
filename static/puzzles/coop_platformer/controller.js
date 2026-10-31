@@ -30,11 +30,12 @@ export function update(view, state) {
   st.hint.textContent = def ? def.hint : "";
 }
 
-// Effects the TV sends: sound for everybody, a buzz when you fall.
+// Effects the TV sends: sound for everybody, a buzz when you fall, a long one when Sahur wakes up.
 export function onFx(fx) {
   play(fx.kind, fx.data);
   if (fx.kind === "fail") vibrate([120, 60, 120]);
-  else if (fx.kind === "ring" || fx.kind === "open" || fx.kind === "win") vibrate(50);
+  else if (fx.kind === "alarm") vibrate([300, 100, 300]);
+  else if (fx.kind === "ring" || fx.kind === "open" || fx.kind === "gate" || fx.kind === "win") vibrate(50);
 }
 
 export function onTvOnline(online) {

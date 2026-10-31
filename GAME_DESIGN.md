@@ -57,7 +57,7 @@ Los móviles son lo único que sigue conectado a la realidad: son los **mandos**
 | 3 | Centro comercial de las 3 AM | Lirilì Larilà | Contad las formas | Observación / conteo | 10 |
 | 4 | Sitio-19 | Ballerina Cappuccina | Trivia de las Backrooms | Trivia por consenso | 12 |
 | 6 | Hangar abandonado | Bombardiro Crocodilo | Desactivad la bomba | Información repartida (Keep Talking) | 12 |
-| 7 | Final | Tung Tung Tung Sahur | La salida de Sahur | Plataformas cooperativas (4 niveles más) | 12 |
+| 7 | Final | Tung Tung Tung Sahur | La salida de Sahur | Plataformas cooperativas con scroll (5 niveles largos) | 18 |
 
 > **Estado:** todas las salas del plan son jugables: 0, 1, 2, 3, 4, 6 y 7. La **sala 5 se ha quitado** (la numeración no cambia: de la 4 se pasa a la 6). Ballerina Cappuccina, que guardaba la sala 5, pasa a presentar la trivia de la sala 4.
 
@@ -122,12 +122,16 @@ Bombardiro suelta una bomba en mitad del hangar. Es un *Keep Talking and Nobody 
 
 *Tung. Tung. Tung.* Algo golpea al otro lado de la pantalla.
 
-- **La salida de Sahur**: las plataformas cooperativas de la sala 1 (el juego que más gustó), con **4 niveles nuevos** que mezclan sus piezas y añaden dos: **varias campanas** (hay que tocarlas todas) y **pinchos** (tocarlos devuelve al inicio y cuesta Brainrot%, como caerse).
-  - **Nivel 1, Tung, tung, tung**: tres campanas, una encima de un bloque. Torre humana tres veces.
-  - **Nivel 2, Suelo de pinchos**: saltar los pinchos y pisar el botón pesado entre varios para abrir la verja.
-  - **Nivel 3, El foso**: la llave está en una repisa sobre la salida; con ella, todos a bordo de la plataforma.
-  - **Nivel 4, La salida**: botón, llave en una repisa flotante y pinchos delante de la puerta.
-- Todos se pueden pasar con 2 jugadores (lo comprueban bots en `tests_js/platformer_sahur.test.mjs`, con 2 y con 12). Desde el borde, un salto parado siempre libra una tira de pinchos.
+- **La salida de Sahur**: las plataformas cooperativas de la sala 1 (el juego que más gustó), al estilo de los plataformas cooperativos de pantalla compartida: **5 niveles largos** (de 88 a 108 casillas, unas 3–4 pantallas) por la aldea de Sahur de noche, con **scroll horizontal**.
+  - **Pantalla compartida**: la cámara sigue al grupo y una **correa** no deja que nadie se aleje más de 28 casillas del resto (la tele enseña 30). Si uno se queda atrás, los de delante chocan con el borde: hay que moverse juntos.
+  - **Caerse** (o tocar los pinchos) cuesta Brainrot% como en la sala 1, pero no te manda al principio: reapareces **encima del compañero más retrasado que pise suelo** (siempre es un sitio seguro y dentro de pantalla). Si no hay nadie, en el último **farol** encendido (los faroles son puntos de control: se encienden al pasar).
+  - Piezas nuevas: **tambor** (rebota unas 5 casillas: sube un muro de 4 que un salto no sube), **botón pequeño** (lo pisa uno solo y su verja está abierta solo mientras lo pisa; con uno a cada lado sale el «yo te abro, tú me abres»), **ascensor** (sube cuando estáis todos encima) y **varias verjas y plataformas por nivel** (cada botón abre la verja más cercana de su tipo). Los pinchos y los tambores cuentan bajo el centro del cuerpo.
+  - **Nivel 1, Tung, tung, tung**: un foso, un tambor para subir un muro, dos campanas con torre humana y una tercera que solo suena rebotando quietos en un tambor.
+  - **Nivel 2, El mercado de noche**: botón pesado y verja con pinchos detrás, una verja de botones pequeños (uno a cada lado) y un puesto entre pinchos.
+  - **Nivel 3, Los tejados**: el ascensor hasta el primer tejado, saltos entre tejados sobre el vacío, una plataforma que cruza la calle y la llave en un alero (torre humana).
+  - **Nivel 4, Los tambores**: una cadena de tres tambores sobre pinchos, dos campanas que solo suenan rebotando y un botón pesado antes del muro final.
+  - **Nivel 5, ¡Que viene Sahur!**: botón pesado, ascensor y la llave en un alero; **al cogerla, Sahur se despierta** y avanza desde la izquierda (2,5 casillas/s; corriendo vais a 7). Al que alcanza lo atrapa (Brainrot%) y reaparece delante; el que lleva la llave no la pierde. Si la llave vuelve a su sitio, Sahur se duerme otra vez.
+- Todos se pueden pasar con 2 jugadores y con 12, sin caerse y sin que nadie salga de pantalla (lo comprueban bots en `tests_js/platformer_sahur.test.mjs`). Solo no se puede: la torre humana pide dos.
 - El juego anterior de esta sala, *Sahur dice*, sigue en el código pero ya no está en el plan de salas.
 - Al superarlo: pista de la última ancla, **la salida**. Escanearla lanza la cinemática del final que os toque.
 
@@ -149,6 +153,15 @@ No es una ristra de minijuegos: entre sala y sala, la tele pone una **cinemátic
 - El **anfitrión** controla la tele: Espacio, Intro, → o un clic pasan de frase; Esc o «Saltar» terminan la escena. Cada escena se ve una vez por partida (una tele recargada no la repite).
 - Unos 8 minutos de narración en total (más lo que tarden los lectores). Guion: `static/js/story/script.js`.
 - **Reparto como recurso gráfico**: `/static/dev/brainrots.html` pinta a los ocho y descarga cada pose en PNG transparente.
+
+## Sonido
+
+- **Música**: las seis canciones de Suno (`music/README.md`) y, donde no había canción propia, temas gratuitos de Kevin MacLeod: hilo musical de ascensor ralentizado en el centro comercial (sala 3), música de concurso en el Sitio-19 (sala 4) y una pieza de puntillas para buscar los QR.
+- **Ambiente** en bucle bajo la música de las salas con simulación: agua (Piscinas), máquinas (hangar) y grillos (la noche de Sahur). El Nivel 0 va sin ambiente: el zumbido de fluorescentes molestaba demasiado. En rojo, la música calla pero el agua sigue.
+- **Efectos grabados** (Mixkit) en la tele, con la síntesis de siempre como respaldo: golpe y grito en cada QR trampa, campanita al encontrar un ancla, puerta que cruje al entrar en una sala nueva, campanas de iglesia y cerraduras en las plataformas, chapuzón al pillarte Tralalero, tic-tac continuo y explosión en la bomba, «ding» y zumbador de concurso, y aplausos, criatura o monstruos según el final.
+- **Escenas**: golpe en los carteles, retumbo en los temblores, alarma de contención, teléfono cuando llama Sahur y estática cuando habla la Fundación.
+- **Móviles**: solo los sonidos personales (tu escaneo, tu caída, tu chapuzón); el resto sigue sintetizado para que una docena de móviles no suene a la vez con la tele.
+- Fuentes y licencias: `static/audio/CREDITS.md`. La pantalla final muestra la atribución de Kevin MacLeod.
 
 ## Tiempo real y guardado
 

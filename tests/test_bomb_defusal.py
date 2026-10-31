@@ -147,6 +147,11 @@ def test_the_manual_carries_every_rule_text_and_every_word_once():
     assert len(bd.PAGE_IDS) == len(set(bd.PAGE_IDS)) == 14
 
 
+def test_only_the_pages_with_a_vowel_rule_warn_that_the_serial_has_no_i_or_o():
+    assert [p["id"] for p in bd.MANUAL if bd.SERIAL_NOTE in p["lines"]] == ["wires-5", "button-press"]
+    assert "A, E o U" in bd.SERIAL_NOTE
+
+
 @pytest.mark.parametrize("experts", [1, 2, 3, 5, 9, 13])
 def test_pages_are_dealt_once_each_and_evenly(experts):
     pids = [f"e{i}" for i in range(experts)]

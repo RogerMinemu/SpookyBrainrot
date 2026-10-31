@@ -148,7 +148,7 @@ def test_jump_to_sub_level():
 @pytest.mark.parametrize(
     "room,phase,level",
     [(1, "puzzle", 4), (1, "puzzle", -1), (1, "puzzle", "2"), (1, "puzzle", True), (1, "puzzle", 1.5),
-     (7, "puzzle", 4), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
+     (7, "puzzle", 5), (2, "puzzle", 0), (0, "puzzle", 0), (1, "intro", 0), (1, None, 0),
      ("lobby", None, 0), ("ending", None, 0)],
 )
 def test_jump_bad_level_is_rejected_without_mutation(room, phase, level):
@@ -235,7 +235,7 @@ def test_debug_rooms_listing():
     assert rooms[2]["phases"] == ["intro", "puzzle", "search", "unlocked"]
     assert rooms[7]["phases"] == ["intro", "puzzle", "search"]  # the last room ends via the ending
     # platformer levels, shape rounds, trivia "start with N right answers", Sahur's platformer levels; the bomb has none
-    assert [r["levels"] for r in rooms] == [[], [], [0, 1, 2, 3], [], [0, 1, 2], [0, 1, 2, 3, 4, 5], [], [0, 1, 2, 3], []]
+    assert [r["levels"] for r in rooms] == [[], [], [0, 1, 2, 3], [], [0, 1, 2], [0, 1, 2, 3, 4, 5], [], [0, 1, 2, 3, 4], []]
 
 
 # --- HTTP level -----------------------------------------------------------------------------

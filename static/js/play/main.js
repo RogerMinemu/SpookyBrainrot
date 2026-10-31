@@ -4,7 +4,7 @@ import { onEvent, onError } from "/static/js/play/toast.js";
 import { applyState } from "/static/js/ui/theme.js";
 import { panel, button, title, pill } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
-import { unlockAudio, setMuted, play as playSound } from "/static/js/shared/audio.js";
+import { unlockAudio, setMuted, play as playSound, preloadSamples } from "/static/js/shared/audio.js";
 import { createScanner } from "/static/js/play/scanner.js";
 import { storyKeyFor, lineFor, varsFor } from "/static/js/story/runner.js";
 import { PHONE } from "/static/js/story/script.js";
@@ -55,8 +55,23 @@ let admin = null; // admin menu: only on the admin player's phone (the welcome s
 // Shown while the TV is absent: the phone stops sending input (the TV would not see it anyway)
 const tvOffline = h("div", { id: "tv-offline", class: "tv-offline hidden", role: "status" }, "La tele no está conectada. Esperad un momento...");
 document.body.appendChild(tvOffline);
-// first touch on the page unlocks WebAudio (a user gesture is mandatory on phones)
-document.addEventListener("pointerdown", () => unlockAudio(), { once: true, capture: true });
+// Every touch retries the WebAudio unlock (a user gesture is mandatory on phones). Not just the first pointerdown:
+// on a touchscreen pointerdown is no user gesture (pointerup / touchend / click are), so a context made there stays
+// suspended, and iOS suspends it again after a call or a locked screen. A phone loads only the recorded effects that
+// are personal (your scan, your fall, your splash); shared cues like the bells stay synth on the phones, or a dozen
+// of them would ring with the TV.
+const PHONE_SAMPLES = ["scare", "scream", "anchor", "fall", "splash"];
+const unlockPhoneAudio = () => { if (unlockAudio()) preloadSamples(PHONE_SAMPLES); };
+for (const ev of ["pointerdown", "pointerup", "touchend", "click", "keydown"]) {
+  document.addEventListener(ev, unlockPhoneAudio, { capture: true, passive: true });
+}
+
+/** The scanning phone reacts too: a decoy screams in your hand, the right QR chimes. */
+function scanSound(reply) {
+  const result = reply && reply.result;
+  if (result === "jumpscare") playSound("scare");
+  else if (result === "unlocked" || result === "finished") playSound("anchor");
+}
 
 const ctx = {
   sendInput: (mask) => tvOnline && socket ? socket.sendInput(mask) : false,
@@ -101,7 +116,7 @@ if (SEAT) {
     setMask(mask) { if (sb.pad) sb.pad.force(mask); if (sb.hold) sb.hold(mask !== 0); },
     advance: () => ctx.advance(),
     reading: () => !!readerLine,                               // this seat was picked to read the cutscene line
-    storyNext: () => !!readerLine && storyNext(readerLine),     // ...and presses "Siguiente"
+    storyNext: () => !!readerLine && readerLine.typed && storyNext(readerLine), // ...and presses "Siguiente" (once typed)
     scan: (token) => !!socket && socket.send("scan", { token }), // what the "Pistas" camera sends once it reads a QR
     setSound(on) { setMuted(!on); if (on) unlockAudio(); },
     view: () => (latest ? latest.view : null),
@@ -115,7 +130,8 @@ function storyLine(state) {
   const d = storyFx.data;
   if (d.key !== storyKeyFor(state)) return null;
   const line = lineFor(d.scene, d.beat, varsFor(state)) || { name: "", text: PHONE.waiting };
-  return { ...line, key: d.key, scene: d.scene, beat: d.beat, reader: d.reader || null, readerName: d.reader_name || "" };
+  return { ...line, key: d.key, scene: d.scene, beat: d.beat, typed: !!d.typed, reader: d.reader || null,
+    readerName: d.reader_name || "" };
 }
 
 /** The reader's "Siguiente": the TV goes on to the next line (it ignores a press for a line it no longer shows). */
@@ -133,17 +149,20 @@ function onStoryFx(data) {
 function renderStory(state, line) {
   const mine = !!line.reader && !!me && line.reader === me.player_id;
   readerLine = mine ? line : null;
-  const sig = JSON.stringify([line.key, line.scene, line.beat, line.reader, line.readerName, me ? me.name : ""]);
+  const sig = JSON.stringify([line.key, line.scene, line.beat, line.typed, line.reader, line.readerName, me ? me.name : ""]);
   if (storyShown && storyShown.sig === sig && storyShown.panel.isConnected) return;
   let next = null;
   if (mine) {
-    next = button(PHONE.next, { cls: "story-next", onclick: () => {
+    // off while the TV is still typing the line: a tap that early would skip it before anybody has read it
+    next = button(line.typed ? PHONE.next : PHONE.typing, { cls: "story-next", onclick: () => {
+      if (!line.typed) return;
       if (!storyNext(line)) return;
       next.disabled = true; // until the TV announces the next line (a double tap would skip two)
       next.textContent = PHONE.sent;
       // the TV drops a press that comes too soon after the line appeared: let the reader try again
       setTimeout(() => { if (next.isConnected) { next.disabled = false; next.textContent = PHONE.next; } }, READER_RETRY_MS);
     } });
+    next.disabled = !line.typed;
   }
   const box = panel([
     h("div", { class: "me" }, `Eres ${me ? me.name : ""}`),
@@ -257,7 +276,10 @@ function connect() {
       onEvent(ev);
     },
     // a right QR changes the phase first (the scanner is gone by then): the anchor_unlocked event says it instead
-    onScan: (reply) => scanner && scanner.showResult(reply),
+    onScan: (reply) => {
+      scanSound(reply);
+      if (scanner) scanner.showResult(reply);
+    },
     onError: (err) => onError(err),
     onStatus: (s) => {
       connBadge.classList.toggle("hidden", s === "open");

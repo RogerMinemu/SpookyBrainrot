@@ -45,10 +45,11 @@ export function update(view) {
   st.experts.textContent = view.experts.length
     ? `El manual está repartido: ${view.experts.map((e) => `${e.name} (${e.pages} pág.)`).join(" · ")}. Cada error quita ${view.strike_s} s.`
     : "Sin expertos: el artificiero tiene la bomba y el manual entero.";
-  // sounds: the last minute ticks, a strike warns, a module done cheers, the boom booms
-  if (!boom && view.left !== st.left && view.left <= 60) play("tick");
-  if (view.strikes > st.strikeCount && !boom) play("warn");
-  if (solved > st.solved) play("win");
+  // sounds: no per-second tick (it grated), a heart races from the last 10 s, a strike buzzes, a module done chimes,
+  // the boom booms
+  if (!boom && view.left === 10 && st.left !== 10) play("heartbeat");
+  if (view.strikes > st.strikeCount && !boom) play("strike");
+  if (solved > st.solved) play("module");
   if (boom && st.phase !== "boom") play("boom");
   st.left = view.left;
   st.strikeCount = view.strikes;

@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from app.config import ROOT_DIR, Settings
 from app.content import ANCHORS_IN_USE
 from app.core.game import same_name
-from app.core.qr import ordered_with_labels, qr_url, short_codes
+from app.core.qr import KIND_ANCHOR, ordered_with_labels, qr_url, short_codes
 from app.web import pages
 from app.web.qr_svg import svg_scalable
 
@@ -83,11 +83,14 @@ async def admin_qr_sheet(request: Request) -> HTMLResponse:
     state = request.app.state
     entries = state.qr_repo.entries()
     codes = short_codes(entries)
+    # ?solo=llaves: only the anchors some room uses. Labels come from the full sheet, so /admin/qr-key still matches.
+    keys_only = request.query_params.get("solo") == "llaves"
     cards = [(label, svg_scalable(qr_url(state.settings.public_url, e.token)), codes[e.token])
-             for label, e in ordered_with_labels(entries)]
+             for label, e in ordered_with_labels(entries)
+             if not keys_only or (e.kind == KIND_ANCHOR and e.idx in ANCHORS_IN_USE)]
     house = state.house_repo.all()
     missing = sum(1 for i in ANCHORS_IN_USE if not (house.get(i, {}).get("riddle") or "").strip())
-    return HTMLResponse(pages.qr_sheet(cards, missing), headers=NO_CACHE)
+    return HTMLResponse(pages.qr_sheet(cards, missing, keys_only), headers=NO_CACHE)
 
 
 @router.get("/admin/qr-key")

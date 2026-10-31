@@ -3,10 +3,10 @@
 // - a 1920x1080 cast canvas: characters through ctx.sprite (painted atlas, or the flat silhouette in the same place);
 // - a DOM caption that types the line (shown + rest spans, so the text never reflows), with the speaker's name;
 // - title cards, the Foundation's terminal look, Sahur calling from a phone, the brainrot line-up, alarm and shake.
-// The TV is the clock. It tells the phones which beat it is on (fx "story" {key, scene, beat, done, reader}); they
-// print the same line from the same script. Every scene picks a random connected player who reads all its lines aloud:
-// once typed, a line stays up until that player presses "Siguiente" on the phone (WS "story" relayed here,
-// readerNext()), so the group has time to read. Title cards, and a TV with nobody connected, still run on the clock.
+// The TV is the clock. It tells the phones which beat it is on (fx "story" {key, scene, beat, done, typed, reader});
+// they print the same line from the same script. Every scene picks a random connected player who reads all its lines
+// aloud: once typed (typed: true unlocks the button), a line stays up until that player presses "Siguiente" on the
+// phone (WS "story" relayed here, readerNext()), so the group has time to read. Title cards, and a TV with nobody connected, still run on the clock.
 // Host controls: Space / Enter / -> / a click = next (finish the line first), Esc or "Saltar" = skip the scene.
 // A finished (or skipped) key is remembered for this game in sessionStorage.
 import { h } from "/static/js/shared/dom.js";
@@ -87,7 +87,8 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     const b = cur.c.beats[cur.index];
     const r = cur.reader;
     sendFx("all", "story", done || !b ? { key: cur.key, done: true }
-      : { key: cur.key, scene: b.scene, beat: b.i, done: false, reader: r ? r.id : null, reader_name: r ? r.name : "" });
+      : { key: cur.key, scene: b.scene, beat: b.i, done: false, typed: cur.typed === cur.index,
+        reader: r ? r.id : null, reader_name: r ? r.name : "" });
   }
 
   function showReader() {
@@ -148,6 +149,15 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
       clearTimeout(cur.shakeTimer);
       cur.shakeTimer = setTimeout(() => root.classList.remove("shake"), SHAKE_MS);
     }
+    // stage sounds: a title card slams, a shake thuds, the containment alarm, Sahur's phone ringing when he calls in,
+    // and radio static when the Foundation's terminal cuts in. `sfx` in the script plays on top.
+    const prev = cur.c.beats[f.index - 1];
+    const same = (k) => prev && prev.scene === b.scene && prev[k] === b[k];
+    if (b.card) play("card");
+    if (b.shake) play("thud");
+    if (b.show === "alarm" && !same("show")) play("alarm");
+    if (b.via === "phone" && !same("via")) play("phone");
+    if (b.who === "fundacion" && !same("who")) play("static");
     if (b.sfx) play(b.sfx);
     chooseReader();
     fx(false);
@@ -212,6 +222,10 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     if (f.index !== cur.index) setBeat(f);
     caption_(f);
     if (cur.reader) reader.classList.toggle("waiting", f.revealed);
+    if (f.revealed && cur.typed !== cur.index) {
+      cur.typed = cur.index;
+      if (cur.reader) fx(false); // the reader's "Siguiente" unlocks only now
+    }
     voice(f, t);
     const b = f.beat;
     if (b.show === "lineup") drawLineup(g, t);
@@ -269,7 +283,7 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     const sceneStart = new Map();
     for (const b of c.beats) if (!sceneStart.has(b.scene)) sceneStart.set(b.scene, b.start);
     cur = { key, c, base: nowMs(), index: -1, lastShown: 0, lastBlip: 0, sceneStart, mount: null, heartbeat: 0, shakeTimer: 0,
-      players: [], pick: null, reader: null, released: -1, beatAt: 0 };
+      players: [], pick: null, reader: null, released: -1, typed: -1, beatAt: 0 };
     setPlayers(state);
     onActive(true);
     root.classList.remove("hidden");
@@ -284,11 +298,15 @@ export function createStory({ gameId, sprite, sendFx, onActive = () => {} }) {
     if (cur) jumpTo(nextStop(cur.c, clock()));
   }
 
-  /** The reader's phone pressed "Siguiente" for the line it shows: straight to the next line (stale presses are dropped). */
+  /**
+   * The reader's phone pressed "Siguiente" for the line it shows: straight to the next line. Stale presses, and
+   * presses before the line has finished typing (the phone keeps the button off until then), are dropped.
+   */
   function readerNext(m) {
     if (!cur || !m || !cur.reader || m.pid !== cur.reader.id || m.key !== cur.key) return;
     const b = cur.c.beats[cur.index];
     if (!b || m.scene !== b.scene || m.beat !== b.i || nowMs() - cur.beatAt < READER_MIN_MS) return;
+    if (cur.typed !== cur.index) return;
     const after = cur.c.beats[cur.index + 1];
     jumpTo(after ? after.start : cur.c.total);
   }

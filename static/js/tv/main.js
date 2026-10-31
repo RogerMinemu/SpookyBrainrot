@@ -5,7 +5,7 @@ import { handleEvent } from "/static/js/tv/effects.js";
 import { applyState } from "/static/js/ui/theme.js";
 import { panel, button, title } from "/static/js/ui/kit.js";
 import { startArt } from "/static/js/art/boot.js";
-import { unlockAudio, isUnlocked, audioContext } from "/static/js/shared/audio.js";
+import { unlockAudio, isUnlocked, audioContext, preloadSamples, play } from "/static/js/shared/audio.js";
 import { createMusic } from "/static/js/tv/music.js";
 import { createStory } from "/static/js/tv/story.js";
 
@@ -35,7 +35,7 @@ musicButton.classList.add("music-toggle");
 musicButton.setAttribute("aria-pressed", "false");
 document.body.append(musicButton);
 document.addEventListener("pointerdown", () => {
-  unlockAudio();
+  if (unlockAudio()) preloadSamples(); // the TV is the room's speaker: every recorded effect, loaded once
   const ac = audioContext();
   if (ac) ac.resume().then(() => music.unlock()).catch(() => {});
 }, { capture: true });
@@ -57,6 +57,21 @@ const masks = new Map();
 function leavePuzzle() {
   if (active) { active.mod.unmount(); active = null; }
   music.setRed(false);
+}
+
+// One-shot sounds of the screen changes (the puzzles and the cutscenes make their own): a pop when somebody joins
+// and the crowd (or the monsters) when the game ends. No door creak between rooms: it sounded awful.
+const ENDING_SOUND = { escape: "applause", escape_with_passenger: "creature", brainrots: "monsters" };
+let heard = null; // { ids: Set of player ids, view: "kind:room" } of the previous state
+function screenSounds(state) {
+  const ids = new Set(state.game.players.map((p) => p.id));
+  const v = state.view;
+  const view = `${v.kind}:${state.game.room_no}`;
+  if (heard) {
+    if ([...ids].some((id) => !heard.ids.has(id))) play("join");
+    if (view !== heard.view && v.kind === "ending") play(ENDING_SOUND[v.band]);
+  }
+  heard = { ids, view };
 }
 
 function updateMeter(state) {
@@ -114,6 +129,7 @@ async function render(state) {
   clearTakeover();
   applyState(state);
   updateMeter(state);
+  screenSounds(state);
   story.sync(state);
   music.sync(state);
   music.setStory(story.active());
@@ -158,7 +174,7 @@ if (new URLSearchParams(location.search).has("demo")) {
 }
 
 function start() {
-  unlockAudio(); // the splash click is the user gesture that lets WebAudio run
+  if (unlockAudio()) preloadSamples(); // the splash click is the user gesture that lets WebAudio run
   splash.classList.add("hidden");
   screen.classList.remove("hidden");
   const el = document.documentElement;

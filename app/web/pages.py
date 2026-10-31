@@ -74,20 +74,24 @@ _SHEET_STYLE = """
 @page{size:A4;margin:0}
 body{background:#fff;color:#000}
 .notice{background:#fff3cd;color:#664d03;padding:.8rem 1rem;margin:0;font-family:system-ui,sans-serif}
+.tools{padding:.8rem 1rem;margin:0;font-family:system-ui,sans-serif;border-bottom:1px solid #999}
 .card{width:210mm;height:297mm;display:flex;flex-direction:column;align-items:center;justify-content:center;
  page-break-after:always;break-after:page;box-sizing:border-box}
 .card svg{width:15cm;height:15cm}
 .card .label{font:700 3rem system-ui,sans-serif;margin-top:1rem}
 .card .code{font:600 1.6rem system-ui,sans-serif;margin-top:.6rem;color:#333}
 .card .code b{font:700 2.6rem ui-monospace,Consolas,monospace;letter-spacing:.35em;color:#000;margin-left:.3em}
-@media print{.notice{display:none}}
+@media print{.notice,.tools{display:none}}
 @media screen{.card{border-bottom:2px dashed #999;margin:0 auto}}
 """
 
 
-def qr_sheet(cards: Sequence[Tuple[str, str, str]], missing_riddles: int) -> str:
+def qr_sheet(cards: Sequence[Tuple[str, str, str]], missing_riddles: int, keys_only: bool = False) -> str:
     """cards: (label, svg, code). Identical cards: nothing reveals anchor vs decoy. The code is typed in the phone's
-    "Pistas" screen when its camera cannot read the QR."""
+    "Pistas" screen when its camera cannot read the QR. keys_only: the cards are just the room keys (reprints)."""
+    toggle = ('Solo las llaves de las salas &middot; <a href="/admin/qr-sheet">Ver todos los QR</a>' if keys_only
+              else '<a href="/admin/qr-sheet?solo=llaves">Imprimir solo las llaves de las salas</a>')
+    tools = f'<p class="tools">{toggle} <span class="muted">(esta barra no se imprime)</span></p>'
     notice = ""
     if missing_riddles:
         notice = (f'<p class="notice">Faltan {missing_riddles} pistas por escribir en '
@@ -97,7 +101,7 @@ def qr_sheet(cards: Sequence[Tuple[str, str, str]], missing_riddles: int) -> str
                    for label, svg, code in cards)
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hoja de QR</title>'
-        f'{_PAPER}<style>{_SHEET_STYLE}</style></head><body class="sheet">{notice}{body}</body></html>'
+        f'{_PAPER}<style>{_SHEET_STYLE}</style></head><body class="sheet">{tools}{notice}{body}</body></html>'
     )
 
 

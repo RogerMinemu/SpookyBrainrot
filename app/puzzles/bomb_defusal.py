@@ -38,6 +38,9 @@ MODULE_TITLES = {"wires": "Cables", "button": "Botón", "keypad": "Símbolos", "
 
 SERIAL_LETTERS = "ABCDEFGHJKLMNPRSTUVXZ"  # no I or O (they read as 1 and 0): the vowels are A, E and U
 VOWELS = frozenset("AEU")
+_VOWEL_LIST = sorted(VOWELS)
+SERIAL_NOTE = ("El número de serie no lleva ni I ni O: un 0 es un cero y un 1, un uno. "
+               f"Sus vocales solo pueden ser {', '.join(_VOWEL_LIST[:-1])} o {_VOWEL_LIST[-1]}.")
 WIRE_COLORS = ("rojo", "azul", "amarillo", "blanco", "negro")
 BUTTON_COLORS = ("rojo", "azul", "amarillo", "blanco")
 BUTTON_LABELS = ("ABORTAR", "DETONAR", "MANTENER", "TUNG")
@@ -172,17 +175,23 @@ def _password_lists() -> List[List[str]]:
     return [words[i:i + size] for i in range(0, len(words), size)]
 
 
+def _rule_lines(rules: Sequence[tuple]) -> List[str]:
+    """The rule texts, after the serial warning when one of them asks for a vowel (0 and 1 pass for O and I)."""
+    texts = [text for text, _, _ in rules]
+    return ([SERIAL_NOTE] if any("vocal" in t for t in texts) else []) + texts
+
+
 def manual_pages() -> List[dict]:
     """Every page of the manual, in reading order: {id, module, title, lines[, symbols][, words]}."""
     pages: List[dict] = []
     for n in sorted(WIRE_RULES):
         pages.append({
             "id": f"wires-{n}", "module": "wires", "title": f"Cables · si hay {n} cables",
-            "lines": ["Los cables se cuentan de arriba abajo."] + [text for text, _, _ in WIRE_RULES[n]],
+            "lines": ["Los cables se cuentan de arriba abajo."] + _rule_lines(WIRE_RULES[n]),
         })
     pages.append({
         "id": "button-press", "module": "button", "title": "Botón · ¿pulsar o mantener?",
-        "lines": ["«Pulsa y suelta enseguida» es soltarlo antes de un segundo."] + [text for text, _, _ in BUTTON_RULES],
+        "lines": ["«Pulsa y suelta enseguida» es soltarlo antes de un segundo."] + _rule_lines(BUTTON_RULES),
     })
     pages.append({
         "id": "button-strip", "module": "button", "title": "Botón · si lo mantienes pulsado",
@@ -194,16 +203,24 @@ def manual_pages() -> List[dict]:
     for i, col in enumerate(KEYPAD_COLUMNS):
         pages.append({
             "id": f"keypad-{i + 1}", "module": "keypad", "title": f"Símbolos · columna {i + 1}",
-            "lines": ["Si los cuatro símbolos de la bomba están en esta columna, se pulsan en este orden, "
-                      "de arriba abajo:"],
+            "lines": [f"Si los cuatro símbolos de la bomba están en esta columna, se pulsan por orden de número, "
+                      f"del 1 al {len(col)}, saltando los que no estén en la bomba:"],
             "symbols": list(col),
         })
     lists = _password_lists()
     for i, words in enumerate(lists):
         pages.append({
             "id": f"password-{i + 1}", "module": "password", "title": f"Contraseña · lista {i + 1} de {len(lists)}",
-            "lines": ["La contraseña es la única palabra de todas las listas que se puede formar con las letras "
-                      "de la bomba. Luego, «Enviar»."],
+            "lines": [
+                f"La bomba tiene {len(PASSWORD_WORDS[0])} columnas de letras y cada una esconde "
+                f"{LETTERS_PER_COLUMN} letras que se cambian con ▲ y ▼. Las letras del principio NO son la respuesta.",
+                "1. El artificiero recorre la primera columna entera y dice sus letras en voz alta.",
+                "2. Descarta las palabras cuya primera letra no esté entre ellas.",
+                "3. Repetid con la segunda columna (segunda letra), la tercera... hasta que quede una sola palabra.",
+                f"Las palabras están repartidas en {len(lists)} listas, quizá en móviles distintos: "
+                "cada uno descarta en la suya. Solo sobrevive una.",
+                "El artificiero la forma con las flechas y pulsa «Enviar». Una palabra equivocada es un error.",
+            ],
             "words": words,
         })
     return pages

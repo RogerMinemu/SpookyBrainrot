@@ -81,7 +81,7 @@ export function update(view) {
   }
   st.locking = view.locking;
   st.fact.textContent = r ? r.fact : "";
-  if (r && !st.revealed) play(r.ok ? "win" : "fail");
+  if (r && !st.revealed) play(r.ok ? "correct" : "wrong"); // quiz-show ding / buzzer
   st.revealed = !!r;
   st.wrong = !!r && !r.ok;
 }

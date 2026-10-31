@@ -32,14 +32,14 @@ Cada ficha incluye un prompt de estilo en inglés, exclusiones, estructura opcio
 | Noclip | Efecto de transición; sin canción propia |
 | Sala 1: plataformas | 02 · Nivel 0 |
 | Sala 2: Tralalero | 03 · Las piscinas; silenciar en rojo |
-| Sala 3: contar formas | 02 · Nivel 0, a menor volumen |
-| Sala 4: trivia | 01 · Espere, por favor, a menor volumen |
+| Sala 3: contar formas | «Local Forecast - Elevator» (Kevin MacLeod), ralentizado y filtrado como un hilo musical moribundo |
+| Sala 4: trivia | «Thinking Music» (Kevin MacLeod), música de concurso |
 | Sala 6: bomba | 04 · Fallo de contención |
-| Sala 7: Sahur dice | 05 · Sahur dice; silenciar o atenuar durante secuencias y respuestas |
-| Búsqueda de anclas | 01 · Espere, por favor; en la búsqueda final puede mantenerse 05 |
+| Sala 7: la salida de Sahur | 05 · Sahur dice |
+| Búsqueda de anclas | «Sneaky Snitch» (Kevin MacLeod), de puntillas por la casa; en la búsqueda final, 05 |
 | Final: escape | 06 · Fuera de las Backrooms |
-| Final: pasajero | 06 · Misma toma, bajar volumen para el mensaje y cortar |
-| Final: brainrots | 06 · Edición ralentizada, filtrada y con repetición breve |
+| Final: pasajero | 06 · Misma toma, entera |
+| Final: brainrots | 06 · Misma toma, entera, ralentizada y filtrada |
 
 La Sala 5 está eliminada del juego. No necesita música.
 
@@ -57,6 +57,10 @@ Las seis tomas están copiadas a `static/audio/music/` con los nombres de sus fi
 
 La tele reproduce la música después de activar el sonido y permite silenciarla con «Música: sí/no». Las actualizaciones de estado conservan la posición de la pista. La música baja durante las escenas narrativas, se silencia en rojo y durante la demostración y respuesta de Sahur.
 
-El final de escape se reproduce una vez. El del pasajero corta la misma pista a los 35 segundos como máximo. El de brainrots repite un fragmento ralentizado y filtrado del mismo audio. Estos tratamientos no requieren nuevas generaciones.
+Los tres finales reproducen la canción entera una vez; el de brainrots, ralentizada y filtrada.
+
+Las salas que no tenían canción propia (3, 4 y la búsqueda de anclas) usan temas gratuitos de Kevin MacLeod, y las salas
+con simulación (menos el Nivel 0) llevan debajo un bucle de ambiente (agua, hangar, grillos). Fuentes, licencias y
+atribución: `static/audio/CREDITS.md`.
 
 Los archivos conservan el audio original: los puntos de bucle todavía no tienen un recorte musical revisado de oído. Los bucles actuales repiten la pista completa.

@@ -76,7 +76,7 @@ export function update(view) {
   } else {
     const ok = view.phase === "pass";
     st.cue.textContent = ok ? "¡Todo cuadra!" : "¡Alguien ha contado mal!";
-    if (st.phase === "count") play(ok ? "win" : "fail");
+    if (st.phase === "count") play(ok ? "correct" : "wrong");
     if (ok) st.hint.textContent = view.round < view.rounds ? "Preparaos: la siguiente ronda trae más formas." : "Lirilì vuelve a darle cuerda al reloj...";
     fill(st.tags, view.results.map(resultTag));
   }

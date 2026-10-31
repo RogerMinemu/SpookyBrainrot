@@ -3,7 +3,7 @@
 // never shift the layout underneath. Pure presentation: cast data only; characters are drawn via ctx.sprite.
 import { h } from "/static/js/shared/dom.js";
 import { portrait } from "/static/js/ui/kit.js";
-import { tone } from "/static/js/shared/audio.js";
+import { tone, play } from "/static/js/shared/audio.js";
 import { byName } from "/static/js/art/roster.js"; // pure cast data; characters are drawn through ctx.sprite only
 import { SCARES, VOICES } from "/static/js/story/script.js";
 
@@ -56,6 +56,7 @@ const handlers = {
     const sc = scarePortrait(d.cameo, ctx);
     const rig = byName(d.cameo);
     const line = (rig && SCARES[rig.id]) || "os ha encontrado...";
+    play("scare"); // the hit and the scream, then the brainrot says its line
     if (rig && SCARES[rig.id]) speak(rig.id, line);
     overlay("jumpscare", [
       splat("s1"), splat("s2"),
@@ -64,17 +65,26 @@ const handlers = {
         torn(line, "scare-line")),
     ], 3000, sc ? sc.destroy : null);
   },
-  splash: () => overlay("splash-flash", [
-    splat("s1"), splat("s2"), splat("s3"),
-    h("div", { class: "overlay-big ink-word" }, "¡Salpicón!")], 1100),
-  round_failed: (d) => overlay("round-failed", [
-    splat("s1"), splat("s2"),
-    h("div", { class: "rot-drips", "aria-hidden": "true" }),
-    h("div", { class: "scare-stage" },
-      torn(d.title || "¡Ronda fallida!", "big"),
-      torn(`${d.text || "Probad otra vez."} +${d.penalty || 0}% de brainrot.`, "small"))], 3200),
+  splash: () => {
+    play("splash");
+    overlay("splash-flash", [
+      splat("s1"), splat("s2"), splat("s3"),
+      h("div", { class: "overlay-big ink-word" }, "¡Salpicón!")], 1100);
+  },
+  round_failed: (d) => {
+    play("round_fail");
+    overlay("round-failed", [
+      splat("s1"), splat("s2"),
+      h("div", { class: "rot-drips", "aria-hidden": "true" }),
+      h("div", { class: "scare-stage" },
+        torn(d.title || "¡Ronda fallida!", "big"),
+        torn(`${d.text || "Probad otra vez."} +${d.penalty || 0}% de brainrot.`, "small"))], 3200);
+  },
   toast: (d) => overlay("note", [torn(d.text || "")], 3000),
-  anchor_unlocked: () => overlay("note unlocked-note", [torn("Ancla encontrada", "gold")], 2600),
+  anchor_unlocked: () => {
+    play("anchor");
+    overlay("note unlocked-note", [torn("Ancla encontrada", "gold")], 2600);
+  },
 };
 
 /** Global hook; returns true if handled. Puzzle modules may also export onEvent(ev). */

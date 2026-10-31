@@ -4,10 +4,15 @@
 import { createStage } from "/static/js/sim/draw.js";
 import { createHost } from "/static/js/sim/host.js";
 import { colorFor } from "/static/js/sim/colors.js";
+import { play } from "/static/js/shared/audio.js";
 import { createSim } from "./sim.js";
 import { drawScene } from "./render.js";
 
 let st = null;
+
+// The room hears the gadgets (bells, door, gate, lanterns), every fall, the cleared level and Sahur waking up; the
+// phones get every fx as before. Fx sent "to: tv" (Sahur's drum while he walks) never leave the TV.
+const TV_SOUNDS = new Set(["ring", "open", "gate", "fail", "win", "lantern", "alarm", "drum"]);
 
 /** Connected players in join order, each with its join colour. */
 function rosterOf(state) {
@@ -22,10 +27,13 @@ export function mount(root, ctx) {
   const host = createHost({
     makeSim: (opts) => createSim({ ...opts, set: st && st.set }),
     report: ctx.sendSim,
-    fx: ctx.sendFx,
+    fx: (to, kind, data) => {
+      if (TV_SOUNDS.has(kind)) play(kind, data);
+      if (to !== "tv") ctx.sendFx(to, kind, data);
+    },
     draw: (sim) => {
       if (++frames % 120 === 0) stage.refresh();
-      drawScene(stage.g, stage.tokens, sim.level, sim.snapshot(), performance.now() / 1000);
+      drawScene(stage.g, stage.tokens, sim.level, sim.snapshot(), performance.now() / 1000, { sprite: ctx.sprite });
     },
   });
   host.start();

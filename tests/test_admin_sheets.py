@@ -22,6 +22,20 @@ def test_sheet_does_not_distinguish_anchors_from_decoys(client):
         assert e.token not in html  # only encoded inside the QR modules
 
 
+def test_keys_only_sheet_prints_just_the_room_anchors_with_their_full_sheet_labels(client):
+    from app.content import ANCHORS_IN_USE
+    from app.core.qr import KIND_ANCHOR, ordered_with_labels
+
+    entries = client.app.state.qr_repo.entries()
+    expected = [label for label, e in ordered_with_labels(entries)
+                if e.kind == KIND_ANCHOR and e.idx in ANCHORS_IN_USE]
+    html = client.get("/admin/qr-sheet?solo=llaves").text
+    assert html.count("<svg") == len(ANCHORS_IN_USE) == 6  # anchor 5 has no room
+    assert re.findall(r'class="label">(#\d\d)<', html) == expected
+    assert 'href="/admin/qr-sheet"' in html
+    assert 'href="/admin/qr-sheet?solo=llaves"' in client.get("/admin/qr-sheet").text
+
+
 def test_sheet_flags_missing_riddles_in_non_printed_notice(client):
     # anchor 5 has no room since room 5 was dropped: its missing riddle is not nagged about
     assert "Faltan 6 pistas" in client.get("/admin/qr-sheet").text

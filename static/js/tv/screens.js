@@ -89,6 +89,8 @@ export function renderEnding(root, state) {
         h("p", {}, `Brainrot final: ${Math.round(state.view.brainrot || 0)}%`),
         h("p", { class: "muted" }, `Tiempo de juego: ${mins} min`)),
       playersList(state.game.players),
+      // CC BY attribution of the extra music (static/audio/CREDITS.md)
+      h("p", { class: "muted credits" }, "Música adicional: Kevin MacLeod (incompetech.com), CC BY 4.0. Efectos: Mixkit."),
     ], { cls: "stack ending-panel" }));
 }
 

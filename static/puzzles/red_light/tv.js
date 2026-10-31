@@ -15,8 +15,9 @@ function rosterOf(state) {
   return players.map((p, i) => ({ id: p.id, name: p.name, color: colorFor(i), connected: p.connected })).filter((p) => p.connected);
 }
 
-// Cue sounds are for the room (TV speakers); everything also goes to the phones as fx.
-const TV_SOUNDS = new Set(["warn", "green", "red", "fail", "win", "blip"]);
+// Cue sounds are for the room (TV speakers); everything also goes to the phones as fx. On the TV a catch splashes and
+// every arrival rings Tralalero's bell (softly: with a big group there are many).
+const TV_SOUNDS = { warn: "warn", green: "green", red: "red", fail: "caught", win: "win", blip: "blip", ring: "ring" };
 
 export function mount(root, ctx) {
   document.documentElement.dataset.realtime = "1"; // no watercolor boil while the sim runs
@@ -28,7 +29,7 @@ export function mount(root, ctx) {
     report: ctx.sendSim,
     fx: (to, kind, data) => {
       if (ctx.musicRed && (kind === "red" || kind === "green")) ctx.musicRed(kind === "red");
-      if (TV_SOUNDS.has(kind)) play(kind, data);
+      if (TV_SOUNDS[kind]) play(TV_SOUNDS[kind], kind === "ring" ? { vol: 0.5 } : data);
       ctx.sendFx(to, kind, data);
     },
     draw: (sim) => {

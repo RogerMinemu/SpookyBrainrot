@@ -358,5 +358,6 @@ export const PHONE = {
   yourTurn: "Te toca leer",
   readAloud: "Esta escena la lees tú: cada frase en voz alta para todos, y «Siguiente» cuando la hayan oído.",
   next: "Siguiente ▶",
+  typing: "Espera a que termine la frase...",
   sent: "Un momento...",
 };

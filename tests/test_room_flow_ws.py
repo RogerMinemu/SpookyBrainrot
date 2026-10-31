@@ -111,12 +111,12 @@ def test_room1_to_room2_to_rooms_3_4_6_to_room7_to_ending(client, clock):
             tv2.send_text(env("advance"))
             s = state_until(tv2, lambda p: p["view"].get("kind") == "sahur_platformer")
 
-            # --- room 7: Sahur's four platformer levels, the same TV reports as room 1 ----------------
-            for level in range(4):
+            # --- room 7: Sahur's five platformer levels, the same TV reports as room 1 ----------------
+            for level in range(5):
                 view = s["view"]
-                assert view["level"] == level and view["levels"] == 4 and view["set"] == "sahur"
+                assert view["level"] == level and view["levels"] == 5 and view["set"] == "sahur"
                 sim(tv2, view, "clear")
-                if level < 3:
+                if level < 4:
                     s = state_until(tv2, lambda p, lv=level: p["view"].get("level") == lv + 1)
             s = state_until(tv2, lambda p: p["game"]["phase"] == "search")
             assert s["game"]["room_no"] == 7
