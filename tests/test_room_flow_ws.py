@@ -54,7 +54,7 @@ def test_room1_to_room2_to_rooms_3_4_5_to_room6_to_ending(client, clock):
         for level in range(4):
             view = s["view"]
             assert view["level"] == level and view["levels"] == 4
-            if level == 0:  # (the sim bucket is 8 reports and FakeClock never refills it)
+            if level == 0:  # (FakeClock never refills the sim bucket)
                 sim(tv, {**view, "epoch": view["epoch"] + 5}, "clear")
                 assert next_of(tv, "error")["payload"]["code"] == "stale"
                 assert rt.game.puzzle_state.level == 0  # the stale report changed nothing

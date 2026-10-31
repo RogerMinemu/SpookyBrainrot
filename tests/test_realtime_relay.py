@@ -1,5 +1,6 @@
 """Unit tests for app/web/realtime.py (token bucket, mask cleaning, relay memory, frame caps)."""
 from app.web.realtime import (
+    BUCKET_SPECS,
     FRAME_LIMITS,
     MASK_BITS,
     InputRelay,
@@ -60,3 +61,11 @@ def test_relay_buckets_are_per_owner_and_per_kind():
     assert r.bucket(one, "input") is r.bucket(one, "input")
     assert r.bucket(one, "input") is not r.bucket(two, "input")
     assert r.bucket(one, "input") is not r.bucket(one, "sim")
+
+
+def test_sim_burst_fits_a_whole_group_arriving_at_once():
+    # red light: one "arrive" report per player and the last one completes the room; a dropped one is never resent
+    clock = FakeClock()
+    burst, rate = BUCKET_SPECS["sim"]
+    b = TokenBucket(burst, rate, clock.now_ms)
+    assert all(b.allow() for _ in range(12 + 1))  # 12 players (every join colour) + the TV's clear, same instant
