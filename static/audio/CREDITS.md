@@ -4,8 +4,11 @@ Sonidos y músicas gratuitos añadidos al juego (además de las seis canciones d
 
 ## Efectos y ambientes — Mixkit
 
-Licencia: [Mixkit Sound Effects Free License](https://mixkit.co/license/#sfxFree) (uso gratuito en proyectos;
-no se pueden redistribuir sueltos como colección de sonidos).
+Licencia: [Mixkit Sound Effects Free License](https://mixkit.co/license/#sfxFree). Se pueden usar gratis dentro de un
+proyecto, pero no redistribuir sueltos, como colección de sonidos ni junto al código fuente.
+
+**Por eso no están en el repositorio.** `python tools/fetch_audio.py` los descarga de estas URLs y comprueba su sha256
+(`mixkit.json`). Sin ellos el juego funciona igual: cada efecto usa su versión sintetizada y los ambientes no suenan.
 
 | Archivo | Sonido original | Fuente |
 | --- | --- | --- |

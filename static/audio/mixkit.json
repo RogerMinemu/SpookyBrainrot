@@ -1,0 +1,199 @@
+{
+  "source": "Mixkit (https://mixkit.co)",
+  "license": "Mixkit Sound Effects Free License (https://mixkit.co/license/#sfxFree)",
+  "note": "Not committed: the licence forbids redistributing the items on their own or with source files. Run `python tools/fetch_audio.py` to download them.",
+  "files": {
+    "sfx/scare-hit.mp3": {
+      "title": "Horror impact",
+      "url": "https://assets.mixkit.co/active_storage/sfx/773/773-preview.mp3",
+      "sha256": "178677542e98df017a0dc908f095f5cb627e28eb94bcd383f609253f652800f2",
+      "bytes": 84036
+    },
+    "sfx/scare-scream.mp3": {
+      "title": "Angry monster scream",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1963/1963-preview.mp3",
+      "sha256": "79cd0c61767e68f3cc70431290ff5e23437ac674cfab6ce697db4707d0ef9a88",
+      "bytes": 66391
+    },
+    "sfx/anchor.mp3": {
+      "title": "Magic sweep game trophy",
+      "url": "https://assets.mixkit.co/active_storage/sfx/257/257-preview.mp3",
+      "sha256": "12e86f0817594e43491b0a3f9216e3597077e93fc7c5598232a2caf5cdabc674",
+      "bytes": 68354
+    },
+    "sfx/door-creak.mp3": {
+      "title": "Scary wooden door opening",
+      "url": "https://assets.mixkit.co/active_storage/sfx/190/190-preview.mp3",
+      "sha256": "88944ee907c7b83000664761559bd33766b388df8604aa2a26f0682238094c53",
+      "bytes": 112637
+    },
+    "sfx/card.mp3": {
+      "title": "Cinematic whoosh deep impact",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1143/1143-preview.mp3",
+      "sha256": "9854bff8a78fcebef95350ff0ec72a41ba449ab372bbd601b55d84de13bd626d",
+      "bytes": 115904
+    },
+    "sfx/thud.mp3": {
+      "title": "Apocalyptic stomp impact",
+      "url": "https://assets.mixkit.co/active_storage/sfx/3057/3057-preview.mp3",
+      "sha256": "c278de3e31d10b3d5e7bea277e3e1cda15bf5aaa744ee6fbd6296e913e66b245",
+      "bytes": 91755
+    },
+    "sfx/alarm.mp3": {
+      "title": "Security facility breach alarm",
+      "url": "https://assets.mixkit.co/active_storage/sfx/994/994-preview.mp3",
+      "sha256": "489ae215c19ba21d92c1cc945e3cafe507b6a9bb52b536321377f77badcb2c14",
+      "bytes": 156588
+    },
+    "sfx/phone-ring.mp3": {
+      "title": "Old telephone ring",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1357/1357-preview.mp3",
+      "sha256": "d09d4527dc522b269075d12b4565f99987843492384b6f35fc79cd659d896af4",
+      "bytes": 277822
+    },
+    "sfx/static.mp3": {
+      "title": "Glitch static",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1457/1457-preview.mp3",
+      "sha256": "58dc85a58c9d1399f70ead26740129149190a725fd4c61c678b8ee095362cff6",
+      "bytes": 48177
+    },
+    "sfx/round-fail.mp3": {
+      "title": "Horror lose",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2028/2028-preview.mp3",
+      "sha256": "874d10511c933faadcf01744cc46443649013742931eabdd813fabf05c075f59",
+      "bytes": 124648
+    },
+    "sfx/clock-tick.mp3": {
+      "title": "Clock ticker single",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1061/1061-preview.mp3",
+      "sha256": "70d0e0fe1d930949e1f86e24bfb9a6521ad4cb6c5e1a07190cc6d1f3e7603d37",
+      "bytes": 20508
+    },
+    "sfx/strike.mp3": {
+      "title": "Classic short alarm",
+      "url": "https://assets.mixkit.co/active_storage/sfx/993/993-preview.mp3",
+      "sha256": "0d1042efacc5bd4125443874d8ba66b95e1ff463a2fbf4a27438e093c16c8293",
+      "bytes": 39252
+    },
+    "sfx/module.mp3": {
+      "title": "Winning notification",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3",
+      "sha256": "18d0cca199d784354b3faf534f3843139d6f315e9df9adaaf73b157807d73493",
+      "bytes": 57416
+    },
+    "sfx/explosion.mp3": {
+      "title": "Bomb explosion in battle",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2800/2800-preview.mp3",
+      "sha256": "c95787edcaaccaf23ab7a875b78a6384eecd2cf594121ed05b859328407b0884",
+      "bytes": 102462
+    },
+    "sfx/splash.mp3": {
+      "title": "Sea water splash",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1198/1198-preview.mp3",
+      "sha256": "463cfbe1c7942bd978af3777a521cf3e89c8e5dce5a7bbd5fc5a10cc3217ae96",
+      "bytes": 58459
+    },
+    "sfx/whoosh.mp3": {
+      "title": "Air woosh",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1489/1489-preview.mp3",
+      "sha256": "8af9843a636d3b4961f0c8b3545a21e674bd43d59f97d5c38d3f9a3f04674fd2",
+      "bytes": 71724
+    },
+    "sfx/church-bell.mp3": {
+      "title": "Cinematic church bell hit",
+      "url": "https://assets.mixkit.co/active_storage/sfx/619/619-preview.mp3",
+      "sha256": "629b121451a648cb286758093363641a04474b2e7216dcb85194dcb11148172c",
+      "bytes": 186528
+    },
+    "sfx/lock.mp3": {
+      "title": "Door key in door lock",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2842/2842-preview.mp3",
+      "sha256": "921d3d573a47338491e4986303b5c73d17278833fd2a8cfaf64505b01f7eec43",
+      "bytes": 86071
+    },
+    "sfx/gate.mp3": {
+      "title": "Heavy sliding door",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1523/1523-preview.mp3",
+      "sha256": "027b6c50a7bd0af86c1518d4d61f501a1fa86570f7eed57ba96dbdc8c21de41a",
+      "bytes": 37267
+    },
+    "sfx/fall.mp3": {
+      "title": "Lose life falling",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2029/2029-preview.mp3",
+      "sha256": "56dae987fccf8ce3c0371f53df78cc5f96a8a8918fd8d60de71333bb97e22ea0",
+      "bytes": 109512
+    },
+    "sfx/level-clear.mp3": {
+      "title": "Completion of a level",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2063/2063-preview.mp3",
+      "sha256": "4ab1e8285d9c36374b00c6bb53f80aecc6d9976ca6f5f4f0c51c7682dfb95e00",
+      "bytes": 95779
+    },
+    "sfx/correct.mp3": {
+      "title": "Winning chimes",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3",
+      "sha256": "9f2489e7f8cde4944423733638491466c0590b686879ac4e3c833d9fb2e8d38a",
+      "bytes": 84035
+    },
+    "sfx/wrong.mp3": {
+      "title": "Negative answer lose",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2032/2032-preview.mp3",
+      "sha256": "daaf9f26f320f302873860a50621904b7da146aabbd9b68e51822d864e5a1d3f",
+      "bytes": 88423
+    },
+    "sfx/join.mp3": {
+      "title": "Magic sparkle poof hit",
+      "url": "https://assets.mixkit.co/active_storage/sfx/3082/3082-preview.mp3",
+      "sha256": "8f62ca086e7c11239f34b5f6a8e63b88b2d5069811a1d11d535def23fd9fbd1f",
+      "bytes": 83919
+    },
+    "sfx/applause.mp3": {
+      "title": "Small group cheer and applause",
+      "url": "https://assets.mixkit.co/active_storage/sfx/518/518-preview.mp3",
+      "sha256": "ee695dcf87d0940e347d9049aada9fec33598c10da1f9d10fef32515c73c90cf",
+      "bytes": 345057
+    },
+    "sfx/creature.mp3": {
+      "title": "Creepy little creature",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2873/2873-preview.mp3",
+      "sha256": "e05746aa32cc1dd0511d2245657958e1c0aa8c1b600ef0b133114fa23f90912a",
+      "bytes": 51875
+    },
+    "sfx/monsters.mp3": {
+      "title": "Monsters scream",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1958/1958-preview.mp3",
+      "sha256": "3de7d09341425e2f3c0ee9cf47f2b8bbc7e32c8c96b138f28f992050932b7686",
+      "bytes": 391201
+    },
+    "sfx/heartbeat.mp3": {
+      "title": "Horror deep drum heartbeat",
+      "url": "https://assets.mixkit.co/active_storage/sfx/559/559-preview.mp3",
+      "sha256": "a1919757a6389683e962e5f85074f088faabdbc09b9c6e6bee9463a581373a12",
+      "bytes": 127661
+    },
+    "ambience/fluorescent.mp3": {
+      "title": "Low electricity humming",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2132/2132-preview.mp3",
+      "sha256": "1386ae61ead8e39629730c26db309a2c33ff415a0797c5993def43c13ad5e1c3",
+      "bytes": 726615
+    },
+    "ambience/pool.mp3": {
+      "title": "Water flowing ambience loop",
+      "url": "https://assets.mixkit.co/active_storage/sfx/3126/3126-preview.mp3",
+      "sha256": "f66d790fde40c2bad3f36039dd570b819509519d0fb8a3a458b3571a0928a2a0",
+      "bytes": 1693046
+    },
+    "ambience/hangar.mp3": {
+      "title": "Industrial machine hum",
+      "url": "https://assets.mixkit.co/active_storage/sfx/2504/2504-preview.mp3",
+      "sha256": "5ba69a91cc718c7a1309699027e33b859cecde0f071b66b5cac0019312c902f2",
+      "bytes": 1449883
+    },
+    "ambience/night.mp3": {
+      "title": "Summer night crickets loop",
+      "url": "https://assets.mixkit.co/active_storage/sfx/1789/1789-preview.mp3",
+      "sha256": "4a262dacc038ac1e7037c070a979b06766ad1bb1382a143bb06d048c479683b0",
+      "bytes": 1239214
+    }
+  }
+}

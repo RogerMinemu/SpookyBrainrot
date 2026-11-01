@@ -7,3 +7,13 @@ __pycache__/
 venv/
 .playwright-mcp/
 .atl/
+# Mixkit audio: downloaded by tools/fetch_audio.py, never committed (its licence forbids it)
+static/audio/sfx/
+static/audio/ambience/
+*.part
+node_modules/
+*.log
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
