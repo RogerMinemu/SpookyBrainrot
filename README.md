@@ -11,7 +11,6 @@
 ![Python](https://img.shields.io/badge/servidor-Python%20%2B%20FastAPI-3776AB?style=for-the-badge)
 ![p5.brush](https://img.shields.io/badge/acuarela-p5.js%20%2B%20p5.brush-E8508C?style=for-the-badge)
 ![Suno](https://img.shields.io/badge/m%C3%BAsica-Suno-7B5CA8?style=for-the-badge)
-![Claude Code](https://img.shields.io/badge/programado%20con-Claude%20Code-D97757?style=for-the-badge)
 
 **7 salas · 8 brainrots pintados en acuarela · de 2 a 12 jugadores · ~90 min · 6 canciones · 895 tests · 0 apps que instalar**
 
@@ -295,9 +294,9 @@ INSTRUCTIONS.md           el encargo original, tal cual
 
 ### 🎨 El pincel: ClaudeAnimationBase, de John Heibel
 
-**[github.com/JohnHeibel/ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase)** (MIT) es un kit para animar dibujos pintados a mano con Claude, sobre p5.js + p5.brush. [`static/js/art/engine.js`](static/js/art/engine.js) es una adaptación de su `core.js`, y la licencia original está en [`static/vendor/claude-animation-base/`](static/vendor/claude-animation-base/LICENSE).
+**[github.com/JohnHeibel/ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase)** (MIT) es un kit para animar dibujos pintados a mano sobre p5.js + p5.brush. [`static/js/art/engine.js`](static/js/art/engine.js) es una adaptación de su `core.js`, y la licencia original está en [`static/vendor/claude-animation-base/`](static/vendor/claude-animation-base/LICENSE).
 
-Otro proyecto del autor de este juego, con la misma técnica de acuarela: **[No me creas](https://github.com/RogerMinemu/no-me-creas-claude)**, el videoclip que Claude programó cuadro a cuadro.
+Otro proyecto del autor de este juego, con la misma técnica de acuarela: **[No me creas](https://github.com/RogerMinemu/no-me-creas-claude)**, un videoclip animado cuadro a cuadro.
 
 ### 🎵 Sonido
 
@@ -320,21 +319,9 @@ Fuentes y licencias de cada archivo: [`static/audio/CREDITS.md`](static/audio/CR
 
 ---
 
-## 🤝 Humano + IA
+## 🛋️ La partida de prueba
 
-**El humano dirigió; la IA ejecutó.** El encargo original cabe en un párrafo ([`INSTRUCTIONS.md`](INSTRUCTIONS.md)): un escape room web en Python, móviles como mandos, objetos escondidos por la casa, brainrots, acuarela y canciones de Suno. A partir de ahí, el juego se construyó con **Claude Code** y un flujo de *Spec-Driven Development*: propuesta, especificación, diseño, tareas, implementación y verificación para cada cambio grande.
-
-Después hubo una partida de prueba de verdad, y lo que pasó en el salón cambió el juego: la sala de Sahur cambió su juego de memoria por plataformas (fue lo que más gustó), las cinemáticas pasaron a leerse en voz alta por un jugador, los QR ganaron un código de 4 letras por si la cámara no lee, en las piscinas se nada 4 veces más despacio y la bomba pasó a tener 8 minutos.
-
-| | Humano | Claude | Suno |
-|---|:---:|:---:|:---:|
-| El encargo y la visión | ✅ | | |
-| Diseño de salas y guion ([`GAME_DESIGN.md`](GAME_DESIGN.md)) | ✅ (dirige y corrige) | ✅ | |
-| Código: servidor, salas, tele, móviles y tests | | ✅ | |
-| Brainrots en acuarela y cinemáticas | ✅ (referencias) | ✅ | |
-| Música | ✅ (elige las tomas) | | ✅ |
-| Jugar la partida de prueba y decidir qué cambiar | ✅ | | |
-| Aplicar los cambios del playtest | | ✅ | |
+Antes de publicarlo hubo una partida de prueba de verdad, y lo que pasó en el salón cambió el juego: la sala de Sahur cambió su juego de memoria por plataformas (fue lo que más gustó), las cinemáticas pasaron a leerse en voz alta por un jugador, los QR ganaron un código de 4 letras por si la cámara no lee, en las piscinas se nada 4 veces más despacio y la bomba pasó a tener 8 minutos.
 
 ---
 
@@ -365,6 +352,6 @@ There are 7 rooms, each guarded by an "Italian brainrot" meme painted in waterco
 
 The server is Python (FastAPI + WebSocket + SQLite) and runs on your home network. The frontend is plain ES modules, with no bundler. Run `pip install -r requirements.txt && python tools/fetch_audio.py && python main.py` and open `http://localhost:8000` on the TV computer. `/admin/demo` plays a whole game with bots.
 
-The code is MIT. Vendored libraries, fonts and audio keep their own licenses; the Mixkit sound effects are not redistributed here and `tools/fetch_audio.py` downloads them (see [LICENSE](LICENSE) and [`static/audio/CREDITS.md`](static/audio/CREDITS.md)). Built with Claude Code, directed by a human.
+The code is MIT. Vendored libraries, fonts and audio keep their own licenses; the Mixkit sound effects are not redistributed here and `tools/fetch_audio.py` downloads them (see [LICENSE](LICENSE) and [`static/audio/CREDITS.md`](static/audio/CREDITS.md)).
 
 </details>
