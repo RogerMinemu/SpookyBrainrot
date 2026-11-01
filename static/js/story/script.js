@@ -266,7 +266,7 @@ export const SCENES = {
       card("Sala final · La salida de Sahur", { sfx: "warn" }),
       say("fundacion", "Tung. Tung. Tung. Perdemos la señal de la Fundación... Estáis solos.", { shake: true }),
       say("sahur", "Os avisé tres veces: tung, tung, tung. La gente educada contesta.", { emote: "angry" }),
-      say("sahur", "Pero bueno, ya que estáis despiertos... la salida está detrás de mis cuatro puertas."),
+      say("sahur", "Pero bueno, ya que estáis despiertos... la salida está detrás de mis cinco puertas."),
       say("sahur", "Volvéis a ser bichitos, como en el Nivel 0. Campanas, pinchos, botones y llaves: o pasáis todos, o no pasa nadie."),
       say("sahur", "Y si uno pisa un pincho o se cae, volvéis todos al principio. Mi bate tiene muchísima paciencia. Tung.", { emote: "scary", shake: true }),
     ],
