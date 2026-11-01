@@ -1,0 +1,47 @@
+MIT License
+
+Copyright (c) 2026 Roger
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+This license covers the original code and text in this repository only (app/,
+static/ outside static/vendor/ and static/audio/, tests/, tests_js/, main.py and
+the docs). It does NOT cover:
+
+- third-party libraries and fonts in static/vendor/ (p5.js LGPL-2.1, p5.brush MIT,
+  jsQR Apache-2.0, Permanent Marker Apache-2.0, Fredoka OFL-1.1), each under its
+  own license, listed in static/vendor/VENDOR.md;
+- static/js/art/engine.js, an adapted port of ClaudeAnimationBase
+  (https://github.com/JohnHeibel/ClaudeAnimationBase), MIT, (c) 2026 John Heibel,
+  license in static/vendor/claude-animation-base/LICENSE;
+- the Mixkit sound effects and ambiences (Mixkit Sound Effects Free License). They
+  are NOT included in this repository: tools/fetch_audio.py downloads them from
+  Mixkit into static/audio/sfx/ and static/audio/ambience/ (list and sha256 in
+  static/audio/mixkit.json);
+- the tracks by Kevin MacLeod (incompetech.com) in static/audio/music/, under
+  Creative Commons Attribution 4.0;
+- the six songs generated with Suno (music/*.mp3 and the matching files in
+  static/audio/music/), subject to Suno's terms of service.
+
+Sources and attributions for every audio file: static/audio/CREDITS.md.
+
+The "Italian brainrot" characters are internet memes; this is a fan project with no
+affiliation to their creators, to the Backrooms or to the SCP Wiki.
